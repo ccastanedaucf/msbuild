@@ -226,7 +226,7 @@ namespace Microsoft.Build.Shared
 #if (CLR2COMPATIBILITY)
             _length = (uint)Marshal.SizeOf(typeof(NativeMethodsShared.MemoryStatus));
 #else
-            _length = (uint)Marshal.SizeOf<NativeMethodsShared.MemoryStatus>();
+                _length = (uint)Marshal.SizeOf<NativeMethodsShared.MemoryStatus>();
 #endif
             }
 
@@ -325,7 +325,7 @@ namespace Microsoft.Build.Shared
 #if (CLR2COMPATIBILITY)
             _nLength = (uint)Marshal.SizeOf(typeof(NativeMethodsShared.SecurityAttributes));
 #else
-            _nLength = (uint)Marshal.SizeOf<NativeMethodsShared.SecurityAttributes>();
+                _nLength = (uint)Marshal.SizeOf<NativeMethodsShared.SecurityAttributes>();
 #endif
             }
 
@@ -542,7 +542,7 @@ namespace Microsoft.Build.Shared
             get { return RuntimeInformation.IsOSPlatform(OSPlatform.Windows); }
 #endif
         }
-        
+
 #if MONO
         private static bool? _isOSX;
 #endif
@@ -678,9 +678,9 @@ namespace Microsoft.Build.Shared
         /// </summary>
         internal static ProcessorArchitectures ProcessorArchitectureNative => SystemInformation.ProcessorArchitectureTypeNative;
 
-#endregion
+        #endregion
 
-#region Set Error Mode (copied from BCL)
+        #region Set Error Mode (copied from BCL)
 
         private static readonly Version s_threadErrorModeMinOsVersion = new Version(6, 1, 0x1db0);
 
@@ -705,9 +705,9 @@ namespace Microsoft.Build.Shared
         [DllImport("kernel32.dll", EntryPoint = "SetErrorMode", ExactSpelling = true)]
         private static extern int SetErrorMode_VistaAndOlder(int newMode);
 
-#endregion
+        #endregion
 
-#region Wrapper methods
+        #region Wrapper methods
 
         /// <summary>
         /// Really truly non pumping wait.
@@ -1181,22 +1181,39 @@ namespace Microsoft.Build.Shared
         /// Internal, optimized GetCurrentDirectory implementation that simply delegates to the native method
         /// </summary>
         /// <returns></returns>
-        internal static string GetCurrentDirectory()
+        internal unsafe static string GetCurrentDirectory()
         {
-            if (IsWindows)
-            {
-                StringBuilder sb = new StringBuilder(MAX_PATH);
-                int pathLength = GetCurrentDirectory(MAX_PATH, sb);
-
-                return pathLength > 0 ? sb.ToString() : null;
+#if FEATURE_LEGACY_GETCURRENTDIRECTORY
+            if (IsWindows) {
+                int bufferSize = GetCurrentDirectoryAndAssertSuccess(0, null);
+                char* buffer = stackalloc char[bufferSize];
+                int pathLength = GetCurrentDirectoryAndAssertSuccess(bufferSize, buffer);
+                return new string(buffer, startIndex: 0, length: pathLength);
             }
-
+#endif
             return Directory.GetCurrentDirectory();
         }
 
-#endregion
+        private unsafe static int GetCurrentDirectoryAndAssertSuccess(int nBufferLength, char* lpBuffer)
+        {
+            int pathLength = GetCurrentDirectory(nBufferLength, lpBuffer);
+            AssertNativeMethodSuccess(pathLength);
+            return pathLength;
+        }
 
-#region PInvoke
+        internal static void AssertNativeMethodSuccess(int result)
+        {
+            bool isError = result == 0;
+            if (isError)
+            {
+                int code = Marshal.GetLastWin32Error();
+                ThrowExceptionForErrorCode(code);
+            }
+        }
+
+        #endregion
+
+        #region PInvoke
 
         /// <summary>
         /// Gets the current OEM code page which is used by console apps
@@ -1276,7 +1293,7 @@ namespace Microsoft.Build.Shared
         [SuppressMessage("Microsoft.Design", "CA1060:MovePInvokesToNativeMethodsClass", Justification = "Class name is NativeMethodsShared for increased clarity")]
         [SuppressMessage("Microsoft.Usage", "CA2205:UseManagedEquivalentsOfWin32Api", Justification = "Using unmanaged equivalent for performance reasons")]
         [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
-        internal static extern int GetCurrentDirectory(int nBufferLength, [Out] StringBuilder lpBuffer);
+        internal unsafe static extern int GetCurrentDirectory(int nBufferLength, char* lpBuffer);
 
         [SuppressMessage("Microsoft.Design", "CA1060:MovePInvokesToNativeMethodsClass", Justification = "Class name is NativeMethodsShared for increased clarity")]
         [SuppressMessage("Microsoft.Usage", "CA2205:UseManagedEquivalentsOfWin32Api", Justification = "Using unmanaged equivalent for performance reasons")]
