@@ -742,7 +742,7 @@ namespace Microsoft.Build.Construction
             // to represent the SLN.
             foreach (ProjectInstance instance in projectInstances)
             {
-                instance.ToProjectRootElement();
+                EmitMetaProject(instance.ToProjectRootElement(), instance.FullPath);
             }
 
             return projectInstances.ToArray();
@@ -881,6 +881,7 @@ namespace Microsoft.Build.Construction
             // so make it possible to see what we have at this point.
             string path = traversalProject.FullPath;
             string metaProjectPath = _solutionFile.FullPath + ".metaproj.tmp";
+            EmitMetaProject(traversalProject, metaProjectPath);
             traversalProject.FullPath = path;
 
             // Create the instance.  From this point forward we can evaluate conditions against the traversal project directly.
