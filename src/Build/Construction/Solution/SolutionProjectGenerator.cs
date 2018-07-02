@@ -742,6 +742,7 @@ namespace Microsoft.Build.Construction
             // to represent the SLN.
             foreach (ProjectInstance instance in projectInstances)
             {
+                instance.ToProjectRootElement();
             }
 
             return projectInstances.ToArray();
