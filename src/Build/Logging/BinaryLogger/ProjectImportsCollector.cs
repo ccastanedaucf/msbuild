@@ -47,25 +47,27 @@ namespace Microsoft.Build.Logging
 
         public void AddFile(string filePath)
         {
-            if (filePath == null || _fileStream == null)
+            if (filePath != null && _fileStream != null)
             {
-                return;
+                EnqueueAddFile(t => AddFileCore(filePath));
             }
+        }
 
+        public void AddFile(string filePath, string archivePath)
+        {
+            if (_fileStream != null)
+            {
+                EnqueueAddFile(t => AddFileCore(filePath, archivePath));
+            }
+        }
+
+        private void EnqueueAddFile(Action<Task> addFileAction)
+        {
             lock (_fileStream)
             {
                 // enqueue the task to add a file and return quickly
                 // to avoid holding up the current thread
-                _currentTask = _currentTask.ContinueWith(t =>
-                {
-                    try
-                    {
-                        AddFileCore(filePath);
-                    }
-                    catch
-                    {
-                    }
-                }, TaskScheduler.Default);
+                _currentTask = _currentTask.ContinueWith(addFileAction, TaskScheduler.Default);
             }
         }
 
@@ -75,36 +77,85 @@ namespace Microsoft.Build.Logging
         /// </remarks>
         private void AddFileCore(string filePath)
         {
-            // quick check to avoid repeated disk access for Exists etc.
-            if (_processedFiles.Contains(filePath))
+            try
             {
-                return;
+                // quick check to avoid repeated disk access for Exists etc.
+                if (_processedFiles.Contains(filePath))
+                {
+                    return;
+                }
+
+                var fileInfo = new FileInfo(filePath);
+                if (!fileInfo.Exists || fileInfo.Length == 0)
+                {
+                    _processedFiles.Add(filePath);
+                    return;
+                }
+
+                filePath = Path.GetFullPath(filePath);
+
+                // if the file is already included, don't include it again
+                if (!_processedFiles.Add(filePath))
+                {
+                    return;
+                }
+
+                string archivePath = CalculateArchivePath(filePath);
+
+                ZipArchiveEntry archiveEntry = _zipArchive.CreateEntry(archivePath);
+                archiveEntry.LastWriteTime = fileInfo.LastWriteTime;
+
+                using (Stream entryStream = archiveEntry.Open())
+                using (FileStream content = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read | FileShare.Delete))
+                {
+                    content.CopyTo(entryStream);
+                }
             }
-
-            var fileInfo = new FileInfo(filePath);
-            if (!fileInfo.Exists || fileInfo.Length == 0)
+            catch
             {
-                _processedFiles.Add(filePath);
-                return;
             }
+        }
 
-            filePath = Path.GetFullPath(filePath);
-
-            // if the file is already included, don't include it again
-            if (!_processedFiles.Add(filePath))
+        /// <remarks>
+        /// This method doesn't need locking/synchronization because it's only called
+        /// from a task that is chained linearly
+        /// </remarks>
+        private void AddFileCore(string filePath, string archivePath)
+        {
+            try
             {
-                return;
+                // quick check to avoid repeated disk access for Exists etc.
+                if (_processedFiles.Contains(filePath))
+                {
+                    return;
+                }
+
+                var fileInfo = new FileInfo(filePath);
+                if (!fileInfo.Exists || fileInfo.Length == 0)
+                {
+                    _processedFiles.Add(filePath);
+                    return;
+                }
+
+                filePath = Path.GetFullPath(filePath);
+
+                // if the file is already included, don't include it again
+                if (!_processedFiles.Add(filePath))
+                {
+                    return;
+                }
+
+                ZipArchiveEntry archiveEntry = _zipArchive.CreateEntry(CalculateArchivePath(archivePath));
+                archiveEntry.LastWriteTime = fileInfo.LastWriteTime;
+
+                using (Stream entryStream = archiveEntry.Open())
+                using (FileStream content = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read | FileShare.Delete))
+                {
+                    content.CopyTo(entryStream);
+                }
             }
-
-            string archivePath = CalculateArchivePath(filePath);
-
-            ZipArchiveEntry archiveEntry = _zipArchive.CreateEntry(archivePath);
-            archiveEntry.LastWriteTime = fileInfo.LastWriteTime;
-
-            using (Stream entryStream = archiveEntry.Open())
-            using (FileStream content = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read | FileShare.Delete))
+            catch
             {
-                content.CopyTo(entryStream);
             }
         }
 
