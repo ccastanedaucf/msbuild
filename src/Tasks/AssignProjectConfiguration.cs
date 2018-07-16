@@ -95,7 +95,19 @@ namespace Microsoft.Build.Tasks
         /// <summary>
         /// The current project's full path
         /// </summary>
-        public string CurrentProject { get; set; }
+        public string CurrentProject {
+            get
+            {
+                return _currentProject;
+            }
+
+            set
+            {
+                _currentProject = FileUtilities.GetFullPathNoThrow(value);
+            }
+        }
+
+        private string _currentProject;
 
         /// <summary>
         /// The current project's platform.
