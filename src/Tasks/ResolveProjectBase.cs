@@ -97,7 +97,8 @@ namespace Microsoft.Build.Tasks
 
             foreach (ITaskItem reference in references)
             {
-                _cachedProjectReferencesByAbsolutePath.Add(reference.GetMetadata("FullPath")); // metadata is cached and used again later
+                string fullPath = FileUtilities.GetFullPathNoThrow(reference.GetMetadata("FullPath"));
+                _cachedProjectReferencesByAbsolutePath.Add(fullPath); // metadata is cached and used again later
 
                 if (!VerifyReferenceAttributes(reference, out string missingAttribute))
                 {
