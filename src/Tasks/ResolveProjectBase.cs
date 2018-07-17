@@ -224,7 +224,7 @@ namespace Microsoft.Build.Tasks
 
             // We didn't find the project element by locating a project guid on the P2P reference
             // next we'll try a lookup by the absolute path of the project
-            string projectFullPath = projectRef.GetMetadata("FullPath"); // reserved metadata "FullPath" is used at it will cache the value
+            string projectFullPath = FileUtilities.GetFullPathNoThrow(projectRef.GetMetadata("FullPath")); // reserved metadata "FullPath" is used at it will cache the value
 
             if ((_cachedProjectElementsByAbsolutePath.TryGetValue(projectFullPath, out projectElement)) && (projectElement != null))
             {
