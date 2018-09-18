@@ -36,14 +36,14 @@ namespace Microsoft.Build.Collections
         /// See <see cref="AddEmptyMarker">AddEmptyMarker</see>.
         /// This collection provides quick access to the ordered set of items of a particular type.
         /// </summary>
-        private readonly Dictionary<string, LinkedList<T>> _itemLists;
+        private readonly Dictionary<string, List<T>> _itemLists;
 
         /// <summary>
         /// Dictionary of items in the collection, to speed up Contains,
         /// Remove, and Replace. For those operations, we look up here,
         /// then modify the other dictionary to match.
         /// </summary>
-        private readonly Dictionary<T, LinkedListNode<T>> _nodes;
+        private readonly Dictionary<T, List<T>> _nodes;
 
         /// <summary>
         /// Constructor for an empty collection.
@@ -51,8 +51,8 @@ namespace Microsoft.Build.Collections
         internal ItemDictionary()
         {
             // Tracing.Record("new item dictionary");
-            _itemLists = new Dictionary<string, LinkedList<T>>(MSBuildNameIgnoreCaseComparer.Default);
-            _nodes = new Dictionary<T, LinkedListNode<T>>();
+            _itemLists = new Dictionary<string, List<T>>(MSBuildNameIgnoreCaseComparer.Default);
+            _nodes = new Dictionary<T, List<T>>();
         }
 
         /// <summary>
@@ -62,8 +62,8 @@ namespace Microsoft.Build.Collections
         internal ItemDictionary(int initialItemTypesCapacity, int initialItemsCapacity = 0)
         {
             // Tracing.Record("new item dictionary");
-            _itemLists = new Dictionary<string, LinkedList<T>>(initialItemTypesCapacity, MSBuildNameIgnoreCaseComparer.Default);
-            _nodes = new Dictionary<T, LinkedListNode<T>>(initialItemsCapacity);
+            _itemLists = new Dictionary<string, List<T>>(initialItemTypesCapacity, MSBuildNameIgnoreCaseComparer.Default);
+            _nodes = new Dictionary<T, List<T>>(initialItemsCapacity);
         }
 
         /// <summary>
@@ -72,8 +72,8 @@ namespace Microsoft.Build.Collections
         internal ItemDictionary(IEnumerable<T> items)
         {
             // Tracing.Record("new item dictionary");
-            _itemLists = new Dictionary<string, LinkedList<T>>(MSBuildNameIgnoreCaseComparer.Default);
-            _nodes = new Dictionary<T, LinkedListNode<T>>();
+            _itemLists = new Dictionary<string, List<T>>(MSBuildNameIgnoreCaseComparer.Default);
+            _nodes = new Dictionary<T, List<T>>();
             ImportItems(items);
         }
 
@@ -113,7 +113,7 @@ namespace Microsoft.Build.Collections
         {
             get
             {
-                LinkedList<T> list;
+                List<T> list;
                 lock (_itemLists)
                 {
                     if (!_itemLists.TryGetValue(itemtype, out list))
@@ -204,14 +204,14 @@ namespace Microsoft.Build.Collections
         {
             lock (_itemLists)
             {
-                if (!_itemLists.TryGetValue(projectItem.Key, out LinkedList<T> list))
+                if (!_itemLists.TryGetValue(projectItem.Key, out List<T> list))
                 {
-                    list = new LinkedList<T>();
+                    list = new List<T>();
                     _itemLists[projectItem.Key] = list;
                 }
 
-                LinkedListNode<T> node = list.AddLast(projectItem);
-                _nodes.Add(projectItem, node);
+                list.Add(projectItem);
+                _nodes.Add(projectItem, list);
             }
         }
 
@@ -227,13 +227,12 @@ namespace Microsoft.Build.Collections
         {
             lock (_itemLists)
             {
-                if (!_nodes.TryGetValue(projectItem, out LinkedListNode<T> node))
+                if (!_nodes.TryGetValue(projectItem, out List<T> list))
                 {
                     return false;
                 }
 
-                LinkedList<T> list = node.List;
-                list.Remove(node);
+                list.Remove(projectItem);
                 _nodes.Remove(projectItem);
 
                 // Save memory
@@ -258,11 +257,12 @@ namespace Microsoft.Build.Collections
             ErrorUtilities.VerifyThrow(existingItem.Key == newItem.Key, "Cannot replace an item {0} with an item {1} with a different name.", existingItem.Key, newItem.Key);
             lock (_itemLists)
             {
-                if (_nodes.TryGetValue(existingItem, out LinkedListNode<T> node))
+                if (_nodes.TryGetValue(existingItem, out List<T> list))
                 {
-                    node.Value = newItem;
+                    int itemIndex = list.IndexOf(existingItem);
+                    list[itemIndex] = newItem;
                     _nodes.Remove(existingItem);
-                    _nodes.Add(newItem, node);
+                    _nodes.Add(newItem, list);
                 }
             }
         }
@@ -289,9 +289,9 @@ namespace Microsoft.Build.Collections
         {
             lock (_itemLists)
             {
-                if (!_itemLists.TryGetValue(itemType, out LinkedList<T> list))
+                if (!_itemLists.TryGetValue(itemType, out List<T> list))
                 {
-                    list = new LinkedList<T>();
+                    list = new List<T>();
                     _itemLists[itemType] = list;
                 }
 
@@ -301,8 +301,8 @@ namespace Microsoft.Build.Collections
                     // Debug only: hot code path
                     ErrorUtilities.VerifyThrow(String.Equals(itemType, item.Key, StringComparison.OrdinalIgnoreCase), "Item type mismatch");
 #endif
-                    LinkedListNode<T> node = list.AddLast(item);
-                    _nodes.Add(item, node);
+                    list.Add(item);
+                    _nodes.Add(item, list);
                 }
             }
         }
@@ -331,7 +331,7 @@ namespace Microsoft.Build.Collections
             lock (_itemLists)
             {
                 ErrorUtilities.VerifyThrow(!_itemLists.ContainsKey(itemType), "Should be none");
-                _itemLists.Add(itemType, new LinkedList<T>());
+                _itemLists.Add(itemType, new List<T>());
             }
         }
 
@@ -344,7 +344,7 @@ namespace Microsoft.Build.Collections
         {
             lock (_itemLists)
             {
-                if (_itemLists.TryGetValue(itemType, out LinkedList<T> list) && list.Count == 0)
+                if (_itemLists.TryGetValue(itemType, out List<T> list) && list.Count == 0)
                 {
                     return true;
                 }
