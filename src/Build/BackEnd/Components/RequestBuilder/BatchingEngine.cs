@@ -1,9 +1,8 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
 using System.Collections.Generic;
-
+using System.Linq;
 using Microsoft.Build.Collections;
 using ElementLocation = Microsoft.Build.Construction.ElementLocation;
 using Microsoft.Build.Evaluation;
@@ -69,6 +68,8 @@ namespace Microsoft.Build.BackEnd
     /// </remarks>
     internal static class BatchingEngine
     {
+        private static readonly List<ProjectItemInstance> EmptyGroup = new List<ProjectItemInstance>();
+
         #region Methods
 
         /// <summary>
@@ -80,345 +81,234 @@ namespace Microsoft.Build.BackEnd
         (
             List<string> batchableObjectParameters,
             Lookup lookup,
-            ElementLocation elementLocation
-        )
-        {
-            return PrepareBatchingBuckets(batchableObjectParameters, lookup, null, elementLocation);
-        }
-
-        /// <summary>
-        /// Determines how many times the batchable object needs to be executed (each execution is termed a "batch"), and prepares
-        /// buckets of items to pass to the object in each batch.
-        /// </summary>
-        /// <param name="elementLocation"></param>
-        /// <param name="batchableObjectParameters"></param>
-        /// <param name="lookup"></param>
-        /// <param name="implicitBatchableItemType">Any item type that can be considered an implicit input to this batchable object.
-        /// This is useful for items inside targets, where the item name is plainly an item type that's an "input" to the object.</param>
-        /// <returns>List containing ItemBucket objects, each one representing an execution batch.</returns>
-        internal static List<ItemBucket> PrepareBatchingBuckets
-        (
-            List<string> batchableObjectParameters,
-            Lookup lookup,
-            string implicitBatchableItemType,
-            ElementLocation elementLocation
+            ElementLocation elementLocation,
+            string explicitItemName = ""
         )
         {
             if (batchableObjectParameters == null)
             {
                 ErrorUtilities.ThrowInternalError("Need the parameters of the batchable object to determine if it can be batched.");
             }
-
             if (lookup == null)
             {
                 ErrorUtilities.ThrowInternalError("Need to specify the lookup.");
             }
 
-            ItemsAndMetadataPair pair = ExpressionShredder.GetReferencedItemNamesAndMetadata(batchableObjectParameters);
-
             // All the @(itemname) item list references in the tag, including transforms, etc.        
-            HashSet<string> consumedItemReferences = pair.Items;
-
-            // All the %(itemname.metadataname) references in the tag (not counting those embedded 
+            // and all the %(itemname.metadataname) references in the tag (not counting those embedded 
             // inside item transforms), and note that the itemname portion is optional.
             // The keys in the returned hash table are the qualified metadata names (e.g. "EmbeddedResource.Culture"
             // or just "Culture").  The values are MetadataReference structs, which simply split out the item 
-            // name (possibly null) and the actual metadata name.            
-            Dictionary<string, MetadataReference> consumedMetadataReferences = pair.Metadata;
-
-            List<ItemBucket> buckets = null;
-            if (consumedMetadataReferences != null && consumedMetadataReferences.Count > 0)
-            {
-                // Add any item types that we were explicitly told to assume.
-                if (implicitBatchableItemType != null)
-                {
-                    consumedItemReferences = consumedItemReferences ?? new HashSet<string>(MSBuildNameIgnoreCaseComparer.Default);
-                    consumedItemReferences.Add(implicitBatchableItemType);
-                }
-
-                // This method goes through all the item list references and figures out which ones
-                // will be participating in batching, and which ones won't.  We get back a hashtable
-                // where the key is the item name that will be participating in batching.  The values
-                // are all String.Empty (not used).  This method may return additional item names 
-                // that weren't represented in "consumedItemReferences"... this would happen if there
-                // were qualified metadata references in the consumedMetadataReferences table, such as 
-                // %(EmbeddedResource.Culture).
-                Dictionary<string, ICollection<ProjectItemInstance>> itemListsToBeBatched = GetItemListsToBeBatched(consumedMetadataReferences, consumedItemReferences, lookup, elementLocation);
-
-                // At this point, if there were any metadata references in the tag, but no item 
-                // references to batch on, we've got a problem because we can't figure out which 
-                // item lists the user wants us to batch.
-                if (itemListsToBeBatched.Count == 0)
-                {
-                    foreach (string unqualifiedMetadataName in consumedMetadataReferences.Keys)
-                    {
-                        // Of course, since this throws an exception, there's no way we're ever going
-                        // to really loop here... it's just that the foreach is the only way I can
-                        // figure out how to get data out of the hashtable without knowing any of the
-                        // keys!
-                        ProjectErrorUtilities.VerifyThrowInvalidProject(false,
-                            elementLocation, "CannotReferenceItemMetadataWithoutItemName", unqualifiedMetadataName);
-                    }
-                }
-                else
-                {
-                    // If the batchable object consumes item metadata as well as items to be batched,
-                    // we need to partition the items consumed by the object.
-                    buckets = BucketConsumedItems(lookup, itemListsToBeBatched, consumedMetadataReferences, elementLocation);
-                }
-            }
+            // name (possibly null) and the actual metadata name.       
+            ItemsAndMetadataPair itemNamesAndMetadata = ExpressionShredder.GetReferencedItemNamesAndMetadata(batchableObjectParameters);
 
             // if the batchable object does not consume any item metadata or items, or if the item lists it consumes are all
             // empty, then the object does not need to be batched
-            if ((buckets == null) || (buckets.Count == 0))
-            {
-                // create a default bucket that references the project items and properties -- this way we always have a bucket
-                buckets = new List<ItemBucket>(1);
-                buckets.Add(new ItemBucket(null, null, lookup, buckets.Count));
-            }
+            bool hasMetadata = itemNamesAndMetadata.Metadata?.Count > 0;
+            return hasMetadata
+                ? CreateBatchingBuckets(lookup, itemNamesAndMetadata, elementLocation, explicitItemName)
+                : CreateSingleBucket(lookup);
+        }
+
+        private static List<ItemBucket> CreateSingleBucket(Lookup lookup)
+        {
+            // create a default bucket that references the project items and properties -- this way we always have a bucket
+            var buckets = new List<ItemBucket>(1);
+            var singleBucket = new ItemBucket(null, null, lookup);
+            buckets.Add(singleBucket);
 
             return buckets;
         }
 
-        /// <summary>
-        /// Of all the item lists that are referenced in this batchable object, which ones should we
-        /// batch on, and which ones should we just pass in wholesale to every invocation of the 
-        /// target/task?
-        /// 
-        /// Rule #1.  If the user has referenced any *qualified* item metadata such as %(EmbeddedResource.Culture),
-        /// then that item list "EmbeddedResource" will definitely get batched.
-        /// 
-        /// Rule #2.  For all the unqualified item metadata such as %(Culture), we make sure that 
-        /// every single item in every single item list being passed into the task contains a value
-        /// for that metadata.  If not, it's an error.  If so, we batch all of those item lists.
-        /// 
-        /// All other item lists will not be batched, and instead will be passed in wholesale to all buckets.
-        /// </summary>
-        /// <returns>Dictionary containing the item names that should be batched.  If the items match unqualified metadata,
-        /// the entire list of items will be returned in the Value.  Otherwise, the Value will be empty, indicating only the
-        /// qualified item set (in the Key) should be batched.
-        /// </returns>
-        private static Dictionary<string, ICollection<ProjectItemInstance>> GetItemListsToBeBatched
+        private static List<ItemBucket> CreateBatchingBuckets
         (
-            Dictionary<string, MetadataReference> consumedMetadataReferences,   // Key is [string] potentially qualified metadata name
-                                                                                // Value is [struct MetadataReference]
-            HashSet<string> consumedItemReferenceNames,
             Lookup lookup,
-            ElementLocation elementLocation
+            ItemsAndMetadataPair itemNamesAndMetadata,
+            ElementLocation elementLocation,
+            string explicitItemName
         )
         {
-            // The keys in this hashtable are the names of the items that we will batch on.
-            // The values are always String.Empty (not used).
-            var itemListsToBeBatched = new Dictionary<string, ICollection<ProjectItemInstance>>(MSBuildNameIgnoreCaseComparer.Default);
+            if (itemNamesAndMetadata.Items == null)
+            {
+                itemNamesAndMetadata.Items = new HashSet<string>();
+            }
+
+            AddExplicitAndQualifiedItemNames(itemNamesAndMetadata, explicitItemName);
+            VerifyThrowNoItemNamesToBatch(itemNamesAndMetadata, elementLocation);
+
+            HashSet<string> itemNames = itemNamesAndMetadata.Items;
+            List<MetadataName> metadataNames = GetMetadataNames(itemNamesAndMetadata.Metadata);
+            Dictionary<MetadataValues, List<ProjectItemInstance>> metadataValuesToItems =
+                MapMetadataValuesToItems(lookup, itemNames, metadataNames);
+            
+
+            return CreateItemBuckets(metadataNames, metadataValuesToItems);
+        }
+
+        private static void AddExplicitAndQualifiedItemNames(ItemsAndMetadataPair itemNamesAndMetadata, string explicitItemName)
+        {
+            // Add any item types that we were explicitly told to assume.
+            AddItemNameIfNotNullOrEmpty(itemNamesAndMetadata.Items, explicitItemName);
 
             // Loop through all the metadata references and find the ones that are qualified
             // with an item name.
-            foreach (MetadataReference consumedMetadataReference in consumedMetadataReferences.Values)
+            foreach (KeyValuePair<string, MetadataReference> metadataName in itemNamesAndMetadata.Metadata)
             {
-                if (consumedMetadataReference.ItemName != null)
-                {
-                    // Rule #1.  Qualified metadata reference.
-                    // For metadata references that are qualified with an item name 
-                    // (e.g., %(EmbeddedResource.Culture) ), we add that item name to the list of 
-                    // consumed item names, even if the item name wasn't otherwise referenced via
-                    // @(...) syntax, and even if every item in the list doesn't necessary contain
-                    // a value for this metadata.  This is the special power that you get by qualifying 
-                    // the metadata reference with an item name.
-                    itemListsToBeBatched[consumedMetadataReference.ItemName] = null;
-
-                    // Also add this qualified item to the consumed item references list, because
-                    // %(EmbeddedResource.Culture) effectively means that @(EmbeddedResource) is
-                    // being consumed, even though we may not see literally "@(EmbeddedResource)"
-                    // in the tag anywhere.  Adding it to this list allows us (down below in this
-                    // method) to check that every item in this list has a value for each 
-                    // unqualified metadata reference.
-                    consumedItemReferenceNames = consumedItemReferenceNames ?? new HashSet<string>(MSBuildNameIgnoreCaseComparer.Default);
-                    consumedItemReferenceNames.Add(consumedMetadataReference.ItemName);
-                }
+                // Also add this qualified item to the consumed item references list, because
+                // %(EmbeddedResource.Culture) effectively means that @(EmbeddedResource) is
+                // being consumed, even though we may not see literally "@(EmbeddedResource)"
+                // in the tag anywhere.  Adding it to this list allows us (down below in this
+                // method) to check that every item in this list has a value for each 
+                // unqualified metadata reference.
+                AddItemNameIfNotNullOrEmpty(itemNamesAndMetadata.Items, metadataName.Value.ItemName);
             }
-
-            // Loop through all the metadata references and find the ones that are unqualified.
-            foreach (MetadataReference consumedMetadataReference in consumedMetadataReferences.Values)
-            {
-                if (consumedMetadataReference.ItemName == null)
-                {
-                    // Rule #2.  Unqualified metadata reference.
-                    // For metadata references that are unqualified, every single consumed item
-                    // must contain a value for that metadata.  If any item doesn't, it's an error
-                    // to use unqualified metadata.
-                    if (consumedItemReferenceNames != null)
-                    {
-                        foreach (string consumedItemName in consumedItemReferenceNames)
-                        {
-                            // Loop through all the items in the item list.
-                            ICollection<ProjectItemInstance> items = lookup.GetItems(consumedItemName);
-
-                            if (items != null)
-                            {
-                                // Loop through all the items in the BuildItemGroup.
-                                foreach (ProjectItemInstance item in items)
-                                {
-                                    ProjectErrorUtilities.VerifyThrowInvalidProject(
-                                        item.HasMetadata(consumedMetadataReference.MetadataName),
-                                        elementLocation, "ItemDoesNotContainValueForUnqualifiedMetadata",
-                                        item.EvaluatedInclude, consumedItemName, consumedMetadataReference.MetadataName);
-                                }
-                            }
-
-                            // This item list passes the test of having every single item containing
-                            // a value for this metadata.  Therefore, add this item list to the batching list.
-                            // Also, to save doing lookup.GetItems again, put the items in the table as the value.
-                            itemListsToBeBatched[consumedItemName] = items;
-                        }
-                    }
-                }
-            }
-
-            return itemListsToBeBatched;
         }
 
-        /// <summary>
-        /// Partitions the items consumed by the batchable object into buckets, where each bucket contains a set of items that
-        /// have the same value set on all item metadata consumed by the object.
-        /// </summary>
-        /// <remarks>
-        /// PERF NOTE: Given n items and m batching metadata that produce l buckets, it is usually the case that n > l > m,
-        /// because a batchable object typically uses one or two item metadata to control batching, and only has a handful of
-        /// buckets. The number of buckets is typically only large if a batchable object is using single-item batching
-        /// (where l == n). Any algorithm devised for bucketing therefore, should try to minimize n and l in its complexity
-        /// equation. The algorithm below has a complexity of O(n*lg(l)*m/2) in its comparisons, and is effectively O(n) when
-        /// l is small, and O(n*lg(n)) in the worst case as l -> n. However, note that the comparison complexity is not the
-        /// same as the operational complexity for this algorithm. The operational complexity of this algorithm is actually
-        /// O(n*m + n*lg(l)*m/2 + n*l/2 + n + l), which is effectively O(n^2) in the worst case. The additional complexity comes
-        /// from the array and metadata operations that are performed. However, those operations are extremely cheap compared
-        /// to the comparison operations, which dominate the time spent in this method.
-        /// </remarks>
-        /// <returns>List containing ItemBucket objects (can be empty), each one representing an execution batch.</returns>
-        private static List<ItemBucket> BucketConsumedItems
+        private static void AddItemNameIfNotNullOrEmpty(HashSet<string> itemNames, string itemName)
+        {
+            if (!string.IsNullOrEmpty(itemName))
+            {
+                itemNames.Add(itemName);
+            }
+        }
+
+        private static void VerifyThrowNoItemNamesToBatch(ItemsAndMetadataPair itemNamesAndMetadata, ElementLocation elementLocation)
+        {
+            // At this point, if there were any metadata references in the tag, but no item 
+            // references to batch on, we've got a problem because we can't figure out which 
+            // item lists the user wants us to batch.
+            if (itemNamesAndMetadata.Items.Count > 0)
+            {
+                string unqualifiedMetadataName = itemNamesAndMetadata.Metadata.Keys.First();
+                ProjectErrorUtilities.VerifyThrowInvalidProject
+                (
+                    false,
+                    elementLocation,
+                    "CannotReferenceItemMetadataWithoutItemName",
+                    unqualifiedMetadataName
+                );
+            }
+        }
+
+        private static List<MetadataName> GetMetadataNames(Dictionary<string, MetadataReference> metadataNames)
+        {
+            var flattenedMetadataNames = new List<MetadataName>();
+
+            foreach (KeyValuePair<string, MetadataReference> metadataName in metadataNames)
+            {
+                string fullName = metadataName.Key;
+                string itemName = metadataName.Value.ItemName;
+                string unqualifiedName = metadataName.Value.MetadataName;
+                flattenedMetadataNames.Add(new MetadataName(fullName, itemName, unqualifiedName));
+            }
+
+            return flattenedMetadataNames;
+        }
+
+        private static Dictionary<MetadataValues, List<ProjectItemInstance>> MapMetadataValuesToItems
         (
             Lookup lookup,
-            Dictionary<string, ICollection<ProjectItemInstance>> itemListsToBeBatched,
-            Dictionary<string, MetadataReference> consumedMetadataReferences,
-            ElementLocation elementLocation
+            HashSet<string> itemNames,
+            List<MetadataName> metadataNames
         )
         {
-            ErrorUtilities.VerifyThrow(itemListsToBeBatched.Count > 0, "Need item types consumed by the batchable object.");
-            ErrorUtilities.VerifyThrow(consumedMetadataReferences.Count > 0, "Need item metadata consumed by the batchable object.");
+            var metadataValuesToItems = new Dictionary<MetadataValues, List<ProjectItemInstance>>();
 
-            var buckets = new List<ItemBucket>();
-
-            // Get and iterate through the list of item names that we're supposed to batch on.
-            foreach (KeyValuePair<string, ICollection<ProjectItemInstance>> entry in itemListsToBeBatched)
+            foreach (string itemName in itemNames)
             {
-                string itemName = entry.Key;
-
-                // Use the previously-fetched items, if possible
-                ICollection<ProjectItemInstance> items = entry.Value ?? lookup.GetItems(itemName);
-
-                if (items != null)
+                foreach (ProjectItemInstance item in lookup.GetItems(itemName))
                 {
-                    foreach (ProjectItemInstance item in items)
+                    MetadataValues metadataValues = GetMetadataValues(metadataNames, item);
+
+                    if (!metadataValuesToItems.TryGetValue(metadataValues, out List<ProjectItemInstance> items))
                     {
-                        // Get this item's values for all the metadata consumed by the batchable object.
-                        Dictionary<string, string> itemMetadataValues = GetItemMetadataValues(item, consumedMetadataReferences, elementLocation);
-
-                        // put the metadata into a dummy bucket we can use for searching
-                        ItemBucket dummyBucket = ItemBucket.GetDummyBucketForComparisons(itemMetadataValues);
-
-                        // look through all previously created buckets to find a bucket whose items have the same values as
-                        // this item for all metadata consumed by the batchable object
-                        int matchingBucketIndex = buckets.BinarySearch(dummyBucket);
-
-                        ItemBucket matchingBucket = (matchingBucketIndex >= 0)
-                            ? buckets[matchingBucketIndex]
-                            : null;
-
-                        // If we didn't find a bucket that matches this item, create a new one, adding
-                        // this item to the bucket.
-                        if (null == matchingBucket)
-                        {
-                            matchingBucket = new ItemBucket(itemListsToBeBatched.Keys, itemMetadataValues, lookup, buckets.Count);
-
-                            // make sure to put the new bucket into the appropriate location
-                            // in the sorted list as indicated by the binary search
-                            // NOTE: observe the ~ operator (bitwise complement) in front of
-                            // the index -- see MSDN for more information on the return value
-                            // from the List.BinarySearch() method
-                            buckets.Insert(~matchingBucketIndex, matchingBucket);
-                        }
-
-                        // We already have a bucket for this type of item, so add this item to
-                        // the bucket.
-                        matchingBucket.AddItem(item);
+                        items = new List<ProjectItemInstance>();
+                        metadataValuesToItems[metadataValues] = items;
                     }
+                    items.Add(item);
                 }
             }
 
-            // Put the buckets back in the order in which they were discovered, so that the first
-            // item declared in the project file ends up in the first batch passed into the target/task.
-            var orderedBuckets = new List<ItemBucket>(buckets.Count);
-            for (int i = 0; i < buckets.Count; ++i)
-            {
-                orderedBuckets.Add(null);
-            }
-
-            foreach (ItemBucket bucket in buckets)
-            {
-                orderedBuckets[bucket.BucketSequenceNumber] = bucket;
-            }
-            return orderedBuckets;
+            return metadataValuesToItems;
         }
 
-        /// <summary>
-        /// Gets the values of the specified metadata for the given item.
-        /// The keys in the dictionary returned may be qualified and/or unqualified, exactly
-        /// as they are found in the metadata reference. 
-        /// For example if %(x) is found, the key is "x", if %(z.x) is found, the key is "z.x".
-        /// This dictionary in each bucket is used by Expander to expand exactly the same metadata references, so
-        /// %(x) is expanded using the key "x", and %(z.x) is expanded using the key "z.x".
-        /// </summary>
-        /// <returns>the metadata values</returns>
-        private static Dictionary<string, string> GetItemMetadataValues
+        private static MetadataValues GetMetadataValues
         (
-            ProjectItemInstance item,
-            Dictionary<string, MetadataReference> consumedMetadataReferences,
-            ElementLocation elementLocation
+            List<MetadataName> metadataNames,
+            ProjectItemInstance item
         )
         {
-            var itemMetadataValues = new Dictionary<string, string>(consumedMetadataReferences.Count, MSBuildNameIgnoreCaseComparer.Default);
+            var metadataValues = new string[metadataNames.Count];
 
-            foreach (KeyValuePair<string, MetadataReference> consumedMetadataReference in consumedMetadataReferences)
+            for (int i = 0; i < metadataNames.Count; i++)
             {
-                string metadataQualifiedName = consumedMetadataReference.Key;
-                string metadataItemName = consumedMetadataReference.Value.ItemName;
-                string metadataName = consumedMetadataReference.Value.MetadataName;
-
-                if (
-                        (metadataItemName != null) &&
-                        (0 != String.Compare(item.ItemType, metadataItemName, StringComparison.OrdinalIgnoreCase))
-                    )
-                {
-                    itemMetadataValues[metadataQualifiedName] = String.Empty;
-                }
-                else
-                {
-                    try
-                    {
-                        // This returns String.Empty for both metadata that is undefined and metadata that has 
-                        // an empty value; they are treated the same.
-                        itemMetadataValues[metadataQualifiedName] = ((IItem)item).GetMetadataValueEscaped(metadataName);
-                    }
-                    catch (InvalidOperationException e)
-                    {
-                        ProjectErrorUtilities.VerifyThrowInvalidProject(false, elementLocation,
-                            "CannotEvaluateItemMetadata", metadataName, e.Message);
-                    }
-                }
+                MetadataName metadataName = metadataNames[i];
+                string metadataValueEscaped = ((IItem)item).GetMetadataValueEscaped(metadataName.UnqualifiedName);
+                metadataValues[i] = metadataValueEscaped;
             }
 
-            return itemMetadataValues;
+            return new MetadataValues(metadataValues);
+        }
+
+        private static List<ItemBucket> CreateItemBuckets
+        (
+            HashSet<string> itemNames,
+            List<MetadataName> metadataNames,
+            Dictionary<MetadataValues, List<ProjectItemInstance>> metadataValuesToItems
+        )
+        {
+            var buckets = new List<ItemBucket>(metadataValuesToItems.Count);
+
+            foreach (KeyValuePair<MetadataValues, List<ProjectItemInstance>> metadataValuesWithItems in metadataValuesToItems)
+            {
+                MetadataValues metadataValues = metadataValuesWithItems.Key;
+                List<ProjectItemInstance> items = metadataValuesWithItems.Value;
+                var metadataNameToValue = new Dictionary<string, string>(metadataNames.Count, MSBuildNameIgnoreCaseComparer.Default);
+
+                for (int i = 0; i < metadataNames.Count; i++)
+                {
+                    metadataNameToValue.Add(metadataNames[i].FullName, metadataValues.Values[i]);
+                }
+
+                buckets.Add(new ItemBucket());
+            }
+
+            // list of item name -> collection
+
+            return buckets;
         }
 
         #endregion
+
+        private struct MetadataName
+        {
+            internal readonly string FullName;
+
+            internal readonly string ItemName;
+
+            internal readonly string UnqualifiedName;
+
+            internal MetadataName
+            (
+                string fullName,
+                string itemName,
+                string unqualifiedName
+            )
+            {
+                FullName = fullName;
+                ItemName = itemName;
+                UnqualifiedName = unqualifiedName;
+            }
+        }
+
+        private struct MetadataValues
+        {
+            internal readonly string[] Values;
+
+            internal MetadataValues(string[] values)
+            {
+                Values = values;
+            }
+        }
     }
 }
