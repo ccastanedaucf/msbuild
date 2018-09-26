@@ -533,47 +533,33 @@ namespace Microsoft.Build.Shared
                             // to unescape first.
                             unescapedItemSpec = EscapingUtilities.UnescapeAll(itemSpec);
 
-                            FileInfo info = FileUtilities.GetFileInfoNoThrow(unescapedItemSpec);
+                            FileInfo writeTimeInfo = FileUtilities.GetFileInfoNoThrow(unescapedItemSpec);
 
-                            if (info != null)
-                            {
-                                modifiedItemSpec = info.LastWriteTime.ToString(FileTimeFormat, null);
-                            }
-                            else
-                            {
-                                // File does not exist, or path is a directory
-                                modifiedItemSpec = String.Empty;
-                            }
+                            modifiedItemSpec = writeTimeInfo != null
+                                ? writeTimeInfo.LastWriteTime.ToString(FileTimeFormat, null)
+                                : string.Empty;
                             break;
                         case ItemSpecModifierCode.CreatedTime:
                             // About to go out to the filesystem.  This means data is leaving the engine, so need
                             // to unescape first.
                             unescapedItemSpec = EscapingUtilities.UnescapeAll(itemSpec);
 
-                            if (FileSystems.Default.FileExists(unescapedItemSpec))
-                            {
-                                modifiedItemSpec = File.GetCreationTime(unescapedItemSpec).ToString(FileTimeFormat, null);
-                            }
-                            else
-                            {
-                                // File does not exist, or path is a directory                        
-                                modifiedItemSpec = String.Empty;
-                            }
+                            FileInfo creationTimeInfo = FileUtilities.GetFileInfoNoThrow(unescapedItemSpec);
+
+                            modifiedItemSpec = creationTimeInfo != null
+                                ? creationTimeInfo.CreationTime.ToString(FileTimeFormat, null)
+                                : string.Empty;
                             break;
                         case ItemSpecModifierCode.AccessedTime:
                             // About to go out to the filesystem.  This means data is leaving the engine, so need
                             // to unescape first.
                             unescapedItemSpec = EscapingUtilities.UnescapeAll(itemSpec);
 
-                            if (FileSystems.Default.FileExists(unescapedItemSpec))
-                            {
-                                modifiedItemSpec = File.GetLastAccessTime(unescapedItemSpec).ToString(FileTimeFormat, null);
-                            }
-                            else
-                            {
-                                // File does not exist, or path is a directory                        
-                                modifiedItemSpec = String.Empty;
-                            }
+                            FileInfo accessTimeInfo = FileUtilities.GetFileInfoNoThrow(unescapedItemSpec);
+
+                            modifiedItemSpec = accessTimeInfo != null
+                                ? accessTimeInfo.LastAccessTime.ToString(FileTimeFormat, null)
+                                : string.Empty;
                             break;
                         case ItemSpecModifierCode.DefiningProjectDirectory:
                             if (String.IsNullOrEmpty(definingProjectEscaped))
