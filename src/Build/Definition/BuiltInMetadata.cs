@@ -9,6 +9,8 @@ using Microsoft.Build.Shared;
 using Microsoft.Build.Internal;
 using Microsoft.Build.Collections;
 
+using ItemSpecModifiers = Microsoft.Build.Shared.FileUtilities.ItemSpecModifiers;
+
 namespace Microsoft.Build.Evaluation
 {
     /// <summary>
@@ -73,18 +75,20 @@ namespace Microsoft.Build.Evaluation
         /// <returns>The escaped as necessary metadata value.</returns>
         internal static string GetMetadataValueEscaped(string currentDirectory, string evaluatedIncludeBeforeWildcardExpansionEscaped, string evaluatedIncludeEscaped, string definingProjectEscaped, string name, ref string fullPath)
         {
+            ItemSpecModifiers.ItemSpecModifierCode modifier = ItemSpecModifiers.GetItemSpecModifierCode(name);
+
             // This is an assert, not a VerifyThrow, because the caller should already have done this check, and it's slow/hot.
-            Debug.Assert(FileUtilities.ItemSpecModifiers.IsItemSpecModifier(name));
+            Debug.Assert(modifier != ItemSpecModifiers.ItemSpecModifierCode.Invalid);
 
             string value = null;
 
-            if (String.Equals(name, FileUtilities.ItemSpecModifiers.RecursiveDir, StringComparison.OrdinalIgnoreCase))
+            if (modifier == ItemSpecModifiers.ItemSpecModifierCode.RecursiveDir)
             {
                 value = GetRecursiveDirValue(evaluatedIncludeBeforeWildcardExpansionEscaped, evaluatedIncludeEscaped);
             }
             else
             {
-                value = FileUtilities.ItemSpecModifiers.GetItemSpecModifier(currentDirectory, evaluatedIncludeEscaped, definingProjectEscaped, name, ref fullPath);
+                value = ItemSpecModifiers.GetItemSpecModifier(currentDirectory, evaluatedIncludeEscaped, definingProjectEscaped, modifier, ref fullPath);
             }
 
             return value;

@@ -12,6 +12,8 @@ using Microsoft.Build.Framework;
 using Microsoft.Build.Shared;
 using System.Reflection;
 
+using ItemSpecModifiers = Microsoft.Build.Shared.FileUtilities.ItemSpecModifiers;
+
 namespace Microsoft.Build.BackEnd
 {
     /// <summary>
@@ -725,11 +727,13 @@ namespace Microsoft.Build.BackEnd
 
                 string metadataValue = null;
 
-                if (FileUtilities.ItemSpecModifiers.IsDerivableItemSpecModifier(metadataName))
+                ItemSpecModifiers.ItemSpecModifierCode modifier = ItemSpecModifiers.GetItemSpecModifierCode(metadataName);
+
+                if (ItemSpecModifiers.IsDerivableItemSpecModifier(modifier))
                 {
                     // FileUtilities.GetItemSpecModifier is expecting escaped data, which we assume we already are.
                     // Passing in a null for currentDirectory indicates we are already in the correct current directory
-                    metadataValue = FileUtilities.ItemSpecModifiers.GetItemSpecModifier(null, _escapedItemSpec, _escapedDefiningProject, metadataName, ref _fullPath);
+                    metadataValue = ItemSpecModifiers.GetItemSpecModifier(null, _escapedItemSpec, _escapedDefiningProject, modifier, ref _fullPath);
                 }
                 else if (_customEscapedMetadata != null)
                 {

@@ -22,6 +22,7 @@ using Microsoft.Build.Shared.FileSystem;
 using Microsoft.Build.Utilities;
 using Microsoft.Win32;
 using AvailableStaticMethods = Microsoft.Build.Internal.AvailableStaticMethods;
+using ItemSpecModifiers = Microsoft.Build.Shared.FileUtilities.ItemSpecModifiers;
 using ReservedPropertyNames = Microsoft.Build.Internal.ReservedPropertyNames;
 using TaskItem = Microsoft.Build.Execution.ProjectItemInstance.TaskItem;
 using TaskItemFactory = Microsoft.Build.Execution.ProjectItemInstance.TaskItem.TaskItemFactory;
@@ -2174,7 +2175,8 @@ namespace Microsoft.Build.Evaluation
                             string directoryToUse = item.Value.ProjectDirectory ?? Directory.GetCurrentDirectory();
                             string definingProjectEscaped = item.Value.GetMetadataValueEscaped(FileUtilities.ItemSpecModifiers.DefiningProjectFullPath);
 
-                            result = FileUtilities.ItemSpecModifiers.GetItemSpecModifier(directoryToUse, item.Key, definingProjectEscaped, functionName);
+                            ItemSpecModifiers.ItemSpecModifierCode modifier = ItemSpecModifiers.GetItemSpecModifierCode(functionName);
+                            result = ItemSpecModifiers.GetItemSpecModifier(directoryToUse, item.Key, definingProjectEscaped, modifier);
                         }
                         catch (Exception e) // Catching Exception, but rethrowing unless it's a well-known exception.
                         {
@@ -2714,7 +2716,9 @@ namespace Microsoft.Build.Evaluation
                     string value = null;
                     try
                     {
-                        if (FileUtilities.ItemSpecModifiers.IsDerivableItemSpecModifier(name))
+                        ItemSpecModifiers.ItemSpecModifierCode modifier = ItemSpecModifiers.GetItemSpecModifierCode(name);
+
+                        if (ItemSpecModifiers.IsDerivableItemSpecModifier(modifier))
                         {
                             // If we're not a ProjectItem or ProjectItemInstance, then ProjectDirectory will be null.
                             // In that case, we're safe to get the current directory as we'll be running on TaskItems which
@@ -2722,7 +2726,7 @@ namespace Microsoft.Build.Evaluation
                             string directoryToUse = _sourceOfMetadata.ProjectDirectory ?? Directory.GetCurrentDirectory();
                             string definingProjectEscaped = _sourceOfMetadata.GetMetadataValueEscaped(FileUtilities.ItemSpecModifiers.DefiningProjectFullPath);
 
-                            value = FileUtilities.ItemSpecModifiers.GetItemSpecModifier(directoryToUse, _itemSpec, definingProjectEscaped, name);
+                            value = ItemSpecModifiers.GetItemSpecModifier(directoryToUse, _itemSpec, definingProjectEscaped, modifier);
                         }
                         else
                         {
