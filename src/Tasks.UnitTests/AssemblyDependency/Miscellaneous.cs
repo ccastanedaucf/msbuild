@@ -117,7 +117,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
                     };
 
             // Now, pass feed resolved primary references into ResolveAssemblyReference.
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             t.BuildEngine = engine;
             t.Assemblies = assemblyNames;
@@ -157,7 +157,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
                     };
 
             // Now, pass feed resolved primary references into ResolveAssemblyReference.
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             t.BuildEngine = engine;
             t.Assemblies = assemblyNames;
@@ -196,7 +196,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
                     };
 
             // Now, pass feed resolved primary references into ResolveAssemblyReference.
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             t.BuildEngine = engine;
             t.Assemblies = assemblyNames;
@@ -229,10 +229,10 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         [Fact]
         public void TestSetRuntimeVersion()
         {
-            Version parsedVersion = ResolveAssemblyReference.SetTargetedRuntimeVersion("4.0.21006");
+            Version parsedVersion = ResolveAssemblyReferenceEngine.SetTargetedRuntimeVersion("4.0.21006");
             Assert.True(parsedVersion.Equals(new Version("4.0.21006")));
 
-            parsedVersion = ResolveAssemblyReference.SetTargetedRuntimeVersion("BadVersion");
+            parsedVersion = ResolveAssemblyReferenceEngine.SetTargetedRuntimeVersion("BadVersion");
             Assert.True(parsedVersion.Equals(new Version("2.0.50727")));
         }
 
@@ -258,7 +258,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
                     };
 
             // Now, pass feed resolved primary references into ResolveAssemblyReference.
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             t.BuildEngine = engine;
             t.Assemblies = assemblyNames;
@@ -308,7 +308,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
                     };
 
             // Now, pass feed resolved primary references into ResolveAssemblyReference.
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             t.BuildEngine = engine;
             t.Assemblies = assemblyNames;
@@ -351,7 +351,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
                     };
 
             // Now, pass feed resolved primary references into ResolveAssemblyReference.
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             t.BuildEngine = engine;
             t.Assemblies = assemblyNames;
@@ -389,7 +389,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
                     };
 
             // Now, pass feed resolved primary references into ResolveAssemblyReference.
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             t.BuildEngine = engine;
             t.Assemblies = assemblyNames;
@@ -452,7 +452,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
             assemblyNames[4].SetMetadata("Private", "false");
 
             // Now, pass feed resolved primary references into ResolveAssemblyReference.
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             t.BuildEngine = engine;
             t.AssemblyFiles = assemblyFiles;
@@ -743,7 +743,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
                 // Create the engine.
                 MockEngine engine = new MockEngine(_output);
                 // Now, pass feed resolved primary references into ResolveAssemblyReference.
-                ResolveAssemblyReference t = new ResolveAssemblyReference();
+                ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
                 t.BuildEngine = engine;
                 t.Assemblies = assemblies;
                 t.AssemblyFiles = assemblyFiles;
@@ -797,7 +797,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
             MockEngine engine = new MockEngine(_output);
 
             // Now, pass feed resolved primary references into ResolveAssemblyReference.
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             t.BuildEngine = engine;
             t.TargetFrameworkDirectories = new string[] { s_myVersion20Path };
@@ -831,7 +831,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
             };
 
             // Now, pass feed resolved primary references into ResolveAssemblyReference.
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             t.BuildEngine = engine;
             t.Assemblies = assemblies;
@@ -895,7 +895,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
             assemblies[0].SetMetadata("ExternallyResolved", "true");
 
             // Now, pass feed resolved primary references into ResolveAssemblyReference.
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             t.BuildEngine = engine;
             t.Assemblies = assemblies;
@@ -930,7 +930,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
             };
 
             // Now, pass feed resolved primary references into ResolveAssemblyReference.
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             t.BuildEngine = engine;
             t.Assemblies = assemblies;
@@ -976,7 +976,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
             MockEngine engine = new MockEngine(_output);
 
             // Now, pass feed resolved primary references into ResolveAssemblyReference.
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             t.BuildEngine = engine;
             t.Assemblies = new ITaskItem[] {
@@ -1030,7 +1030,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         [Trait("Category", "mono-osx-failing")]
         public void Regress286699_InvalidCandidateAssemblyFiles()
         {
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             t.BuildEngine = new MockEngine(_output);
 
@@ -1051,7 +1051,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         [Trait("Category", "mono-osx-failing")]
         public void Regress286699_InvalidAssemblyFiles()
         {
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             t.BuildEngine = new MockEngine(_output);
 
@@ -1071,7 +1071,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         [Fact]
         public void Regress286699_InvalidAssembliesParameter()
         {
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             t.BuildEngine = new MockEngine(_output);
 
@@ -1097,7 +1097,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
             // keeps remoting from timing out the object.
             Console.WriteLine("Performing Regress286699_InvalidTargetFrameworkDirectory() test");
 
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             t.BuildEngine = new MockEngine(_output);
 
@@ -1117,7 +1117,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         [Trait("Category", "mono-osx-failing")]
         public void Regress286699_InvalidSearchPath()
         {
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             t.BuildEngine = new MockEngine(_output);
 
@@ -1137,7 +1137,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         [Fact]
         public void Regress286699_InvalidAppConfig()
         {
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             t.BuildEngine = new MockEngine(_output);
 
@@ -1157,7 +1157,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         [Fact]
         public void NonExistentReference()
         {
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             t.BuildEngine = new MockEngine(_output);
             t.Assemblies = new ITaskItem[] {
@@ -1189,7 +1189,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         [Trait("Category", "mono-osx-failing")]
         public void StrongWeakMismatchInDependency()
         {
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             t.BuildEngine = new MockEngine(_output);
             t.Assemblies = new ITaskItem[]
@@ -1213,7 +1213,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         [Fact]
         public void DependenciesOfExternallyResolvedReferencesAreNotSearched()
         {
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             t.BuildEngine = new MockEngine(_output);
             t.Assemblies = new ITaskItem[]
@@ -1241,7 +1241,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
             // keeps remoting from timing out the object.
             Console.WriteLine("Performing UseSuppliedHintPath() test");
 
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             t.BuildEngine = new MockEngine(_output);
 
@@ -1269,7 +1269,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         [Fact]
         public void Regress200872()
         {
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             t.BuildEngine = new MockEngine(_output);
 
@@ -1293,7 +1293,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         [PlatformSpecific(TestPlatforms.Windows)]
         public void AssemblyFoldersExBasic()
         {
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             t.BuildEngine = new MockEngine(_output);
 
@@ -1314,7 +1314,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         [PlatformSpecific(TestPlatforms.Windows)]
         public void AssemblyFoldersExVerifyComponentFolderSorting()
         {
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             t.BuildEngine = new MockEngine(_output);
 
@@ -1336,7 +1336,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         [PlatformSpecific(TestPlatforms.Windows)]
         public void AssemblyFoldersExTargetFrameworkVersionDoesNotBeginWithV()
         {
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             t.BuildEngine = new MockEngine(_output);
 
@@ -1361,7 +1361,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         [PlatformSpecific(TestPlatforms.Windows)]
         public void AssemblyFoldersExProcessorArchDoesNotMatch()
         {
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
             MockEngine mockEngine = new MockEngine(_output);
             t.BuildEngine = mockEngine;
 
@@ -1387,7 +1387,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         [PlatformSpecific(TestPlatforms.Windows)]
         public void AssemblyFoldersExProcessorArchMSILX86()
         {
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
             MockEngine mockEngine = new MockEngine(_output);
             t.BuildEngine = mockEngine;
 
@@ -1411,7 +1411,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         [Trait("Category", "mono-windows-failing")]
         public void VerifyProcessArchitectureMismatchWarning()
         {
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
             MockEngine mockEngine = new MockEngine(_output);
             t.BuildEngine = mockEngine;
 
@@ -1437,7 +1437,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         [Trait("Category", "mono-windows-failing")]
         public void VerifyProcessArchitectureMismatchWarningDefault()
         {
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
             MockEngine mockEngine = new MockEngine(_output);
             t.BuildEngine = mockEngine;
 
@@ -1462,7 +1462,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         [Trait("Category", "mono-windows-failing")]
         public void VerifyProcessArchitectureMismatchError()
         {
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
             MockEngine mockEngine = new MockEngine(_output);
             t.BuildEngine = mockEngine;
 
@@ -1490,7 +1490,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         [PlatformSpecific(TestPlatforms.Windows)]
         public void AssemblyFoldersExProcessorArchNoneX86()
         {
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
             MockEngine mockEngine = new MockEngine(_output);
             t.BuildEngine = mockEngine;
 
@@ -1511,7 +1511,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         [PlatformSpecific(TestPlatforms.Windows)]
         public void AssemblyFoldersExProcessorArchNoneMix()
         {
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
             MockEngine mockEngine = new MockEngine(_output);
             t.BuildEngine = mockEngine;
 
@@ -1540,7 +1540,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         [PlatformSpecific(TestPlatforms.Windows)]
         public void AssemblyFoldersExProcessorArchMSILLastFolder()
         {
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
             MockEngine mockEngine = new MockEngine(_output);
             t.BuildEngine = mockEngine;
 
@@ -1566,7 +1566,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         [PlatformSpecific(TestPlatforms.Windows)]
         public void AssemblyFoldersExProcessorArchNoneLastFolder()
         {
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
             MockEngine mockEngine = new MockEngine(_output);
             t.BuildEngine = mockEngine;
 
@@ -1591,7 +1591,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         [PlatformSpecific(TestPlatforms.Windows)]
         public void AssemblyFoldersExProcessorArchX86FirstFolder()
         {
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
             MockEngine mockEngine = new MockEngine(_output);
             t.BuildEngine = mockEngine;
 
@@ -1615,7 +1615,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         [PlatformSpecific(TestPlatforms.Windows)]
         public void AssemblyFoldersExProcessorArchX86MSIL()
         {
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
             MockEngine mockEngine = new MockEngine(_output);
             t.BuildEngine = mockEngine;
 
@@ -1638,7 +1638,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         [PlatformSpecific(TestPlatforms.Windows)]
         public void AssemblyFoldersExProcessorArchX86None()
         {
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
             MockEngine mockEngine = new MockEngine(_output);
             t.BuildEngine = mockEngine;
 
@@ -1661,7 +1661,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         [PlatformSpecific(TestPlatforms.Windows)]
         public void AssemblyFoldersExProcessorArchNoneNone()
         {
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
             MockEngine mockEngine = new MockEngine(_output);
             t.BuildEngine = mockEngine;
 
@@ -1683,7 +1683,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         [PlatformSpecific(TestPlatforms.Windows)]
         public void AssemblyFoldersExProcessorArcMSILNone()
         {
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
             MockEngine mockEngine = new MockEngine(_output);
             t.BuildEngine = mockEngine;
 
@@ -1705,7 +1705,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         [PlatformSpecific(TestPlatforms.Windows)]
         public void AssemblyFoldersExProcessorArchNoneMSIL()
         {
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
             MockEngine mockEngine = new MockEngine(_output);
             t.BuildEngine = mockEngine;
 
@@ -1728,7 +1728,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         [PlatformSpecific(TestPlatforms.Windows)]
         public void AssemblyFoldersExProcessorArchMSILMSIL()
         {
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
             MockEngine mockEngine = new MockEngine(_output);
             t.BuildEngine = mockEngine;
 
@@ -1751,7 +1751,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         [PlatformSpecific(TestPlatforms.Windows)]
         public void AssemblyFoldersExProcessorArchMatches()
         {
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             t.BuildEngine = new MockEngine(_output);
 
@@ -1776,7 +1776,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         [PlatformSpecific(TestPlatforms.Windows)]
         public void AssemblyFoldersExTargetFrameworkVersionBogusValue()
         {
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             t.BuildEngine = new MockEngine(_output);
 
@@ -1798,7 +1798,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         [PlatformSpecific(TestPlatforms.Windows)]
         public void Regress357227_AssemblyFoldersExAgainstRawDrop()
         {
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             t.BuildEngine = new MockEngine(_output);
 
@@ -1819,7 +1819,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         [PlatformSpecific(TestPlatforms.Windows)]
         public void AssemblyFoldersExHKLM()
         {
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             t.BuildEngine = new MockEngine(_output);
 
@@ -1844,7 +1844,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
             // keeps remoting from timing out the object.
             Console.WriteLine("Performing AssemblyFoldersExHKCUTrumpsHKLM() test");
 
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             t.BuildEngine = new MockEngine(_output);
 
@@ -1864,7 +1864,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         [PlatformSpecific(TestPlatforms.Windows)]
         public void AssemblyFoldersExFutureTargetNDPVersionsDontMatch()
         {
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             t.BuildEngine = new MockEngine(_output);
 
@@ -1884,7 +1884,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         [PlatformSpecific(TestPlatforms.Windows)]
         public void AssemblyFoldersExMatchBackVersion()
         {
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             t.BuildEngine = new MockEngine(_output);
 
@@ -1904,7 +1904,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         [PlatformSpecific(TestPlatforms.Windows)]
         public void AssemblyFoldersExCurrentTargetVersionTrumpsPastTargetVersion()
         {
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             t.BuildEngine = new MockEngine(_output);
 
@@ -1924,7 +1924,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         [PlatformSpecific(TestPlatforms.Windows)]
         public void AssemblyFoldersExServicePackTrumpsBaseVersion()
         {
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             t.BuildEngine = new MockEngine(_output);
 
@@ -1950,7 +1950,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
             // keeps remoting from timing out the object.
             Console.WriteLine("Performing AssemblyFoldersExConditionFilterMaxOS() test");
 
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             t.BuildEngine = new MockEngine(_output);
 
@@ -1989,7 +1989,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         [PlatformSpecific(TestPlatforms.Windows)]
         public void AssemblyFoldersExConditionFilterMinOS()
         {
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             t.BuildEngine = new MockEngine(_output);
 
@@ -2304,7 +2304,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         [PlatformSpecific(TestPlatforms.Windows)]
         public void AssemblyFoldersExConditionFilterPlatform()
         {
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             t.BuildEngine = new MockEngine(_output);
 
@@ -2380,7 +2380,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         [Fact]
         public void CandidateAssemblyFiles()
         {
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             t.BuildEngine = new MockEngine(_output);
 
@@ -2401,7 +2401,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         [Fact]
         public void ThreePartVersionNumberRequiredFrameworkHigherThanTargetFramework()
         {
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             t.BuildEngine = new MockEngine(_output);
             TaskItem item = new TaskItem("System.XML");
@@ -2421,7 +2421,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         [Fact]
         public void ThreePartVersionNumberRequiredFrameworkLowerThanTargetFramework()
         {
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             t.BuildEngine = new MockEngine(_output);
             TaskItem item = new TaskItem("System.XML");
@@ -2442,7 +2442,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         [Fact]
         public void Regress242970()
         {
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             MockEngine engine = new MockEngine(_output);
             t.BuildEngine = engine;
@@ -2489,7 +2489,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
             // keeps remoting from timing out the object.
             Console.WriteLine("Performing RawFileName() test");
 
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             t.BuildEngine = new MockEngine(_output);
 
@@ -2984,7 +2984,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         [Trait("Category", "mono-osx-failing")]
         public void RawFileNameRelative()
         {
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             t.BuildEngine = new MockEngine(_output);
 
@@ -3022,7 +3022,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         [Trait("Category", "mono-osx-failing")]
         public void RelativeDirectoryResolver()
         {
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             t.BuildEngine = new MockEngine(_output);
 
@@ -3058,7 +3058,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         [Trait("Category", "mono-osx-failing")]
         public void HintPathRelative()
         {
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             t.BuildEngine = new MockEngine(_output);
 
@@ -3095,7 +3095,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         [Fact]
         public void RawFileNameWithSpecificVersionFalse()
         {
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             t.BuildEngine = new MockEngine(_output);
 
@@ -3120,7 +3120,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         [Fact]
         public void RawFileNameWithSpecificVersionTrue()
         {
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             t.BuildEngine = new MockEngine(_output);
 
@@ -3145,7 +3145,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         [Fact]
         public void Regress363340_RawFileNameMissing()
         {
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             t.BuildEngine = new MockEngine(_output);
 
@@ -3175,7 +3175,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         [Trait("Category", "mono-osx-failing")]
         public void Regress444793()
         {
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             MockEngine engine = new MockEngine(_output);
             t.BuildEngine = engine;
@@ -3208,7 +3208,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         [Trait("Category", "mono-osx-failing")]
         public void RawFileNameDoesntExist()
         {
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             MockEngine engine = new MockEngine(_output);
             t.BuildEngine = engine;
@@ -3230,7 +3230,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         [Fact]
         public void CandidateAssemblyFilesDifferentBaseName()
         {
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             t.BuildEngine = new MockEngine(_output);
 
@@ -3249,7 +3249,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         [Fact]
         public void ResolveToGAC()
         {
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
             MockEngine engine = new MockEngine(_output);
             t.BuildEngine = engine;
 
@@ -3267,7 +3267,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         [Fact]
         public void ResolveToGACSpecificVersion()
         {
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
             MockEngine engine = new MockEngine(_output);
             t.BuildEngine = engine;
 
@@ -3364,7 +3364,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         [Fact]
         public void ResolveBadImageInPrimary()
         {
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             MockEngine engine = new MockEngine(_output);
             t.BuildEngine = engine;
@@ -3398,7 +3398,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         [Trait("Category", "mono-osx-failing")]
         public void ResolveBadImageInSecondary()
         {
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             MockEngine engine = new MockEngine(true);
             t.BuildEngine = engine;
@@ -3434,7 +3434,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         [Fact]
         public void ResolveReferenceThatHasWrongPKTInEarlierAssembly()
         {
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             t.BuildEngine = new MockEngine(_output);
 
@@ -3457,7 +3457,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         [Fact]
         public void PrimaryFXAssemblyRefIsNotCopyLocal()
         {
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             t.BuildEngine = new MockEngine(_output);
 
@@ -3500,7 +3500,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
             assemblyNames[0].SetMetadata("Private", "true"); // Fx file, but user chose private=true.
 
             // Now, pass feed resolved primary references into ResolveAssemblyReference.
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             t.BuildEngine = engine;
             t.Assemblies = assemblyNames;
@@ -3526,7 +3526,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
             };
 
             // Now, pass feed resolved primary references into ResolveAssemblyReference.
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             t.BuildEngine = engine;
             t.Assemblies = assemblyNames;
@@ -3554,7 +3554,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
             assemblyNames[0].SetMetadata("Private", "bogus"); // Fx file, but user chose private=true.
 
             // Now, pass feed resolved primary references into ResolveAssemblyReference.
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             t.BuildEngine = engine;
             t.Assemblies = assemblyNames;
@@ -3586,7 +3586,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         [Fact]
         public void ConflictBetweenNonCopyLocalDependencies()
         {
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             MockEngine e = new MockEngine(_output);
             t.BuildEngine = e;
@@ -3631,7 +3631,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         [Fact]
         public void ConflictBetweenCopyLocalDependencies()
         {
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             MockEngine engine = new MockEngine(_output);
             t.BuildEngine = engine;
@@ -3692,7 +3692,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         [Fact]
         public void ConflictBetweenCopyLocalDependenciesRegress444809()
         {
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             MockEngine engine = new MockEngine(_output);
             t.BuildEngine = engine;
@@ -3737,7 +3737,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         [Fact]
         public void ConflictBetweenCopyLocalDependenciesRegress444809UnResolvedPrimaryReference()
         {
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             MockEngine engine = new MockEngine(_output);
             t.BuildEngine = engine;
@@ -3778,7 +3778,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         [Fact]
         public void ConflictBetweenCopyLocalDependenciesWithAutoUnify()
         {
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             MockEngine engine = new MockEngine(_output);
             t.BuildEngine = engine;
@@ -3818,7 +3818,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         [Fact]
         public void ConflictWithBackVersionPrimary()
         {
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             MockEngine e = new MockEngine(_output);
             t.BuildEngine = e;
@@ -3855,7 +3855,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         [Fact]
         public void ConflictWithBackVersionPrimaryWithAutoUnify()
         {
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             MockEngine e = new MockEngine(_output);
             t.BuildEngine = e;
@@ -3901,7 +3901,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         [Fact]
         public void ConflictGeneratesMessageReferencingAssemblyName()
         {
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             MockEngine e = new MockEngine(_output);
             t.BuildEngine = e;
@@ -3943,7 +3943,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         [Fact]
         public void ConflictGeneratesMessageReferencingEachConflictingAssemblyName()
         {
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             MockEngine e = new MockEngine(_output);
             t.BuildEngine = e;
@@ -3988,7 +3988,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         [Fact]
         public void ConflictWithForeVersionPrimary()
         {
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             t.BuildEngine = new MockEngine(_output);
 
@@ -4030,7 +4030,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         [Fact]
         public void ConflictBetweenBackAndForeVersionsCopyLocal()
         {
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             MockEngine e = new MockEngine(_output);
             t.BuildEngine = e;
@@ -4069,7 +4069,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         [Fact]
         public void ConflictBetweenBackAndForeVersionsNotCopyLocal()
         {
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             t.BuildEngine = new MockEngine(_output);
 
@@ -4105,7 +4105,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         [Fact]
         public void ConflictingDependenciesWithNonMatchingNames()
         {
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             t.BuildEngine = new MockEngine(_output);
 
@@ -4140,7 +4140,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         [Fact]
         public void ConflictingDependenciesWithNonMatchingNamesAndHardReferenceInProject()
         {
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             t.BuildEngine = new MockEngine(_output);
 
@@ -4169,7 +4169,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         [Fact]
         public void SpecificVersionFalse()
         {
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             t.BuildEngine = new MockEngine(_output);
 
@@ -4194,7 +4194,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         [Fact]
         public void SpecificVersionTrue()
         {
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             t.BuildEngine = new MockEngine(_output);
 
@@ -4217,7 +4217,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         [Fact]
         public void SpecificVersionAbsent()
         {
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             t.BuildEngine = new MockEngine(_output);
 
@@ -4238,7 +4238,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         [Fact]
         public void Regress199998()
         {
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             MockEngine m = new MockEngine(_output);
             t.BuildEngine = m;
@@ -4273,7 +4273,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         [Trait("Category", "mono-osx-failing")]
         public void ExecutableExtensionEXE()
         {
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             MockEngine e = new MockEngine(_output);
             t.BuildEngine = e;
@@ -4312,7 +4312,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         [Fact]
         public void ExecutableExtensionDLL()
         {
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             MockEngine e = new MockEngine(_output);
             t.BuildEngine = e;
@@ -4352,7 +4352,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         [Fact]
         public void ExecutableExtensionDefaultDLLFirst()
         {
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             MockEngine e = new MockEngine(_output);
             t.BuildEngine = e;
@@ -4391,7 +4391,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         [Trait("Category", "mono-osx-failing")]
         public void ExecutableExtensionDefaultEXEFirst()
         {
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             MockEngine e = new MockEngine(_output);
             t.BuildEngine = e;
@@ -4432,7 +4432,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         [Fact]
         public void SimpleNameWithSpecificVersionTrue()
         {
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             MockEngine e = new MockEngine(_output);
             t.BuildEngine = e;
@@ -4471,7 +4471,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         [Trait("Category", "mono-osx-failing")]
         public void SimpleNameWithSpecificVersionFalse()
         {
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             MockEngine e = new MockEngine(_output);
             t.BuildEngine = e;
@@ -4509,7 +4509,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         [Fact]
         public void IrrelevantAssemblyNameElement()
         {
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             MockEngine e = new MockEngine(_output);
             t.BuildEngine = e;
@@ -4560,7 +4560,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         [Fact]
         public void RegressQFE626()
         {
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             MockEngine engine = new MockEngine(_output);
             t.BuildEngine = engine;
@@ -4621,7 +4621,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         [Fact]
         public void Regress265054()
         {
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             t.BuildEngine = new MockEngine(_output);
 
@@ -4684,7 +4684,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         [Fact]
         public void Regress312873_UnresolvedPrimaryWithResolveDependency()
         {
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             t.BuildEngine = new MockEngine(_output);
 
@@ -4727,7 +4727,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         [Trait("Category", "mono-osx-failing")]
         public void Regress275161_ScatterAssemblies()
         {
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             t.BuildEngine = new MockEngine(_output);
 
@@ -4783,7 +4783,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         [Trait("Category", "mono-osx-failing")]
         public void Regress317975_LeftoverLowerVersion()
         {
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             t.BuildEngine = new MockEngine(_output);
 
@@ -4835,7 +4835,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         [Fact]
         public void Regress313086_Part1_MscorlibAsRawFilename()
         {
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             t.BuildEngine = new MockEngine(_output);
 
@@ -4877,7 +4877,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         [Trait("Category", "mono-osx-failing")]
         public void Regress313086_Part2_MscorlibAsRawFilename()
         {
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             t.BuildEngine = new MockEngine(_output);
 
@@ -4915,7 +4915,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
                     };
 
             // Now, pass feed resolved primary references into ResolveAssemblyReference.
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             t.BuildEngine = engine;
             t.AssemblyFiles = assemblyFiles;
@@ -4957,7 +4957,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
                     };
 
                 // Now, pass feed resolved primary references into ResolveAssemblyReference.
-                ResolveAssemblyReference t = new ResolveAssemblyReference();
+                ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
                 t.BuildEngine = engine;
                 t.AssemblyFiles = assemblyFiles;
@@ -4987,7 +4987,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         [Fact]
         public void Regress316906_UnauthorizedAccessViolation_PrimaryReferenceIsInaccessible()
         {
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             MockEngine e = new MockEngine(_output);
             t.BuildEngine = e;
@@ -5018,7 +5018,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         [Fact]
         public void Regress316906_UnauthorizedAccessViolation_PrimaryFileIsInaccessible()
         {
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             MockEngine e = new MockEngine(_output);
             t.BuildEngine = e;
@@ -5042,7 +5042,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         [Fact]
         public void Regress316906_UnauthorizedAccessViolation_PrimaryAsRawFileIsInaccessible()
         {
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             MockEngine e = new MockEngine(_output);
             t.BuildEngine = e;
@@ -5069,7 +5069,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         [Fact]
         public void Regress269704_MissingRegistryElements()
         {
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             MockEngine e = new MockEngine(_output);
             t.BuildEngine = e;
@@ -5113,7 +5113,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         [Trait("Category", "mono-osx-failing")]
         public void Regress276548_AssemblyNameDifferentThanFusionName()
         {
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             MockEngine e = new MockEngine(_output);
             t.BuildEngine = e;
@@ -5150,7 +5150,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
             string veryLongPath = @"C:\" + new String('a', 260);
             string veryLongFile = veryLongPath + "\\A.dll";
 
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             MockEngine e = new MockEngine(_output);
             t.BuildEngine = e;
@@ -5191,7 +5191,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         [Trait("Category", "mono-osx-failing")]
         public void Regress265003_EscapedCharactersInFusionName()
         {
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             MockEngine e = new MockEngine(_output);
             t.BuildEngine = e;
@@ -5230,7 +5230,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         [Trait("Category", "mono-osx-failing")]
         public void Regress284081_UnescapedCharactersInFusionNameWithHintPath()
         {
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             MockEngine e = new MockEngine(_output);
             t.BuildEngine = e;
@@ -5267,7 +5267,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         [Fact]
         public void Regress366322_ReferencesWithFileExtensions()
         {
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             MockEngine e = new MockEngine(_output);
             t.BuildEngine = e;
@@ -5296,7 +5296,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         [Fact]
         public void Regress366814_MultipleFrameworksFolders()
         {
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             MockEngine e = new MockEngine(_output);
             t.BuildEngine = e;
@@ -5345,7 +5345,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
             try
             {
                 // Now, pass feed resolved primary references into ResolveAssemblyReference.
-                ResolveAssemblyReference t = new ResolveAssemblyReference();
+                ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
                 t.BuildEngine = engine;
                 t.AssemblyFiles = assemblyFiles;
@@ -5368,7 +5368,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         [Fact]
         public void Regress354669_HintPathWithTrailingSlash()
         {
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             t.BuildEngine = new MockEngine(_output);
 
@@ -5410,7 +5410,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         [Trait("Category", "mono-osx-failing")]
         public void Regress339786_CrossVersionsWithAppConfig()
         {
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             t.BuildEngine = new MockEngine(_output);
 
@@ -5456,7 +5456,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         [Fact]
         public void Regress_DogfoodCLRThrowsFileLoadException()
         {
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             t.BuildEngine = new MockEngine(_output);
 
@@ -5482,7 +5482,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         [Trait("Category", "mono-osx-failing")]
         public void Regress407623_RedistListDoesNotImplyPresenceInFrameworks()
         {
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             MockEngine e = new MockEngine(_output);
             t.BuildEngine = e;
@@ -5534,7 +5534,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         [Fact]
         public void InvalidCharsInInstalledAssemblyTable()
         {
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             MockEngine e = new MockEngine(_output);
             t.BuildEngine = e;
@@ -5570,7 +5570,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         [Trait("Category", "mono-osx-failing")]
         public void Regress435487_FxFileResolvedByHintPathShouldByCopyLocal()
         {
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             t.BuildEngine = new MockEngine(_output);
 
@@ -5683,7 +5683,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         [Trait("Category", "mono-windows-failing")]
         public void Regress46599_BogusInGACValueForAssemblyInRedistList()
         {
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             t.BuildEngine = new MockEngine(_output);
 
@@ -5736,7 +5736,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         [Trait("Category", "mono-windows-failing")]
         public void VerifyFrameworkFileMetadataFiles()
         {
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             t.BuildEngine = new MockEngine(_output);
 
@@ -6169,7 +6169,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         [Fact]
         public void RedistListNoAssembliesinRedistList()
         {
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             string microsoftBuildEnginePath = Path.Combine(ObjectModelHelpers.TempProjectDir, "v3.5\\Microsoft.Build.Engine.dll");
             string systemXmlPath = Path.Combine(ObjectModelHelpers.TempProjectDir, "v3.5\\System.Xml.dll");
@@ -6546,7 +6546,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         [Trait("Category", "mono-osx-failing")]
         public void IgnoreDefaultInstalledAssemblyTables()
         {
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             t.BuildEngine = new MockEngine(_output);
 
@@ -6631,7 +6631,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         [Fact]
         public void ReferenceTableNullBlackList()
         {
-            TaskLoggingHelper log = new TaskLoggingHelper(new ResolveAssemblyReference());
+            TaskLoggingHelper log = new TaskLoggingHelper(new ResolveAssemblyReferenceEngine());
             ReferenceTable referenceTable = MakeEmptyReferenceTable(log);
             Dictionary<AssemblyNameExtension, Reference> table = referenceTable.References;
 
@@ -6656,7 +6656,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         [Fact]
         public void ReferenceTableEmptyBlackList()
         {
-            TaskLoggingHelper log = new TaskLoggingHelper(new ResolveAssemblyReference());
+            TaskLoggingHelper log = new TaskLoggingHelper(new ResolveAssemblyReferenceEngine());
             ReferenceTable referenceTable = MakeEmptyReferenceTable(log);
             Dictionary<AssemblyNameExtension, Reference> table = referenceTable.References;
 
@@ -6682,7 +6682,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         public void ReferenceTablePrimaryItemInBlackList()
         {
             MockEngine mockEngine = new MockEngine(_output);
-            ResolveAssemblyReference rar = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine rar = new ResolveAssemblyReferenceEngine();
             rar.BuildEngine = mockEngine;
 
             ReferenceTable referenceTable = MakeEmptyReferenceTable(rar.Log);
@@ -6700,7 +6700,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
             Hashtable blackList = new Hashtable(StringComparer.OrdinalIgnoreCase);
             blackList[engineAssemblyName.FullName] = null;
             string[] targetFrameworks = new string[] { "Client", "Web" };
-            string subSetName = ResolveAssemblyReference.GenerateSubSetName(targetFrameworks, null);
+            string subSetName = ResolveAssemblyReferenceEngine.GenerateSubSetName(targetFrameworks, null);
 
             referenceTable.MarkReferencesForExclusion(blackList);
             referenceTable.RemoveReferencesMarkedForExclusion(false, subSetName);
@@ -6721,7 +6721,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         public void ReferenceTablePrimaryItemInBlackListSpecificVersionTrue()
         {
             MockEngine mockEngine = new MockEngine(_output);
-            ResolveAssemblyReference rar = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine rar = new ResolveAssemblyReferenceEngine();
             rar.BuildEngine = mockEngine;
 
             ReferenceTable referenceTable = MakeEmptyReferenceTable(rar.Log);
@@ -6740,7 +6740,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
             Hashtable blackList = new Hashtable(StringComparer.OrdinalIgnoreCase);
             blackList[engineAssemblyName.FullName] = null;
             string[] targetFrameworks = new string[] { "Client", "Web" };
-            string subSetName = ResolveAssemblyReference.GenerateSubSetName(targetFrameworks, null);
+            string subSetName = ResolveAssemblyReferenceEngine.GenerateSubSetName(targetFrameworks, null);
             referenceTable.MarkReferencesForExclusion(blackList);
             referenceTable.RemoveReferencesMarkedForExclusion(false, subSetName);
 
@@ -6760,36 +6760,36 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         public void TestGenerateFrameworkName()
         {
             string[] targetFrameworks = new string[] { "Client" };
-            Assert.True(string.Equals("Client", ResolveAssemblyReference.GenerateSubSetName(targetFrameworks, null), StringComparison.OrdinalIgnoreCase));
+            Assert.True(string.Equals("Client", ResolveAssemblyReferenceEngine.GenerateSubSetName(targetFrameworks, null), StringComparison.OrdinalIgnoreCase));
 
             targetFrameworks = new string[] { "Client", "Framework" };
-            Assert.True(string.Equals("Client, Framework", ResolveAssemblyReference.GenerateSubSetName(targetFrameworks, null), StringComparison.OrdinalIgnoreCase));
+            Assert.True(string.Equals("Client, Framework", ResolveAssemblyReferenceEngine.GenerateSubSetName(targetFrameworks, null), StringComparison.OrdinalIgnoreCase));
 
             targetFrameworks = new string[0];
-            Assert.True(String.IsNullOrEmpty(ResolveAssemblyReference.GenerateSubSetName(targetFrameworks, null)));
+            Assert.True(String.IsNullOrEmpty(ResolveAssemblyReferenceEngine.GenerateSubSetName(targetFrameworks, null)));
 
             targetFrameworks = null;
-            Assert.True(String.IsNullOrEmpty(ResolveAssemblyReference.GenerateSubSetName(targetFrameworks, null)));
+            Assert.True(String.IsNullOrEmpty(ResolveAssemblyReferenceEngine.GenerateSubSetName(targetFrameworks, null)));
 
             ITaskItem[] installedSubSetTable = new ITaskItem[] { new TaskItem("c:\\foo\\Client.xml") };
-            Assert.True(string.Equals("Client", ResolveAssemblyReference.GenerateSubSetName(null, installedSubSetTable), StringComparison.OrdinalIgnoreCase));
+            Assert.True(string.Equals("Client", ResolveAssemblyReferenceEngine.GenerateSubSetName(null, installedSubSetTable), StringComparison.OrdinalIgnoreCase));
 
             installedSubSetTable = new ITaskItem[] { new TaskItem("c:\\foo\\Client.xml"), new TaskItem("D:\\foo\\bar\\Framework.xml") };
-            Assert.True(string.Equals("Client, Framework", ResolveAssemblyReference.GenerateSubSetName(null, installedSubSetTable), StringComparison.OrdinalIgnoreCase));
+            Assert.True(string.Equals("Client, Framework", ResolveAssemblyReferenceEngine.GenerateSubSetName(null, installedSubSetTable), StringComparison.OrdinalIgnoreCase));
 
             installedSubSetTable = new ITaskItem[] { new TaskItem("c:\\foo\\Client.xml"), new TaskItem("D:\\foo\\bar\\Framework2\\"), new TaskItem("D:\\foo\\bar\\Framework"), new TaskItem("Nothing") };
-            Assert.True(string.Equals("Client, Framework, Nothing", ResolveAssemblyReference.GenerateSubSetName(null, installedSubSetTable), StringComparison.OrdinalIgnoreCase));
+            Assert.True(string.Equals("Client, Framework, Nothing", ResolveAssemblyReferenceEngine.GenerateSubSetName(null, installedSubSetTable), StringComparison.OrdinalIgnoreCase));
 
             installedSubSetTable = new ITaskItem[0];
-            Assert.True(String.IsNullOrEmpty(ResolveAssemblyReference.GenerateSubSetName(null, installedSubSetTable)));
+            Assert.True(String.IsNullOrEmpty(ResolveAssemblyReferenceEngine.GenerateSubSetName(null, installedSubSetTable)));
 
             installedSubSetTable = null;
-            Assert.True(String.IsNullOrEmpty(ResolveAssemblyReference.GenerateSubSetName(null, installedSubSetTable)));
+            Assert.True(String.IsNullOrEmpty(ResolveAssemblyReferenceEngine.GenerateSubSetName(null, installedSubSetTable)));
 
 
             targetFrameworks = new string[] { "Client", "Framework" };
             installedSubSetTable = new ITaskItem[] { new TaskItem("c:\\foo\\Mouse.xml"), new TaskItem("D:\\foo\\bar\\Man.xml") };
-            Assert.True(string.Equals("Client, Framework, Mouse, Man", ResolveAssemblyReference.GenerateSubSetName(targetFrameworks, installedSubSetTable), StringComparison.OrdinalIgnoreCase));
+            Assert.True(string.Equals("Client, Framework, Mouse, Man", ResolveAssemblyReferenceEngine.GenerateSubSetName(targetFrameworks, installedSubSetTable), StringComparison.OrdinalIgnoreCase));
         }
 
         /// <summary>
@@ -6799,7 +6799,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         public void ReferenceTablePrimaryItemInBlackListRemoveOnlyNoWarn()
         {
             MockEngine mockEngine = new MockEngine(_output);
-            ResolveAssemblyReference rar = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine rar = new ResolveAssemblyReferenceEngine();
             rar.BuildEngine = mockEngine;
 
             ReferenceTable referenceTable = MakeEmptyReferenceTable(rar.Log);
@@ -6820,7 +6820,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
             referenceTable.RemoveReferencesMarkedForExclusion(true, String.Empty);
 
             Dictionary<AssemblyNameExtension, Reference> table2 = referenceTable.References;
-            string subSetName = ResolveAssemblyReference.GenerateSubSetName(new string[] { }, null);
+            string subSetName = ResolveAssemblyReferenceEngine.GenerateSubSetName(new string[] { }, null);
             string warningMessage = rar.Log.FormatResourceString("ResolveAssemblyReference.FailedToResolveReferenceBecausePrimaryAssemblyInExclusionList", taskItem.ItemSpec, subSetName);
             Assert.False(Object.ReferenceEquals(table, table2)); // "Expected hashtable to be a different instance"
             Assert.Equal(1, table2.Count); // "Expected there to be one elements in the hashtable"
@@ -6838,7 +6838,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         {
             ReferenceTable referenceTable;
             MockEngine mockEngine;
-            ResolveAssemblyReference rar;
+            ResolveAssemblyReferenceEngine rar;
             Hashtable blackList;
             AssemblyNameExtension engineAssemblyName = new AssemblyNameExtension("Microsoft.Build.Engine, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a");
             AssemblyNameExtension dataAssemblyName = new AssemblyNameExtension("System.Data, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a");
@@ -6865,7 +6865,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
             AddReferencesToReferenceTable(referenceTable, engineAssemblyName, dataAssemblyName, sqlclientAssemblyName, xmlAssemblyName, enginePrimaryReference, dataDependencyReference, sqlDependencyReference, xmlPrimaryReference);
             InitializeExclusionList(referenceTable, new AssemblyNameExtension[] { sqlclientAssemblyName }, out blackList);
 
-            string subsetName = ResolveAssemblyReference.GenerateSubSetName(new string[] { "Client" }, null);
+            string subsetName = ResolveAssemblyReferenceEngine.GenerateSubSetName(new string[] { "Client" }, null);
             string warningMessage = rar.Log.FormatResourceString("ResolveAssemblyReference.FailBecauseDependentAssemblyInExclusionList", taskItem.ItemSpec, sqlclientAssemblyName.FullName, subsetName);
             VerifyReferenceTable(referenceTable, mockEngine, engineAssemblyName, dataAssemblyName, sqlclientAssemblyName, xmlAssemblyName, new string[] { warningMessage });
         }
@@ -6882,7 +6882,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         {
             ReferenceTable referenceTable;
             MockEngine mockEngine;
-            ResolveAssemblyReference rar;
+            ResolveAssemblyReferenceEngine rar;
             Hashtable blackList;
             AssemblyNameExtension engineAssemblyName = new AssemblyNameExtension("Microsoft.Build.Engine, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a");
             AssemblyNameExtension dataAssemblyName = new AssemblyNameExtension("System.Data, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a");
@@ -6910,7 +6910,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
             AddReferencesToReferenceTable(referenceTable, engineAssemblyName, dataAssemblyName, sqlclientAssemblyName, xmlAssemblyName, enginePrimaryReference, dataDependencyReference, sqlDependencyReference, xmlPrimaryReference);
             InitializeExclusionList(referenceTable, new AssemblyNameExtension[] { sqlclientAssemblyName }, out blackList);
 
-            string subsetName = ResolveAssemblyReference.GenerateSubSetName(new string[] { "Client" }, null);
+            string subsetName = ResolveAssemblyReferenceEngine.GenerateSubSetName(new string[] { "Client" }, null);
             string warningMessage = rar.Log.FormatResourceString("ResolveAssemblyReference.FailBecauseDependentAssemblyInExclusionList", taskItem.ItemSpec, sqlclientAssemblyName.FullName, subsetName);
             VerifyReferenceTable(referenceTable, mockEngine, engineAssemblyName, dataAssemblyName, sqlclientAssemblyName, xmlAssemblyName, new string[] { warningMessage });
         }
@@ -6923,7 +6923,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         {
             ReferenceTable referenceTable;
             MockEngine mockEngine;
-            ResolveAssemblyReference rar;
+            ResolveAssemblyReferenceEngine rar;
             Hashtable blackList;
             AssemblyNameExtension engineAssemblyName = new AssemblyNameExtension("Microsoft.Build.Engine, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a");
             AssemblyNameExtension xmlAssemblyName = new AssemblyNameExtension("System.Xml, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a");
@@ -6946,7 +6946,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
             AddReferencesToReferenceTable(referenceTable, engineAssemblyName, null, null, xmlAssemblyName, enginePrimaryReference, null, null, xmlPrimaryReference);
 
             InitializeExclusionList(referenceTable, new AssemblyNameExtension[] { xmlAssemblyName }, out blackList);
-            string subsetName = ResolveAssemblyReference.GenerateSubSetName(new string[] { "Client" }, null);
+            string subsetName = ResolveAssemblyReferenceEngine.GenerateSubSetName(new string[] { "Client" }, null);
             string warningMessage = rar.Log.FormatResourceString("ResolveAssemblyReference.FailBecauseDependentAssemblyInExclusionList", taskItem.ItemSpec, xmlAssemblyName.FullName, subsetName);
             string warningMessage2 = rar.Log.FormatResourceString("ResolveAssemblyReference.FailedToResolveReferenceBecausePrimaryAssemblyInExclusionList", taskItem2.ItemSpec, subsetName);
             mockEngine.AssertLogContains(warningMessage);
@@ -6965,7 +6965,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         {
             ReferenceTable referenceTable;
             MockEngine mockEngine;
-            ResolveAssemblyReference rar;
+            ResolveAssemblyReferenceEngine rar;
             Hashtable blackList;
             AssemblyNameExtension engineAssemblyName = new AssemblyNameExtension("Microsoft.Build.Engine, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a");
             AssemblyNameExtension xmlAssemblyName = new AssemblyNameExtension("System.Xml, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a");
@@ -6995,7 +6995,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
             InitializeExclusionList(referenceTable, new AssemblyNameExtension[] { dataAssemblyName }, out blackList);
 
 
-            string subsetName = ResolveAssemblyReference.GenerateSubSetName(new string[] { "Client" }, null);
+            string subsetName = ResolveAssemblyReferenceEngine.GenerateSubSetName(new string[] { "Client" }, null);
             string warningMessage = rar.Log.FormatResourceString("ResolveAssemblyReference.FailBecauseDependentAssemblyInExclusionList", taskItem.ItemSpec, dataAssemblyName.FullName, subsetName);
             string warningMessage2 = rar.Log.FormatResourceString("ResolveAssemblyReference.FailBecauseDependentAssemblyInExclusionList", taskItem2.ItemSpec, dataAssemblyName.FullName, subsetName);
             mockEngine.AssertLogContains(warningMessage);
@@ -7017,7 +7017,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         {
             ReferenceTable referenceTable;
             MockEngine mockEngine;
-            ResolveAssemblyReference rar;
+            ResolveAssemblyReferenceEngine rar;
             Hashtable blackList;
             AssemblyNameExtension engineAssemblyName = new AssemblyNameExtension("Microsoft.Build.Engine, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a");
             AssemblyNameExtension dataAssemblyName = new AssemblyNameExtension("System.Data, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a");
@@ -7047,7 +7047,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
 
             InitializeExclusionList(referenceTable, new AssemblyNameExtension[] { sqlclientAssemblyName }, out blackList);
 
-            string subsetName = ResolveAssemblyReference.GenerateSubSetName(new string[] { "Client" }, null);
+            string subsetName = ResolveAssemblyReferenceEngine.GenerateSubSetName(new string[] { "Client" }, null);
             string warningMessage = rar.Log.FormatResourceString("ResolveAssemblyReference.FailBecauseDependentAssemblyInExclusionList", taskItem.ItemSpec, sqlclientAssemblyName.FullName, subsetName);
             string warningMessage2 = rar.Log.FormatResourceString("ResolveAssemblyReference.FailBecauseDependentAssemblyInExclusionList", taskItem2.ItemSpec, sqlclientAssemblyName.FullName, subsetName);
             VerifyReferenceTable(referenceTable, mockEngine, engineAssemblyName, dataAssemblyName, sqlclientAssemblyName, xmlAssemblyName, new string[] { warningMessage, warningMessage2 });
@@ -7068,7 +7068,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
 #endif
                 null, null, null, new Version("4.0"), null, null, null, true, false, null, null, false, null, WarnOrErrorOnTargetArchitectureMismatchBehavior.None, false, false, null);
             MockEngine mockEngine;
-            ResolveAssemblyReference rar;
+            ResolveAssemblyReferenceEngine rar;
             Hashtable blackList;
             AssemblyNameExtension engineAssemblyName = new AssemblyNameExtension("Microsoft.Build.Engine, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a");
             AssemblyNameExtension dataAssemblyName = new AssemblyNameExtension("System.Data, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a");
@@ -7098,7 +7098,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
 
             InitializeExclusionList(referenceTable, new AssemblyNameExtension[] { sqlclientAssemblyName }, out blackList);
 
-            string subsetName = ResolveAssemblyReference.GenerateSubSetName(new string[] { "Client" }, null);
+            string subsetName = ResolveAssemblyReferenceEngine.GenerateSubSetName(new string[] { "Client" }, null);
             string warningMessage = rar.Log.FormatResourceString("ResolveAssemblyReference.FailBecauseDependentAssemblyInExclusionList", taskItem.ItemSpec, sqlclientAssemblyName.FullName, subsetName);
             string warningMessage2 = rar.Log.FormatResourceString("ResolveAssemblyReference.FailBecauseDependentAssemblyInExclusionList", taskItem2.ItemSpec, sqlclientAssemblyName.FullName, subsetName);
             VerifyReferenceTable(referenceTable, mockEngine, engineAssemblyName, dataAssemblyName, sqlclientAssemblyName, xmlAssemblyName, new string[] { warningMessage, warningMessage2 });
@@ -7116,7 +7116,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         {
             ReferenceTable referenceTable;
             MockEngine mockEngine;
-            ResolveAssemblyReference rar;
+            ResolveAssemblyReferenceEngine rar;
             Hashtable blackList;
             AssemblyNameExtension engineAssemblyName = new AssemblyNameExtension("Microsoft.Build.Engine, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a");
             AssemblyNameExtension dataAssemblyName = new AssemblyNameExtension("System.Data, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a");
@@ -7147,7 +7147,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
             InitializeExclusionList(referenceTable, new AssemblyNameExtension[] { sqlclientAssemblyName, dataAssemblyName }, out blackList);
 
 
-            string subsetName = ResolveAssemblyReference.GenerateSubSetName(new string[] { "Client" }, null);
+            string subsetName = ResolveAssemblyReferenceEngine.GenerateSubSetName(new string[] { "Client" }, null);
             string warningMessage = rar.Log.FormatResourceString("ResolveAssemblyReference.FailBecauseDependentAssemblyInExclusionList", taskItem.ItemSpec, sqlclientAssemblyName.FullName, subsetName);
             string warningMessage2 = rar.Log.FormatResourceString("ResolveAssemblyReference.FailBecauseDependentAssemblyInExclusionList", taskItem.ItemSpec, dataAssemblyName.FullName, subsetName);
             string warningMessage3 = rar.Log.FormatResourceString("ResolveAssemblyReference.FailBecauseDependentAssemblyInExclusionList", taskItem2.ItemSpec, dataAssemblyName.FullName, subsetName);
@@ -7182,7 +7182,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         {
             ReferenceTable referenceTable;
             MockEngine mockEngine;
-            ResolveAssemblyReference rar;
+            ResolveAssemblyReferenceEngine rar;
             Hashtable blackList;
             AssemblyNameExtension engineAssemblyName = new AssemblyNameExtension("Microsoft.Build.Engine, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a");
             AssemblyNameExtension dataAssemblyName = new AssemblyNameExtension("System.Data, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a");
@@ -7216,7 +7216,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
 
             InitializeExclusionList(referenceTable, new AssemblyNameExtension[] { sqlclientAssemblyName, dataAssemblyName }, out blackList);
 
-            string subsetName = ResolveAssemblyReference.GenerateSubSetName(new string[] { "Client" }, null);
+            string subsetName = ResolveAssemblyReferenceEngine.GenerateSubSetName(new string[] { "Client" }, null);
             string warningMessage = rar.Log.FormatResourceString("ResolveAssemblyReference.FailBecauseDependentAssemblyInExclusionList", taskItem2.ItemSpec, dataAssemblyName.FullName, subsetName);
             string notExpectedwarningMessage = rar.Log.FormatResourceString("ResolveAssemblyReference.FailBecauseDependentAssemblyInExclusionList", taskItem.ItemSpec, dataAssemblyName.FullName, subsetName);
             string notExpectedwarningMessage2 = rar.Log.FormatResourceString("ResolveAssemblyReference.FailBecauseDependentAssemblyInExclusionList", taskItem.ItemSpec, sqlclientAssemblyName.FullName, subsetName);
@@ -7279,7 +7279,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         {
             Assert.Throws<ArgumentNullException>(() =>
             {
-                ResolveAssemblyReference rar = new ResolveAssemblyReference();
+                ResolveAssemblyReferenceEngine rar = new ResolveAssemblyReferenceEngine();
                 rar.ProfileName = null;
             }
            );
@@ -7292,7 +7292,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         {
             Assert.Throws<ArgumentNullException>(() =>
             {
-                ResolveAssemblyReference rar = new ResolveAssemblyReference();
+                ResolveAssemblyReferenceEngine rar = new ResolveAssemblyReferenceEngine();
                 rar.FullFrameworkFolders = null;
             }
            );
@@ -7305,7 +7305,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         {
             Assert.Throws<ArgumentNullException>(() =>
             {
-                ResolveAssemblyReference rar = new ResolveAssemblyReference();
+                ResolveAssemblyReferenceEngine rar = new ResolveAssemblyReferenceEngine();
                 rar.FullFrameworkAssemblyTables = null;
             }
            );
@@ -7317,7 +7317,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         public void TestProfileAndSubset1()
         {
             MockEngine mockEngine;
-            ResolveAssemblyReference rar;
+            ResolveAssemblyReferenceEngine rar;
             InitializeRARwithMockEngine(_output, out mockEngine, out rar);
 
             rar.TargetFrameworkSubsets = new string[] { "Client" };
@@ -7334,7 +7334,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         public void TestProfileAndSubset2()
         {
             MockEngine mockEngine;
-            ResolveAssemblyReference rar;
+            ResolveAssemblyReferenceEngine rar;
             InitializeRARwithMockEngine(_output, out mockEngine, out rar);
 
             rar.InstalledAssemblySubsetTables = new ITaskItem[] { new TaskItem("Client.xml") };
@@ -7353,7 +7353,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         public void TestProfileParameterCombinations()
         {
             MockEngine mockEngine;
-            ResolveAssemblyReference rar;
+            ResolveAssemblyReferenceEngine rar;
             InitializeRARwithMockEngine(_output, out mockEngine, out rar);
             rar.ProfileName = "Client";
             Assert.False(rar.Execute());
@@ -7368,7 +7368,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         public void TestFrameworkDirectoryMetadata()
         {
             MockEngine mockEngine;
-            ResolveAssemblyReference rar;
+            ResolveAssemblyReferenceEngine rar;
             InitializeRARwithMockEngine(_output, out mockEngine, out rar);
             TaskItem item = new TaskItem("Client.xml");
             rar.ProfileName = "Client";
@@ -7377,10 +7377,10 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
             mockEngine.AssertLogContains(rar.Log.FormatResourceString("ResolveAssemblyReference.FrameworkDirectoryOnProfiles", item.ItemSpec));
         }
 
-        private static void InitializeRARwithMockEngine(ITestOutputHelper output, out MockEngine mockEngine, out ResolveAssemblyReference rar)
+        private static void InitializeRARwithMockEngine(ITestOutputHelper output, out MockEngine mockEngine, out ResolveAssemblyReferenceEngine rar)
         {
             mockEngine = new MockEngine(output);
-            rar = new ResolveAssemblyReference();
+            rar = new ResolveAssemblyReferenceEngine();
             rar.BuildEngine = mockEngine;
         }
 
@@ -7414,10 +7414,10 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         /// Initialize the mock engine so we can look at the warning messages, also put the assembly name which is to be in the black list into the black list.
         /// Call remove references so that we can then validate the results.
         /// </summary>
-        private void InitializeMockEngine(out ReferenceTable referenceTable, out MockEngine mockEngine, out ResolveAssemblyReference rar)
+        private void InitializeMockEngine(out ReferenceTable referenceTable, out MockEngine mockEngine, out ResolveAssemblyReferenceEngine rar)
         {
             mockEngine = new MockEngine(_output);
-            rar = new ResolveAssemblyReference();
+            rar = new ResolveAssemblyReferenceEngine();
             rar.BuildEngine = mockEngine;
 
             referenceTable = MakeEmptyReferenceTable(rar.Log);
@@ -7476,7 +7476,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
                 subsetListClientPath = ObjectModelHelpers.CreateFileInTempProjectDirectory("v3.5\\SubsetList\\Client.xml", _engineOnlySubset);
                 explicitSubsetListPath = ObjectModelHelpers.CreateFileInTempProjectDirectory("v3.5\\SubsetList\\ExplicitList.xml", _xmlOnlySubset);
 
-                ResolveAssemblyReference t = new ResolveAssemblyReference();
+                ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
                 t.BuildEngine = new MockEngine(_output);
                 t.Assemblies = new ITaskItem[] { new TaskItem("Microsoft.Build.Engine"), new TaskItem("System.Xml") };
                 t.SearchPaths = new string[] { @"{TargetFrameworkDirectory}" };
@@ -7508,7 +7508,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         /// Generate helper delegates for returning the file existence and the assembly name.
         /// Also run the rest and return the result.
         /// </summary>
-        private bool GenerateHelperDelegatesAndExecuteTask(ResolveAssemblyReference t, string microsoftBuildEnginePath, string systemXmlPath)
+        private bool GenerateHelperDelegatesAndExecuteTask(ResolveAssemblyReferenceEngine t, string microsoftBuildEnginePath, string systemXmlPath)
         {
             FileExists cachedFileExists = fileExists;
             GetAssemblyName cachedGetAssemblyName = getAssemblyName;
@@ -7561,7 +7561,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
             string redistListPath = CreateGenericRedistList();
             try
             {
-                ResolveAssemblyReference t = new ResolveAssemblyReference();
+                ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
                 t.BuildEngine = new MockEngine(_output);
                 // These are the assemblies we are going to try and resolve
                 t.Assemblies = new ITaskItem[] { new TaskItem("Microsoft.Build.Engine"), new TaskItem("System.Xml") };
@@ -7605,7 +7605,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         {
             Assert.Throws<ArgumentNullException>(() =>
             {
-                ResolveAssemblyReference reference = new ResolveAssemblyReference();
+                ResolveAssemblyReferenceEngine reference = new ResolveAssemblyReferenceEngine();
                 reference.InstalledAssemblySubsetTables = null;
             }
            );
@@ -7618,7 +7618,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         {
             Assert.Throws<ArgumentNullException>(() =>
             {
-                ResolveAssemblyReference reference = new ResolveAssemblyReference();
+                ResolveAssemblyReferenceEngine reference = new ResolveAssemblyReferenceEngine();
                 reference.TargetFrameworkSubsets = null;
             }
            );
@@ -7631,7 +7631,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         {
             Assert.Throws<ArgumentNullException>(() =>
             {
-                ResolveAssemblyReference reference = new ResolveAssemblyReference();
+                ResolveAssemblyReferenceEngine reference = new ResolveAssemblyReferenceEngine();
                 reference.FullTargetFrameworkSubsetNames = null;
             }
            );
@@ -7646,7 +7646,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
             string redistListPath = CreateGenericRedistList();
             try
             {
-                ResolveAssemblyReference t = new ResolveAssemblyReference();
+                ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
                 t.BuildEngine = new MockEngine(_output);
                 // These are the assemblies we are going to try and resolve
                 t.Assemblies = new ITaskItem[] { new TaskItem("Microsoft.Build.Engine"), new TaskItem("System.Xml") };
@@ -7686,7 +7686,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
             string redistListPath = CreateGenericRedistList();
             try
             {
-                ResolveAssemblyReference t = new ResolveAssemblyReference();
+                ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
                 t.BuildEngine = new MockEngine(_output);
 
                 // These are the assemblies we are going to try and resolve
@@ -7720,7 +7720,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
             string redistListPath = CreateGenericRedistList();
             try
             {
-                ResolveAssemblyReference t = new ResolveAssemblyReference();
+                ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
                 t.BuildEngine = new MockEngine(_output);
                 // These are the assemblies we are going to try and resolve
                 t.Assemblies = new ITaskItem[] { new TaskItem("System.Xml") };
@@ -7756,7 +7756,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
             string redistListPath = CreateGenericRedistList();
             try
             {
-                ResolveAssemblyReference t = new ResolveAssemblyReference();
+                ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
                 t.BuildEngine = new MockEngine(_output);
                 // These are the assemblies we are going to try and resolve
                 t.Assemblies = new ITaskItem[] { new TaskItem("System.Xml") };
@@ -7807,7 +7807,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         /// Generate helper delegates for returning the file existence and the assembly name.
         /// Also run the rest and return the result.
         /// </summary>
-        private bool GenerateHelperDelegatesAndExecuteTask(ResolveAssemblyReference t)
+        private bool GenerateHelperDelegatesAndExecuteTask(ResolveAssemblyReferenceEngine t)
         {
             FileExists cachedFileExists = fileExists;
             GetAssemblyName cachedGetAssemblyName = getAssemblyName;
@@ -7858,7 +7858,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
             string redistListPath = CreateGenericRedistList();
             try
             {
-                ResolveAssemblyReference t = new ResolveAssemblyReference();
+                ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
                 t.BuildEngine = new MockEngine(_output);
 
@@ -7942,7 +7942,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         [Fact]
         public void Regress397129_HandleInvalidDirectoriesAndFiles_Case1()
         {
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             t.BuildEngine = new MockEngine(_output);
 
@@ -7974,7 +7974,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         [Fact]
         public void Regress397129_HandleInvalidDirectoriesAndFiles_Case2()
         {
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             t.BuildEngine = new MockEngine(_output);
 
@@ -8010,7 +8010,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         [Fact]
         public void Regress313747_FalseSuggestedRedirectsWhenAssembliesDifferOnlyByPkt()
         {
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             MockEngine e = new MockEngine(_output);
             t.BuildEngine = e;
@@ -8048,7 +8048,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         [Trait("Category", "mono-osx-failing")]
         public void Regress442570_MissingBackVersionShouldWarn()
         {
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             MockEngine e = new MockEngine(_output);
             t.BuildEngine = e;
@@ -8083,7 +8083,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         [Fact]
         public void RedirectsAreSuggestedInExternallyResolvedGraph()
         {
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             MockEngine e = new MockEngine(_output);
             t.BuildEngine = e;
@@ -8126,7 +8126,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         [Fact]
         public void ByDesignRelatedTo454863_PrimaryReferencesDontResolveToParentFolders()
         {
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             MockEngine e = new MockEngine(_output);
             t.BuildEngine = e;
@@ -8153,7 +8153,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         [Trait("Category", "mono-osx-failing")]
         public void Regress393931_AllowAlternateAssemblyExtensions_Case1()
         {
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             MockEngine e = new MockEngine(_output);
             t.BuildEngine = e;
@@ -8186,7 +8186,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         [Trait("Category", "mono-osx-failing")]
         public void Regress393931_AllowAlternateAssemblyExtensions()
         {
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             MockEngine e = new MockEngine(_output);
             t.BuildEngine = e;
@@ -8229,7 +8229,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         [Trait("Category", "mono-osx-failing")]
         public void Regress387218_UnificationRequiresStrongName()
         {
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             MockEngine e = new MockEngine(_output);
             t.BuildEngine = e;
@@ -8271,7 +8271,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         [Trait("Category", "mono-osx-failing")]
         public void Regress390219_UnificationRequiresSameCulture()
         {
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             MockEngine e = new MockEngine(_output);
             t.BuildEngine = e;
@@ -8303,7 +8303,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         [Trait("Category", "mono-osx-failing")]
         public void SGenDependeicies()
         {
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             MockEngine e = new MockEngine(_output);
             t.BuildEngine = e;
@@ -8348,7 +8348,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         [Trait("Category", "mono-osx-failing")]
         public void Regress315619_TwoWeaklyNamedPrimariesIsInsoluble()
         {
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             MockEngine e = new MockEngine(_output);
             t.BuildEngine = e;
@@ -8391,7 +8391,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         [Trait("Category", "mono-osx-failing")]
         public void ForwardRedistRoot()
         {
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             t.BuildEngine = new MockEngine(_output);
 
@@ -8446,7 +8446,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         /// </summary>
         private int RunTargetFrameworkFilteringTest(string projectTargetFramework)
         {
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
             t.BuildEngine = new MockEngine(_output);
             t.Assemblies = new ITaskItem[]
             {
@@ -8836,7 +8836,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
             {
                 GenerateRedistAndProfileXmlLocations(fullRedistListContents, _engineOnlySubset, out profileRedistList, out fullRedistList, fullFrameworkDirectory, targetFrameworkDirectory);
 
-                ResolveAssemblyReference t = new ResolveAssemblyReference();
+                ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
                 MockEngine e = new MockEngine(_output);
                 t.BuildEngine = e;
                 t.AssemblyFiles = new ITaskItem[] { new TaskItem(Path.Combine(s_myComponentsMiscPath, "DependsOn9Also.dll")) };
@@ -8884,7 +8884,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
             {
                 GenerateRedistAndProfileXmlLocations(fullRedistListContents, _engineOnlySubset, out profileRedistList, out fullRedistList, fullFrameworkDirectory, targetFrameworkDirectory);
 
-                ResolveAssemblyReference t = new ResolveAssemblyReference();
+                ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
                 MockEngine e = new MockEngine(_output);
                 t.BuildEngine = e;
                 TaskItem item = new TaskItem(Path.Combine(s_myComponentsMiscPath, "DependsOn9Also.dll"));
@@ -8928,7 +8928,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
             {
                 GenerateRedistAndProfileXmlLocations(_fullRedistListContents, _engineOnlySubset, out profileRedistList, out fullRedistList, fullFrameworkDirectory, targetFrameworkDirectory);
 
-                ResolveAssemblyReference t = new ResolveAssemblyReference();
+                ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
                 MockEngine e = new MockEngine(_output);
                 t.BuildEngine = e;
                 t.Assemblies = new ITaskItem[] { new TaskItem("Microsoft.Build.Engine"), new TaskItem("System.Xml") };
@@ -8975,7 +8975,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
             {
                 GenerateRedistAndProfileXmlLocations(_fullRedistListContents, _engineOnlySubset, out profileRedistList, out fullRedistList, fullFrameworkDirectory, targetFrameworkDirectory);
 
-                ResolveAssemblyReference t = new ResolveAssemblyReference();
+                ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
                 MockEngine e = new MockEngine(_output);
                 t.BuildEngine = e;
                 t.Assemblies = new ITaskItem[] { new TaskItem("Microsoft.Build.Engine"), new TaskItem("System.Xml") };
@@ -9029,7 +9029,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
             {
                 GenerateRedistAndProfileXmlLocations(fullRedistListContents, _engineOnlySubset, out profileRedistList, out fullRedistList, fullFrameworkDirectory, targetFrameworkDirectory);
 
-                ResolveAssemblyReference t = new ResolveAssemblyReference();
+                ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
                 MockEngine e = new MockEngine(_output);
                 t.BuildEngine = e;
                 TaskItem item = new TaskItem(@"DependsOnOnlyv4Assemblies, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b17a5c561934e089");
@@ -9083,7 +9083,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
 
                 GenerateRedistAndProfileXmlLocations(fullRedistListContentsErrors, _engineOnlySubset, out profileRedistList, out fullRedistList, fullFrameworkDirectory, targetFrameworkDirectory);
 
-                ResolveAssemblyReference t = new ResolveAssemblyReference();
+                ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
                 MockEngine e = new MockEngine(_output);
                 t.BuildEngine = e;
                 t.Assemblies = new ITaskItem[] { new TaskItem("Microsoft.Build.Engine"), new TaskItem("System.Xml") };

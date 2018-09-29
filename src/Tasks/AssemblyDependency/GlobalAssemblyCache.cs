@@ -295,7 +295,7 @@ namespace Microsoft.Build.Tasks
             {
                 if (targetProcessorArchitecture != ProcessorArchitecture.MSIL && targetProcessorArchitecture != ProcessorArchitecture.None)
                 {
-                    string processorArchitecture = ResolveAssemblyReference.ProcessorArchitectureToString(targetProcessorArchitecture);
+                    string processorArchitecture = ResolveAssemblyReferenceEngine.ProcessorArchitectureToString(targetProcessorArchitecture);
                     // Try processor specific first.
                     if (fullFusionName)
                     {

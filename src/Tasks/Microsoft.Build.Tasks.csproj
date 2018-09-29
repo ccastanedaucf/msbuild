@@ -105,7 +105,7 @@
       <Link>StringBuilderCache.cs</Link>
       <ExcludeFromStyleCop>true</ExcludeFromStyleCop>
     </Compile>
-    <Compile Include="..\Shared\ReuseableStringBuilder.cs" >
+    <Compile Include="..\Shared\ReuseableStringBuilder.cs">
       <Link>ReuseableStringBuilder.cs</Link>
     </Compile>
     <Compile Include="..\Shared\StrongNameHelpers.cs">
@@ -291,6 +291,15 @@
       <ExcludeFromStyleCop>true</ExcludeFromStyleCop>
     </Compile>
     <Compile Include="AssemblyDependency\ResolveAssemblyReference.cs">
+      <ExcludeFromStyleCop>true</ExcludeFromStyleCop>
+    </Compile>
+    <Compile Include="AssemblyDependency\ResolveAssemblyReferenceEngine.cs">
+      <ExcludeFromStyleCop>true</ExcludeFromStyleCop>
+    </Compile>
+    <Compile Include="AssemblyDependency\ResolveAssemblyReferenceRequest.cs">
+      <ExcludeFromStyleCop>true</ExcludeFromStyleCop>
+    </Compile>
+    <Compile Include="AssemblyDependency\ResolveAssemblyReferenceResponse.cs">
       <ExcludeFromStyleCop>true</ExcludeFromStyleCop>
     </Compile>
     <Compile Include="AssemblyDependency\TaskItemSpecFilenameComparer.cs">

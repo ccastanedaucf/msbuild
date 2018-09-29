@@ -543,6 +543,73 @@ namespace Microsoft.Build.Tasks
         public string DependsOnSystemRuntime { get { throw null; } }
         public bool DoNotCopyLocalIfInGac { get { throw null; } set { } }
         [Microsoft.Build.Framework.OutputAttribute]
+        public Microsoft.Build.Framework.ITaskItem[] FilesWritten { get { throw null; } }
+        public bool FindDependencies { get { throw null; } set { } }
+        public bool FindDependenciesOfExternallyResolvedReferences { get { throw null; } set { } }
+        public bool FindRelatedFiles { get { throw null; } set { } }
+        public bool FindSatellites { get { throw null; } set { } }
+        public bool FindSerializationAssemblies { get { throw null; } set { } }
+        public Microsoft.Build.Framework.ITaskItem[] FullFrameworkAssemblyTables { get { throw null; } set { } }
+        public string[] FullFrameworkFolders { get { throw null; } set { } }
+        public string[] FullTargetFrameworkSubsetNames { get { throw null; } set { } }
+        public bool IgnoreDefaultInstalledAssemblySubsetTables { get { throw null; } set { } }
+        public bool IgnoreDefaultInstalledAssemblyTables { get { throw null; } set { } }
+        public bool IgnoreTargetFrameworkAttributeVersionMismatch { get { throw null; } set { } }
+        public bool IgnoreVersionForFrameworkReferences { get { throw null; } set { } }
+        public Microsoft.Build.Framework.ITaskItem[] InstalledAssemblySubsetTables { get { throw null; } set { } }
+        public Microsoft.Build.Framework.ITaskItem[] InstalledAssemblyTables { get { throw null; } set { } }
+        public string[] LatestTargetFrameworkDirectories { get { throw null; } set { } }
+        public string ProfileName { get { throw null; } set { } }
+        [Microsoft.Build.Framework.OutputAttribute]
+        public Microsoft.Build.Framework.ITaskItem[] RelatedFiles { get { throw null; } }
+        [Microsoft.Build.Framework.OutputAttribute]
+        public Microsoft.Build.Framework.ITaskItem[] ResolvedDependencyFiles { get { throw null; } }
+        [Microsoft.Build.Framework.OutputAttribute]
+        public Microsoft.Build.Framework.ITaskItem[] ResolvedFiles { get { throw null; } }
+        public Microsoft.Build.Framework.ITaskItem[] ResolvedSDKReferences { get { throw null; } set { } }
+        [Microsoft.Build.Framework.OutputAttribute]
+        public Microsoft.Build.Framework.ITaskItem[] SatelliteFiles { get { throw null; } }
+        [Microsoft.Build.Framework.OutputAttribute]
+        public Microsoft.Build.Framework.ITaskItem[] ScatterFiles { get { throw null; } }
+        [Microsoft.Build.Framework.RequiredAttribute]
+        public string[] SearchPaths { get { throw null; } set { } }
+        [Microsoft.Build.Framework.OutputAttribute]
+        public Microsoft.Build.Framework.ITaskItem[] SerializationAssemblyFiles { get { throw null; } }
+        public bool Silent { get { throw null; } set { } }
+        public string StateFile { get { throw null; } set { } }
+        [Microsoft.Build.Framework.OutputAttribute]
+        public Microsoft.Build.Framework.ITaskItem[] SuggestedRedirects { get { throw null; } }
+        public bool SupportsBindingRedirectGeneration { get { throw null; } set { } }
+        public string TargetedRuntimeVersion { get { throw null; } set { } }
+        public string[] TargetFrameworkDirectories { get { throw null; } set { } }
+        public string TargetFrameworkMoniker { get { throw null; } set { } }
+        public string TargetFrameworkMonikerDisplayName { get { throw null; } set { } }
+        public string[] TargetFrameworkSubsets { get { throw null; } set { } }
+        public string TargetFrameworkVersion { get { throw null; } set { } }
+        public string TargetProcessorArchitecture { get { throw null; } set { } }
+        public bool UnresolveFrameworkAssembliesFromHigherFrameworks { get { throw null; } set { } }
+        public string WarnOrErrorOnTargetArchitectureMismatch { get { throw null; } set { } }
+        public override bool Execute() { throw null; }
+    }
+    public partial class ResolveAssemblyReferenceEngine : Microsoft.Build.Tasks.TaskExtension
+    {
+        public ResolveAssemblyReferenceEngine() { }
+        public string[] AllowedAssemblyExtensions { get { throw null; } set { } }
+        public string[] AllowedRelatedFileExtensions { get { throw null; } set { } }
+        public string AppConfigFile { get { throw null; } set { } }
+        public Microsoft.Build.Framework.ITaskItem[] Assemblies { get { throw null; } set { } }
+        public Microsoft.Build.Framework.ITaskItem[] AssemblyFiles { get { throw null; } set { } }
+        public bool AutoUnify { get { throw null; } set { } }
+        public string[] CandidateAssemblyFiles { get { throw null; } set { } }
+        public bool CopyLocalDependenciesWhenParentReferenceInGac { get { throw null; } set { } }
+        [Microsoft.Build.Framework.OutputAttribute]
+        public Microsoft.Build.Framework.ITaskItem[] CopyLocalFiles { get { throw null; } }
+        [Microsoft.Build.Framework.OutputAttribute]
+        public string DependsOnNETStandard { get { throw null; } }
+        [Microsoft.Build.Framework.OutputAttribute]
+        public string DependsOnSystemRuntime { get { throw null; } }
+        public bool DoNotCopyLocalIfInGac { get { throw null; } set { } }
+        [Microsoft.Build.Framework.OutputAttribute]
         public Microsoft.Build.Framework.ITaskItem[] FilesWritten { get { throw null; } set { } }
         public bool FindDependencies { get { throw null; } set { } }
         public bool FindDependenciesOfExternallyResolvedReferences { get { throw null; } set { } }
@@ -590,6 +657,65 @@ namespace Microsoft.Build.Tasks
         public bool UnresolveFrameworkAssembliesFromHigherFrameworks { get { throw null; } set { } }
         public string WarnOrErrorOnTargetArchitectureMismatch { get { throw null; } set { } }
         public override bool Execute() { throw null; }
+    }
+    public partial class ResolveAssemblyReferenceRequest
+    {
+        public ResolveAssemblyReferenceRequest() { }
+        public string[] AllowedAssemblyExtensions { get { throw null; } set { } }
+        public string[] AllowedRelatedFileExtensions { get { throw null; } set { } }
+        public string AppConfigFile { get { throw null; } set { } }
+        public Microsoft.Build.Framework.ITaskItem[] Assemblies { get { throw null; } set { } }
+        public Microsoft.Build.Framework.ITaskItem[] AssemblyFiles { get { throw null; } set { } }
+        public bool AutoUnify { get { throw null; } set { } }
+        public string[] CandidateAssemblyFiles { get { throw null; } set { } }
+        public bool CopyLocalDependenciesWhenParentReferenceInGac { get { throw null; } set { } }
+        public bool DoNotCopyLocalIfInGac { get { throw null; } set { } }
+        public bool FindDependencies { get { throw null; } set { } }
+        public bool FindDependenciesOfExternallyResolvedReferences { get { throw null; } set { } }
+        public bool FindRelatedFiles { get { throw null; } set { } }
+        public bool FindSatellites { get { throw null; } set { } }
+        public bool FindSerializationAssemblies { get { throw null; } set { } }
+        public Microsoft.Build.Framework.ITaskItem[] FullFrameworkAssemblyTables { get { throw null; } set { } }
+        public string[] FullFrameworkFolders { get { throw null; } set { } }
+        public string[] FullTargetFrameworkSubsetNames { get { throw null; } set { } }
+        public bool IgnoreDefaultInstalledAssemblySubsetTables { get { throw null; } set { } }
+        public bool IgnoreDefaultInstalledAssemblyTables { get { throw null; } set { } }
+        public bool IgnoreTargetFrameworkAttributeVersionMismatch { get { throw null; } set { } }
+        public bool IgnoreVersionForFrameworkReferences { get { throw null; } set { } }
+        public Microsoft.Build.Framework.ITaskItem[] InstalledAssemblySubsetTables { get { throw null; } set { } }
+        public Microsoft.Build.Framework.ITaskItem[] InstalledAssemblyTables { get { throw null; } set { } }
+        public string[] LatestTargetFrameworkDirectories { get { throw null; } set { } }
+        public string ProfileName { get { throw null; } set { } }
+        public Microsoft.Build.Framework.ITaskItem[] ResolvedSDKReferences { get { throw null; } set { } }
+        public string[] SearchPaths { get { throw null; } set { } }
+        public bool Silent { get { throw null; } set { } }
+        public string StateFile { get { throw null; } set { } }
+        public bool SupportsBindingRedirectGeneration { get { throw null; } set { } }
+        public string TargetedRuntimeVersion { get { throw null; } set { } }
+        public string[] TargetFrameworkDirectories { get { throw null; } set { } }
+        public string TargetFrameworkMoniker { get { throw null; } set { } }
+        public string TargetFrameworkMonikerDisplayName { get { throw null; } set { } }
+        public string[] TargetFrameworkSubsets { get { throw null; } set { } }
+        public string TargetFrameworkVersion { get { throw null; } set { } }
+        public string TargetProcessorArchitecture { get { throw null; } set { } }
+        public bool UnresolveFrameworkAssembliesFromHigherFrameworks { get { throw null; } set { } }
+        public string WarnOrErrorOnTargetArchitectureMismatch { get { throw null; } set { } }
+    }
+    public partial class ResolveAssemblyReferenceResponse
+    {
+        public ResolveAssemblyReferenceResponse() { }
+        public System.Collections.Generic.IList<Microsoft.Build.Framework.LazyFormattedBuildEventArgs> BuildEvents { get { throw null; } set { } }
+        public Microsoft.Build.Framework.ITaskItem[] CopyLocalFiles { get { throw null; } set { } }
+        public string DependsOnNETStandard { get { throw null; } set { } }
+        public string DependsOnSystemRuntime { get { throw null; } set { } }
+        public Microsoft.Build.Framework.ITaskItem[] FilesWritten { get { throw null; } set { } }
+        public Microsoft.Build.Framework.ITaskItem[] RelatedFiles { get { throw null; } set { } }
+        public Microsoft.Build.Framework.ITaskItem[] ResolvedDependencyFiles { get { throw null; } set { } }
+        public Microsoft.Build.Framework.ITaskItem[] ResolvedFiles { get { throw null; } set { } }
+        public Microsoft.Build.Framework.ITaskItem[] SatelliteFiles { get { throw null; } set { } }
+        public Microsoft.Build.Framework.ITaskItem[] ScatterFiles { get { throw null; } set { } }
+        public Microsoft.Build.Framework.ITaskItem[] SerializationAssemblyFiles { get { throw null; } set { } }
+        public Microsoft.Build.Framework.ITaskItem[] SuggestedRedirects { get { throw null; } set { } }
     }
     public sealed partial class ResolveCodeAnalysisRuleSet : Microsoft.Build.Tasks.TaskExtension
     {

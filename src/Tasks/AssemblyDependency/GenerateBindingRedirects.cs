@@ -93,7 +93,7 @@ namespace Microsoft.Build.Tasks
                                         new XElement(
                                             ns + "assemblyIdentity",
                                             new XAttribute("name", redirect.Key.Name),
-                                            new XAttribute("publicKeyToken", ResolveAssemblyReference.ByteArrayToString(redirect.Key.GetPublicKeyToken())),
+                                            new XAttribute("publicKeyToken", ResolveAssemblyReferenceEngine.ByteArrayToString(redirect.Key.GetPublicKeyToken())),
                                             new XAttribute("culture", String.IsNullOrEmpty(redirect.Key.CultureName) ? "neutral" : redirect.Key.CultureName)),
                                         new XElement(
                                             ns + "bindingRedirect",
@@ -181,7 +181,7 @@ namespace Microsoft.Build.Tasks
         /// </summary>
         private static bool ByteArrayMatchesString(Byte[] a, string s)
         {
-            return String.Compare(ResolveAssemblyReference.ByteArrayToString(a), s, StringComparison.OrdinalIgnoreCase) != 0;
+            return String.Compare(ResolveAssemblyReferenceEngine.ByteArrayToString(a), s, StringComparison.OrdinalIgnoreCase) != 0;
         }
 
         /// <summary>
@@ -297,7 +297,7 @@ namespace Microsoft.Build.Tasks
                                         String.IsNullOrEmpty(newCulture) ? "neutral" : newCulture),
                                     new XAttribute(
                                         "publicKeyToken",
-                                        ResolveAssemblyReference.ByteArrayToString(newPublicKeyToken))
+                                        ResolveAssemblyReferenceEngine.ByteArrayToString(newPublicKeyToken))
                                 };
                                 if (newProcessorArchitecture != 0)
                                 {

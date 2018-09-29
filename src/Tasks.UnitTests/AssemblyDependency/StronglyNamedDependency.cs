@@ -56,7 +56,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests.VersioningAnd
             };
 
             // Now, pass feed resolved primary references into ResolveAssemblyReference.
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             t.BuildEngine = engine;
             t.Assemblies = assemblyNames;
@@ -110,7 +110,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests.VersioningAnd
             };
 
             // Now, pass feed resolved primary references into ResolveAssemblyReference.
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             t.BuildEngine = engine;
             t.Assemblies = assemblyNames;
@@ -141,7 +141,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests.VersioningAnd
                                    "<File AssemblyName='System' Version='2.0.0.0' PublicKeyToken='b77a5c561934e089' Culture='neutral' ProcessorArchitecture='MSIL' FileVersion='4.0.0.0' InGAC='true' />" +
                                    "</FileList >";
 
-            ResolveAssemblyReference t1 = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t1 = new ResolveAssemblyReferenceEngine();
             t1.TargetFrameworkVersion = "v4.5";
             t1.TargetFrameworkDirectories = new string[] { actualFrameworkDirectory };
             ExecuteRAROnItemsAndRedist(t1, e, items, redistString1, true, new List<string>() { "{RawFileName}" });
@@ -153,7 +153,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests.VersioningAnd
                                    "<File AssemblyName='System' Version='1.0.0.0' PublicKeyToken='b77a5c561934e089' Culture='neutral' ProcessorArchitecture='MSIL' FileVersion='4.0.0.0' InGAC='true' />" +
                                    "</FileList >";
 
-            ResolveAssemblyReference t2 = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t2 = new ResolveAssemblyReferenceEngine();
             t2.TargetFrameworkVersion = "v4.5";
             t2.TargetFrameworkDirectories = new string[] { actualFrameworkDirectory };
             ExecuteRAROnItemsAndRedist(t2, e, items, redistString2, true, new List<string>() { "{RawFileName}" });
@@ -165,7 +165,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests.VersioningAnd
                                    "<File AssemblyName='System' Version='3.0.0.0' PublicKeyToken='b77a5c561934e089' Culture='neutral' ProcessorArchitecture='MSIL' FileVersion='4.0.0.0' InGAC='true' />" +
                                    "</FileList >";
 
-            ResolveAssemblyReference t3 = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t3 = new ResolveAssemblyReferenceEngine();
             t3.TargetFrameworkVersion = "v4.5";
             t3.TargetFrameworkDirectories = new string[] { alternativeFrameworkDirectory };
             ExecuteRAROnItemsAndRedist(t3, e, items, redistString3, true, new List<string>() { "{RawFileName}" });
@@ -177,7 +177,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests.VersioningAnd
                                    "<File AssemblyName='System' Version='1.0.0.0' PublicKeyToken='b77a5c561934e089' Culture='neutral' ProcessorArchitecture='MSIL' FileVersion='4.0.0.0' InGAC='true' />" +
                                    "</FileList >";
 
-            ResolveAssemblyReference t4 = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t4 = new ResolveAssemblyReferenceEngine();
             t4.TargetFrameworkVersion = "v4.5";
             t4.TargetFrameworkDirectories = new string[] { alternativeFrameworkDirectory };
             ExecuteRAROnItemsAndRedist(t4, e, items, redistString4, true, new List<string>() { "{RawFileName}" });

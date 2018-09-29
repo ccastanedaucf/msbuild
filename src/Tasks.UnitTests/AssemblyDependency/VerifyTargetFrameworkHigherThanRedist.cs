@@ -36,7 +36,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
                                   "<File AssemblyName='System' Version='4.0.0.0' PublicKeyToken='b77a5c561934e089' Culture='neutral' ProcessorArchitecture='MSIL' FileVersion='4.0.0.0' InGAC='true' />" +
                                   "</FileList >";
 
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
             ExecuteRAROnItemsAndRedist(t, e, items, redistString, true);
 
             Assert.Equal(0, e.Warnings); // "No warnings expected in this scenario."
@@ -77,7 +77,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
                                   "</Remap>" +
                                   "</FileList >";
 
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
             ExecuteRAROnItemsAndRedist(t, e, items, redistString, false);
 
             Assert.Equal(0, e.Warnings); // "Expected NO warning in this scenario."
@@ -109,7 +109,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
                                   "<File AssemblyName='ReferenceVersion9' Version='4.0.0.0' PublicKeyToken='b17a5c561934e089' Culture='neutral' ProcessorArchitecture='MSIL' FileVersion='4.0.0.0' InGAC='true' />" +
                                   "</FileList >";
 
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             ExecuteRAROnItemsAndRedist(t, e, items, redistString, false);
 
@@ -138,7 +138,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
                                   "<File AssemblyName='Microsoft.Build' Version='4.0.0.0' PublicKeyToken='b03f5f7f11d50a3a' Culture='neutral' ProcessorArchitecture='MSIL' FileVersion='4.0.0.0' InGAC='true' />" +
                                   "</FileList >";
 
-            ResolveAssemblyReference t1 = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t1 = new ResolveAssemblyReferenceEngine();
             t1.TargetFrameworkVersion = "v4.5";
 
             ExecuteRAROnItemsAndRedist(t1, e, items, redistString, false);
@@ -147,7 +147,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
             e.AssertLogContains("Microsoft.Build.dll");
             Assert.Equal(1, t1.ResolvedFiles.Length);
 
-            ResolveAssemblyReference t2 = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t2 = new ResolveAssemblyReferenceEngine();
             t2.TargetFrameworkVersion = "v4.0";
 
             ExecuteRAROnItemsAndRedist(t2, e, items, redistString, false);
@@ -158,7 +158,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
             //e.AssertLogContains("Microsoft.Build.dll");
             Assert.Equal(0, t2.ResolvedFiles.Length);
 
-            ResolveAssemblyReference t3 = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t3 = new ResolveAssemblyReferenceEngine();
             t3.TargetFrameworkVersion = "v4.5";
             t3.UnresolveFrameworkAssembliesFromHigherFrameworks = true;
 
@@ -188,7 +188,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
                                   "<File AssemblyName='mscorlib' Version='4.0.0.0' PublicKeyToken='b17a5c561934e089' Culture='neutral' ProcessorArchitecture='MSIL' FileVersion='4.0.0.0' InGAC='true' />" +
                                   "</FileList >";
 
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
             ExecuteRAROnItemsAndRedist(t, e, items, redistString, false);
 
             Assert.Equal(0, e.Warnings); // "Expected one warning in this scenario."
@@ -216,7 +216,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
                                   "<File AssemblyName='ReferenceVersion9' Version='4.0.0.0' PublicKeyToken='b17a5c561934e089' Culture='neutral' ProcessorArchitecture='MSIL' FileVersion='4.0.0.0' InGAC='true' />" +
                                   "</FileList >";
 
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
             ExecuteRAROnItemsAndRedist(t, e, items, redistString, false);
 
             Assert.Equal(0, e.Warnings); // "No warnings expected in this scenario."
@@ -246,7 +246,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
                                   "<File AssemblyName='System.Data' Version='4.0.0.0' PublicKeyToken='b77a5c561934e089' Culture='neutral' ProcessorArchitecture='MSIL' FileVersion='4.0.0.0' InGAC='true' />" +
                                   "</FileList >";
 
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
             ExecuteRAROnItemsAndRedist(t, e, items, redistString, false);
 
             Assert.Equal(2, e.Warnings); // "Expected one warning in this scenario."
@@ -275,7 +275,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
                                   "<File AssemblyName='Microsoft.Build' Version='4.0.0.0' PublicKeyToken='b03f5f7f11d50a3a' Culture='neutral' ProcessorArchitecture='MSIL' FileVersion='4.0.0.0' InGAC='true' />" +
                                   "</FileList >";
 
-            ResolveAssemblyReference t1 = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t1 = new ResolveAssemblyReferenceEngine();
             t1.TargetFrameworkVersion = "v5.0";
 
             ExecuteRAROnItemsAndRedist(t1, e, items, redistString, false);
@@ -285,7 +285,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
             e.AssertLogContains("Microsoft.Build.dll");
             Assert.Equal(1, t1.ResolvedFiles.Length);
 
-            ResolveAssemblyReference t2 = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t2 = new ResolveAssemblyReferenceEngine();
             t2.TargetFrameworkVersion = "v4.0";
 
             ExecuteRAROnItemsAndRedist(t2, e, items, redistString, false);
@@ -297,7 +297,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
             // e.AssertLogContains("Microsoft.Build.dll");
             Assert.Equal(0, t2.ResolvedFiles.Length);
 
-            ResolveAssemblyReference t3 = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t3 = new ResolveAssemblyReferenceEngine();
             //t2.TargetFrameworkVersion is null
 
             ExecuteRAROnItemsAndRedist(t3, e, items, redistString, false);
@@ -330,7 +330,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
                                   "<File AssemblyName='System.Data' Version='4.0.0.0' PublicKeyToken='b77a5c561934e089' Culture='neutral' ProcessorArchitecture='MSIL' FileVersion='4.0.0.0' InGAC='true' />" +
                                   "</FileList >";
 
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
             ExecuteRAROnItemsAndRedist(t, e, items, redistString, true);
 
             Assert.Equal(0, e.Warnings); // "No warnings expected in this scenario."
@@ -363,7 +363,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
                                       "<File AssemblyName='System' Version='4.0.0.0' PublicKeyToken='b77a5c561934e089' Culture='neutral' ProcessorArchitecture='MSIL' FileVersion='4.0.0.0' InGAC='true' />" +
                                   "</FileList >";
 
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             ExecuteRAROnItemsAndRedist(t, e, items, redistString, false);
 
@@ -398,7 +398,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
                                       "<File AssemblyName='System' Version='4.0.0.0' PublicKeyToken='b77a5c561934e089' Culture='neutral' ProcessorArchitecture='MSIL' FileVersion='4.0.0.0' InGAC='true' />" +
                                   "</FileList >";
 
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
             ExecuteRAROnItemsAndRedist(t, e, items, redistString, true);
 
             Assert.Equal(0, e.Warnings); // "No warnings expected in this scenario."
@@ -428,7 +428,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
                                       "<File AssemblyName='System' Version='4.0.0.0' PublicKeyToken='b77a5c561934e089' Culture='neutral' ProcessorArchitecture='MSIL' FileVersion='4.0.0.0' InGAC='false' />" +
                                   "</FileList >";
 
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             ExecuteRAROnItemsAndRedist(t, e, items, redistString, false);
 
@@ -468,7 +468,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
             additionalPaths.Add(s_myVersion90Path + Path.DirectorySeparatorChar);
 
 
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
             ExecuteRAROnItemsAndRedist(t, e, items, redistString, false, additionalPaths);
 
             Assert.Equal(0, e.Warnings); // "No warnings expected in this scenario."
@@ -508,7 +508,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
             additionalPaths.Add(s_myVersion40Path);
             additionalPaths.Add(s_myVersion90Path + Path.DirectorySeparatorChar);
 
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             ExecuteRAROnItemsAndRedist(t, e, items, redistString, false, additionalPaths);
 

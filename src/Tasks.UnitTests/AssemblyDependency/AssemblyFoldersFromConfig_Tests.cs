@@ -43,7 +43,7 @@ namespace Microsoft.Build.Tasks.UnitTests.AssemblyDependency
 
             try
             {
-                ResolveAssemblyReference t = new ResolveAssemblyReference
+                ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine
                 {
                     BuildEngine = new MockEngine(_output),
                     Assemblies = new ITaskItem[] {new TaskItem("assemblyfromconfig2")},
@@ -72,7 +72,7 @@ namespace Microsoft.Build.Tasks.UnitTests.AssemblyDependency
 
             try
             {
-                ResolveAssemblyReference t = new ResolveAssemblyReference
+                ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine
                 {
                     BuildEngine = new MockEngine(_output),
                     Assemblies = new ITaskItem[] {new TaskItem("assemblyfromconfig_common.dll")},
@@ -102,7 +102,7 @@ namespace Microsoft.Build.Tasks.UnitTests.AssemblyDependency
 
             try
             {
-                ResolveAssemblyReference t = new ResolveAssemblyReference
+                ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine
                 {
                     BuildEngine = new MockEngine(_output),
                     Assemblies = new ITaskItem[] { new TaskItem("v5assembly.dll") },
@@ -117,7 +117,7 @@ namespace Microsoft.Build.Tasks.UnitTests.AssemblyDependency
                 t.ResolvedFiles[0].GetMetadata("ResolvedFrom").ShouldBe(moniker, StringCompareShould.IgnoreCase);
 
                 // Try again changing only the processor architecture
-                t = new ResolveAssemblyReference
+                t = new ResolveAssemblyReferenceEngine
                 {
                     BuildEngine = new MockEngine(_output),
                     Assemblies = new ITaskItem[] { new TaskItem("v5assembly.dll") },
@@ -146,7 +146,7 @@ namespace Microsoft.Build.Tasks.UnitTests.AssemblyDependency
 
             try
             {
-                ResolveAssemblyReference t = new ResolveAssemblyReference
+                ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine
                 {
                     BuildEngine = new MockEngine(_output),
                     Assemblies = new ITaskItem[] {new TaskItem("assemblyfromconfig_common.dll")},
@@ -174,7 +174,7 @@ namespace Microsoft.Build.Tasks.UnitTests.AssemblyDependency
             try
             {
                 MockEngine engine = new MockEngine(_output);
-                ResolveAssemblyReference t = new ResolveAssemblyReference
+                ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine
                 {
                     BuildEngine = engine,
                     Assemblies = new ITaskItem[] { new TaskItem("assemblyfromconfig2") },

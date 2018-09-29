@@ -2962,7 +2962,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         /// <remarks>
         /// NOTE! This test is not in fact completely isolated from its environment: it is reading the real redist lists.
         /// </remarks>
-        protected static bool Execute(ResolveAssemblyReference t, RARSimulationMode RARSimulationMode = RARSimulationMode.LoadAndBuildProject)
+        protected static bool Execute(ResolveAssemblyReferenceEngine t, RARSimulationMode RARSimulationMode = RARSimulationMode.LoadAndBuildProject)
         {
             return Execute(t, true, RARSimulationMode);
         }
@@ -2979,7 +2979,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         /// Execute the task. Without confirming that the number of files resolved with and without find dependencies is identical.
         /// This is because profiles could cause the number of primary references to be different.
         /// </summary>
-        protected static bool Execute(ResolveAssemblyReference t, bool buildConsistencyCheck, RARSimulationMode rarSimulationMode = RARSimulationMode.LoadAndBuildProject)
+        protected static bool Execute(ResolveAssemblyReferenceEngine t, bool buildConsistencyCheck, RARSimulationMode rarSimulationMode = RARSimulationMode.LoadAndBuildProject)
         {
             string tempPath = Path.GetTempPath();
             string redistListPath = Path.Combine(tempPath, Guid.NewGuid() + ".xml");
@@ -3127,7 +3127,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         /// Helper method which allows tests to specify additional assembly search paths.
         /// </summary>
         /// <param name="e"></param>
-        internal void ExecuteRAROnItemsAndRedist(ResolveAssemblyReference t, MockEngine e, ITaskItem[] items, string redistString, bool consistencyCheck)
+        internal void ExecuteRAROnItemsAndRedist(ResolveAssemblyReferenceEngine t, MockEngine e, ITaskItem[] items, string redistString, bool consistencyCheck)
         {
             ExecuteRAROnItemsAndRedist(t, e, items, redistString, consistencyCheck, null);
         }
@@ -3135,7 +3135,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
         /// <summary>
         /// Helper method to get rid of some of the code duplication
         /// </summary>
-        internal void ExecuteRAROnItemsAndRedist(ResolveAssemblyReference t, MockEngine e, ITaskItem[] items, string redistString, bool consistencyCheck, List<string> additionalSearchPaths)
+        internal void ExecuteRAROnItemsAndRedist(ResolveAssemblyReferenceEngine t, MockEngine e, ITaskItem[] items, string redistString, bool consistencyCheck, List<string> additionalSearchPaths)
         {
             t.BuildEngine = e;
             List<string> searchPaths = new List<string>(DefaultPaths);

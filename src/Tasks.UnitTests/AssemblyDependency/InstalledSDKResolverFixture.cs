@@ -30,7 +30,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
             TaskItem[] assemblies = new TaskItem[] { taskItem };
 
             // Now, pass feed resolved primary references into ResolveAssemblyReference.
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             t.BuildEngine = engine;
             t.Assemblies = assemblies;
@@ -77,7 +77,7 @@ namespace Microsoft.Build.UnitTests.ResolveAssemblyReference_Tests
             TaskItem[] assemblies = new TaskItem[] { taskItem };
 
             // Now, pass feed resolved primary references into ResolveAssemblyReference.
-            ResolveAssemblyReference t = new ResolveAssemblyReference();
+            ResolveAssemblyReferenceEngine t = new ResolveAssemblyReferenceEngine();
 
             t.BuildEngine = engine;
             t.Assemblies = assemblies;

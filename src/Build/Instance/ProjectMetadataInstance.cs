@@ -18,6 +18,7 @@ namespace Microsoft.Build.Execution
     /// IMMUTABLE OBJECT.
     /// </summary>
     [DebuggerDisplay("{_name}={EvaluatedValue}")]
+    [Serializable]
     public class ProjectMetadataInstance : IKeyed, IValued, IEquatable<ProjectMetadataInstance>, INodePacketTranslatable, IMetadatum, IDeepCloneable<ProjectMetadataInstance>, IImmutable
     {
         /// <summary>

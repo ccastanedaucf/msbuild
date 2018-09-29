@@ -29,6 +29,7 @@ namespace Microsoft.Build.Utilities
     /// <comment>
     /// Surprisingly few of these Utilities TaskItems are created: typically several orders of magnitude fewer than the number of engine TaskItems.
     /// </comment>
+    [Serializable]
     public sealed class TaskItem :
 #if FEATURE_APPDOMAIN
         MarshalByRefObject,
