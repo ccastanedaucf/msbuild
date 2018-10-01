@@ -67,31 +67,6 @@ namespace Microsoft.Build.Shared
                     DefiningProjectName,
                     DefiningProjectExtension
                 };
-
-            private static readonly Dictionary<string, ItemSpecModifierCode> ItemSpecModifierNameToCode;
-
-            static ItemSpecModifiers()
-            {
-                ItemSpecModifierNameToCode = new Dictionary<string, ItemSpecModifierCode>(All.Length, StringComparer.OrdinalIgnoreCase)
-                {
-                    { FullPath, ItemSpecModifierCode.FullPath },
-                    { RootDir, ItemSpecModifierCode.RootDir },
-                    { Filename, ItemSpecModifierCode.Filename },
-                    { Extension, ItemSpecModifierCode.Extension },
-                    { RelativeDir, ItemSpecModifierCode.RelativeDir },
-                    { Directory, ItemSpecModifierCode.Directory },
-                    { RecursiveDir, ItemSpecModifierCode.RecursiveDir },
-                    { Identity, ItemSpecModifierCode.Identity },
-                    { ModifiedTime, ItemSpecModifierCode.ModifiedTime },
-                    { CreatedTime, ItemSpecModifierCode.CreatedTime },
-                    { AccessedTime, ItemSpecModifierCode.AccessedTime },
-                    { DefiningProjectFullPath, ItemSpecModifierCode.DefiningProjectFullPath },
-                    { DefiningProjectDirectory, ItemSpecModifierCode.DefiningProjectDirectory },
-                    { DefiningProjectName, ItemSpecModifierCode.DefiningProjectName },
-                    { DefiningProjectExtension, ItemSpecModifierCode.DefiningProjectExtension }
-                };
-            }
-
             internal enum ItemSpecModifierCode
             {
                 Invalid,
@@ -149,12 +124,16 @@ namespace Microsoft.Build.Shared
                             default:
                                 return ItemSpecModifierCode.Invalid;
                             case 'R': // RootDir
-                                if (name == FileUtilities.ItemSpecModifiers.RootDir)
+                                if (IsSameItemSpec(name, RootDir, true))
                                 {
                                     return ItemSpecModifierCode.RootDir;
                                 }
                                 break;
                             case 'r':
+                                if (IsSameItemSpec(name, RootDir, false))
+                                {
+                                    return ItemSpecModifierCode.RootDir;
+                                }
                                 break;
                         }
                         break;
@@ -165,24 +144,36 @@ namespace Microsoft.Build.Shared
                             default:
                                 return ItemSpecModifierCode.Invalid;
                             case 'F': // Filename, FullPath
-                                if (name == FileUtilities.ItemSpecModifiers.FullPath)
+                                if (IsSameItemSpec(name, FullPath, true))
                                 {
                                     return ItemSpecModifierCode.FullPath;
                                 }
-                                if (name == FileUtilities.ItemSpecModifiers.Filename)
+                                if (IsSameItemSpec(name, Filename, true))
                                 {
                                     return ItemSpecModifierCode.Filename;
                                 }
                                 break;
                             case 'f':
+                                if (IsSameItemSpec(name, FullPath, false))
+                                {
+                                    return ItemSpecModifierCode.FullPath;
+                                }
+                                if (IsSameItemSpec(name, Filename, false))
+                                {
+                                    return ItemSpecModifierCode.Filename;
+                                }
                                 break;
                             case 'I': // Identity
-                                if (name == FileUtilities.ItemSpecModifiers.Identity)
+                                if (IsSameItemSpec(name, Identity, true))
                                 {
                                     return ItemSpecModifierCode.Identity;
                                 }
                                 break;
                             case 'i':
+                                if (IsSameItemSpec(name, Identity, false))
+                                {
+                                    return ItemSpecModifierCode.Identity;
+                                }
                                 break;
                         }
                         break;
@@ -192,20 +183,28 @@ namespace Microsoft.Build.Shared
                             default:
                                 return ItemSpecModifierCode.Invalid;
                             case 'D': // Directory
-                                if (name == FileUtilities.ItemSpecModifiers.Directory)
+                                if (IsSameItemSpec(name, Directory, true))
                                 {
                                     return ItemSpecModifierCode.Directory;
                                 }
                                 break;
                             case 'd':
+                                if (IsSameItemSpec(name, Directory, false))
+                                {
+                                    return ItemSpecModifierCode.Directory;
+                                }
                                 break;
                             case 'E': // Extension
-                                if (name == FileUtilities.ItemSpecModifiers.Extension)
+                                if (IsSameItemSpec(name, Extension, true))
                                 {
                                     return ItemSpecModifierCode.Extension;
                                 }
                                 break;
                             case 'e':
+                                if (IsSameItemSpec(name, Extension, false))
+                                {
+                                    return ItemSpecModifierCode.Extension;
+                                }
                                 break;
                         }
                         break;
@@ -215,20 +214,28 @@ namespace Microsoft.Build.Shared
                             default:
                                 return ItemSpecModifierCode.Invalid;
                             case 'C': // CreatedTime
-                                if (name == FileUtilities.ItemSpecModifiers.CreatedTime)
+                                if (IsSameItemSpec(name, CreatedTime, true))
                                 {
                                     return ItemSpecModifierCode.CreatedTime;
                                 }
                                 break;
                             case 'c':
+                                if (IsSameItemSpec(name, CreatedTime, false))
+                                {
+                                    return ItemSpecModifierCode.CreatedTime;
+                                }
                                 break;
                             case 'R': // RelativeDir
-                                if (name == FileUtilities.ItemSpecModifiers.RelativeDir)
+                                if (IsSameItemSpec(name, RelativeDir, true))
                                 {
                                     return ItemSpecModifierCode.RelativeDir;
                                 }
                                 break;
                             case 'r':
+                                if (IsSameItemSpec(name, RelativeDir, false))
+                                {
+                                    return ItemSpecModifierCode.RelativeDir;
+                                }
                                 break;
                         }
                         break;
@@ -239,28 +246,40 @@ namespace Microsoft.Build.Shared
                             default:
                                 return ItemSpecModifierCode.Invalid;
                             case 'A': // AccessedTime
-                                if (name == FileUtilities.ItemSpecModifiers.AccessedTime)
+                                if (IsSameItemSpec(name, AccessedTime, true))
                                 {
                                     return ItemSpecModifierCode.AccessedTime;
                                 }
                                 break;
                             case 'a':
+                                if (IsSameItemSpec(name, AccessedTime, false))
+                                {
+                                    return ItemSpecModifierCode.AccessedTime;
+                                }
                                 break;
                             case 'M': // ModifiedTime
-                                if (name == FileUtilities.ItemSpecModifiers.ModifiedTime)
+                                if (IsSameItemSpec(name, ModifiedTime, true))
                                 {
                                     return ItemSpecModifierCode.ModifiedTime;
                                 }
                                 break;
                             case 'm':
+                                if (IsSameItemSpec(name, ModifiedTime, false))
+                                {
+                                    return ItemSpecModifierCode.ModifiedTime;
+                                }
                                 break;
                             case 'R': // RecursiveDir
-                                if (name == FileUtilities.ItemSpecModifiers.RecursiveDir)
+                                if (IsSameItemSpec(name, RecursiveDir, true))
                                 {
                                     return ItemSpecModifierCode.RecursiveDir;
                                 }
                                 break;
                             case 'r':
+                                if (IsSameItemSpec(name, RecursiveDir, false))
+                                {
+                                    return ItemSpecModifierCode.RecursiveDir;
+                                }
                                 break;
                         }
                         break;
@@ -273,17 +292,7 @@ namespace Microsoft.Build.Shared
                         return ItemSpecModifierCode.Invalid;
                 }
 
-                // Could still be a case-insensitive match.
-                bool isItemSpecModifier = ItemSpecModifierNameToCode.TryGetValue(name, out ItemSpecModifierCode modifier);
-
-#if DEBUG
-                if (isItemSpecModifier && s_traceModifierCasing)
-                {
-                    Console.WriteLine("'{0}' is a non-standard casing. Replace the use with the standard casing like 'RecursiveDir' or 'FullPath' for a small performance improvement.", name);
-                }
-#endif
-
-                return isItemSpecModifier ? modifier : ItemSpecModifierCode.Invalid;
+                return ItemSpecModifierCode.Invalid;
             }
 
             /// <summary>
@@ -295,13 +304,13 @@ namespace Microsoft.Build.Shared
                 switch (name.Length)
                 {
                     case 19: // DefiningProjectName
-                        if (name == DefiningProjectName)
+                        if (IsSameItemSpec(name, DefiningProjectName, true))
                         {
                             return ItemSpecModifierCode.DefiningProjectName;
                         }
                         break;
                     case 23: // DefiningProjectFullPath
-                        if (name == DefiningProjectFullPath)
+                        if (IsSameItemSpec(name, DefiningProjectFullPath, true))
                         {
                             return ItemSpecModifierCode.DefiningProjectFullPath;
                         }
@@ -313,20 +322,29 @@ namespace Microsoft.Build.Shared
                             default:
                                 return ItemSpecModifierCode.Invalid;
                             case 'D': // DefiningProjectDirectory
-                                if (name == DefiningProjectDirectory)
+                                if (IsSameItemSpec(name, DefiningProjectDirectory, true))
                                 {
                                     return ItemSpecModifierCode.DefiningProjectDirectory;
                                 }
                                 break;
                             case 'd':
+                                if (IsSameItemSpec(name, DefiningProjectDirectory, false))
+                                {
+                                    return ItemSpecModifierCode.DefiningProjectDirectory;
+                                }
+
                                 break;
                             case 'E': // DefiningProjectExtension
-                                if (name == DefiningProjectExtension)
+                                if (IsSameItemSpec(name, DefiningProjectExtension, true))
                                 {
                                     return ItemSpecModifierCode.DefiningProjectExtension;
                                 }
                                 break;
                             case 'e':
+                                if (IsSameItemSpec(name, DefiningProjectDirectory, false))
+                                {
+                                    return ItemSpecModifierCode.DefiningProjectDirectory;
+                                }
                                 break;
                         }
                         break;
@@ -334,17 +352,23 @@ namespace Microsoft.Build.Shared
                         return ItemSpecModifierCode.Invalid;
                 }
 
-                // Could still be a case-insensitive match.
-                bool isItemSpecModifier = ItemSpecModifierNameToCode.TryGetValue(name, out ItemSpecModifierCode modifier);
+                return ItemSpecModifierCode.Invalid;
+            }
+
+
+            private static bool IsSameItemSpec(string name, string itemSpec, bool shouldCompareCase)
+            {
+                bool isCaseSensitiveMatch = shouldCompareCase && name == itemSpec;
+                bool isCaseInsensitiveMatch = name.Equals(itemSpec, StringComparison.OrdinalIgnoreCase);
 
 #if DEBUG
-                if (isItemSpecModifier && s_traceModifierCasing)
+                if (isCaseInsensitiveMatch && s_traceModifierCasing)
                 {
                     Console.WriteLine("'{0}' is a non-standard casing. Replace the use with the standard casing like 'RecursiveDir' or 'FullPath' for a small performance improvement.", name);
                 }
 #endif
 
-                return isItemSpecModifier ? modifier : ItemSpecModifierCode.Invalid;
+                return isCaseSensitiveMatch || isCaseInsensitiveMatch;
             }
 
             /// <summary>
