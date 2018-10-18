@@ -731,6 +731,37 @@ namespace Microsoft.Build.Tasks
         [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.PreserveSig)]void ReleaseTypeAttr(System.IntPtr pTypeAttr);
         [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.PreserveSig)]void ReleaseVarDesc(System.IntPtr pVarDesc);
     }
+    public partial class InputBuffer : Bond.IO.ICloneable<Microsoft.Build.Tasks.InputBuffer>, Bond.IO.IInputStream
+    {
+        public InputBuffer(System.ArraySegment<byte> seg) { }
+        public InputBuffer(byte[] data) { }
+        public InputBuffer(byte[] data, int length) { }
+        public InputBuffer(byte[] data, int offset, int length) { }
+        public virtual long Length { get { throw null; } }
+        public virtual long Position { get { throw null; } set { } }
+        public Microsoft.Build.Tasks.InputBuffer Clone() { throw null; }
+        public virtual System.ArraySegment<byte> ReadBytes(int count) { throw null; }
+        public virtual double ReadDouble() { throw null; }
+        public virtual float ReadFloat() { throw null; }
+        public virtual string ReadString(System.Text.Encoding encoding, int size) { throw null; }
+        public virtual ushort ReadUInt16() { throw null; }
+        public virtual uint ReadUInt32() { throw null; }
+        public virtual ulong ReadUInt64() { throw null; }
+        public byte ReadUInt8() { throw null; }
+        public ushort ReadVarUInt16() { throw null; }
+        public uint ReadVarUInt32() { throw null; }
+        public ulong ReadVarUInt64() { throw null; }
+        public void SkipBytes(int count) { }
+    }
+    public partial class InputStream : Microsoft.Build.Tasks.InputBuffer
+    {
+        public const int DefaultAllocationChunk = 134217728;
+        public InputStream(System.IO.Stream stream, int bufferLength=65536) : base (default(byte[])) { }
+        public static int ActiveAllocationChunk { get { throw null; } set { } }
+        public override long Length { get { throw null; } }
+        public override long Position { get { throw null; } set { } }
+        public override System.ArraySegment<byte> ReadBytes(int count) { throw null; }
+    }
     public partial class LC : Microsoft.Build.Tasks.ToolTaskExtension
     {
         public LC() { }
@@ -807,6 +838,32 @@ namespace Microsoft.Build.Tasks
         public bool UnloadProjectsOnCompletion { get { throw null; } set { } }
         public bool UseResultsCache { get { throw null; } set { } }
         public override bool Execute() { throw null; }
+    }
+    public partial class OutputBuffer : Bond.IO.IOutputStream
+    {
+        public OutputBuffer(byte[] buffer) { }
+        public OutputBuffer(int length=65536) { }
+        public System.ArraySegment<byte> Data { get { throw null; } }
+        public virtual long Position { get { throw null; } set { } }
+        public virtual void WriteBytes(System.ArraySegment<byte> data) { }
+        public virtual void WriteDouble(double value) { }
+        public virtual void WriteFloat(float value) { }
+        public virtual void WriteString(System.Text.Encoding encoding, string value, int size) { }
+        public void WriteUInt16(ushort value) { }
+        public virtual void WriteUInt32(uint value) { }
+        public virtual void WriteUInt64(ulong value) { }
+        public void WriteUInt8(byte value) { }
+        public void WriteVarUInt16(ushort value) { }
+        public void WriteVarUInt32(uint value) { }
+        public void WriteVarUInt64(ulong value) { }
+    }
+    public partial class OutputStream : Microsoft.Build.Tasks.OutputBuffer
+    {
+        public OutputStream(System.IO.Stream stream, int bufferLength=65536) : base (default(int)) { }
+        public override long Position { get { throw null; } set { } }
+        public void Flush() { }
+        public override void WriteBytes(System.ArraySegment<byte> data) { }
+        public override void WriteString(System.Text.Encoding encoding, string value, int size) { }
     }
     public partial class ReadLinesFromFile : Microsoft.Build.Tasks.TaskExtension
     {
@@ -932,6 +989,7 @@ namespace Microsoft.Build.Tasks
         public bool UnresolveFrameworkAssembliesFromHigherFrameworks { get { throw null; } set { } }
         public string WarnOrErrorOnTargetArchitectureMismatch { get { throw null; } set { } }
         public override bool Execute() { throw null; }
+        public static void InitializeSerializers() { }
     }
     public sealed partial class ResolveCodeAnalysisRuleSet : Microsoft.Build.Tasks.TaskExtension
     {

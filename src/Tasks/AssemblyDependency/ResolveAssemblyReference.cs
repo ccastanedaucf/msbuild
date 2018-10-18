@@ -1844,7 +1844,7 @@ namespace Microsoft.Build.Tasks
         /// </summary>
         private void ReadStateFile()
         {
-            _cache = (SystemState)StateFileBase.DeserializeCache(_stateFile, Log, typeof(SystemState));
+            _cache = SystemState.DeserializeCache(_stateFile, Log);
 
             // Construct the cache if necessary.
             if (_cache == null)
@@ -1918,6 +1918,8 @@ namespace Microsoft.Build.Tasks
             ReadMachineTypeFromPEHeader readMachineTypeFromPEHeader
         )
         {
+            SystemState.InitializeSerializer();
+
             bool success = true;
 #if (!STANDALONEBUILD)
             using (new CodeMarkerStartEnd(CodeMarkerEvent.perfMSBuildResolveAssemblyReferenceBegin, CodeMarkerEvent.perfMSBuildResolveAssemblyReferenceEnd))
@@ -2410,6 +2412,11 @@ namespace Microsoft.Build.Tasks
             }
 
             return success && !Log.HasLoggedErrors;
+        }
+
+        public static void InitializeSerializers()
+        {
+            SystemState.InitializeSerializer();
         }
 
         /// <summary>

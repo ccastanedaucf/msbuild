@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -11,16 +10,18 @@ using System.IO;
 using System.Runtime.Serialization;
 using System.Runtime.Versioning;
 using System.Security.Permissions;
+
 using Microsoft.Build.Shared;
 using Microsoft.Build.Tasks.AssemblyDependency;
+using Microsoft.Build.Utilities;
+using AssemblyNameExtension = Microsoft.Build.Shared.AssemblyNameExtension;
 
 namespace Microsoft.Build.Tasks
 {
     /// <summary>
     /// Class is used to cache system state.
     /// </summary>
-    [Serializable]
-    internal sealed class SystemState : StateFileBase, ISerializable
+    internal sealed partial class SystemState
     {
         /// <summary>
         /// Cache at the SystemState instance level. Has the same contents as <see cref="instanceLocalFileStateCache"/>.
@@ -31,8 +32,7 @@ namespace Microsoft.Build.Tasks
         /// <summary>
         /// Cache at the SystemState instance level. It is serialized and reused between instances.
         /// </summary>
-        private Hashtable instanceLocalFileStateCache = new Hashtable(StringComparer.OrdinalIgnoreCase);
-
+        private Dictionary<string, FileState> instanceLocalFileStateCache = new Dictionary<string, FileState>(StringComparer.OrdinalIgnoreCase);
 
         /// <summary>
         /// LastModified information is purely instance-local. It doesn't make sense to
@@ -110,7 +110,7 @@ namespace Microsoft.Build.Tasks
         /// Class that holds the current file state.
         /// </summary>
         [Serializable]
-        private sealed class FileState : ISerializable
+        private sealed class FileState
         {
             /// <summary>
             /// The last modified time for this file.
@@ -148,50 +148,6 @@ namespace Microsoft.Build.Tasks
             internal FileState(DateTime lastModified)
             {
                 this.lastModified = lastModified;
-            }
-
-            /// <summary>
-            /// Deserializing constuctor.
-            /// </summary>
-            internal FileState(SerializationInfo info, StreamingContext context)
-            {
-                ErrorUtilities.VerifyThrowArgumentNull(info, "info");
-
-                lastModified = new DateTime(info.GetInt64("mod"), (DateTimeKind)info.GetInt32("modk"));
-                assemblyName = (AssemblyNameExtension)info.GetValue("an", typeof(AssemblyNameExtension));
-                dependencies = (AssemblyNameExtension[])info.GetValue("deps", typeof(AssemblyNameExtension[]));
-                scatterFiles = (string[])info.GetValue("sfiles", typeof(string[]));
-                runtimeVersion = (string)info.GetValue("rtver", typeof(string));
-                if (info.GetBoolean("fn"))
-                {
-                    var frameworkNameVersion = (Version) info.GetValue("fnVer", typeof(Version));
-                    var frameworkIdentifier = info.GetString("fnId");
-                    var frameworkProfile = info.GetString("fmProf");
-                    frameworkName = new FrameworkName(frameworkIdentifier, frameworkNameVersion, frameworkProfile);
-                }
-            }
-
-            /// <summary>
-            /// Serialize the contents of the class.
-            /// </summary>
-            [SecurityPermission(SecurityAction.Demand, SerializationFormatter = true)]
-            public void GetObjectData(SerializationInfo info, StreamingContext context)
-            {
-                ErrorUtilities.VerifyThrowArgumentNull(info, "info");
-
-                info.AddValue("mod", lastModified.Ticks);
-                info.AddValue("modk", (int)lastModified.Kind);
-                info.AddValue("an", assemblyName);
-                info.AddValue("deps", dependencies);
-                info.AddValue("sfiles", scatterFiles);
-                info.AddValue("rtver", runtimeVersion);
-                info.AddValue("fn", frameworkName != null);
-                if (frameworkName != null)
-                {
-                    info.AddValue("fnVer", frameworkName.Version);
-                    info.AddValue("fnId", frameworkName.Identifier);
-                    info.AddValue("fmProf", frameworkName.Profile);
-                }
             }
 
             /// <summary>
@@ -234,22 +190,36 @@ namespace Microsoft.Build.Tasks
             }
         }
 
-        /// <summary>
-        /// Construct.
-        /// </summary>
-        internal SystemState()
+        internal static void InitializeSerializer()
         {
+            StateFileCache<SystemStateCachePayload>.InitializeSerializer();
         }
 
         /// <summary>
-        /// Deserialize the contents of the class.
+        /// Reads the specified file from disk.
         /// </summary>
-        internal SystemState(SerializationInfo info, StreamingContext context)
+        /// <returns>The deserialized instance local cache.</returns>
+        internal static SystemState DeserializeCache(string stateFile, TaskLoggingHelper log)
         {
-            ErrorUtilities.VerifyThrowArgumentNull(info, "info");
+            SystemStateCachePayload flattenedCache = StateFileCache<SystemStateCachePayload>.DeserializeCache(stateFile, log);
 
-            instanceLocalFileStateCache = (Hashtable)info.GetValue("fileState", typeof(Hashtable));
-            isDirty = false;
+            if (flattenedCache == null)
+            {
+                return null;
+            }
+
+            Dictionary<string, FileState> cache = SystemStateCacheHydrator.HydrateSystemStateCache(flattenedCache);
+
+            return new SystemState { instanceLocalFileStateCache = cache };
+        }
+
+        /// <summary>
+        /// Writes the contents of the instance local cache out to the specified file.
+        /// </summary>
+        internal void SerializeCache(string stateFile, TaskLoggingHelper log)
+        {
+            SystemStateCachePayload flattenedCache = SystemStateCachePayloadExtractor.ExtractSystemStateCachePayload(instanceLocalFileStateCache);
+            StateFileCache<SystemStateCachePayload>.SerializeCache(stateFile, log, flattenedCache);
         }
 
         /// <summary>
@@ -385,7 +355,7 @@ namespace Microsoft.Build.Tasks
             FileState cacheFileState = null;
             FileState processFileState = null;
             s_processWideFileStateCache.TryGetValue(path, out processFileState);
-            FileState instanceLocalFileState = (FileState)instanceLocalFileStateCache[path];
+            instanceLocalFileStateCache.TryGetValue(path, out FileState instanceLocalFileState);
 
             // Sync the caches.
             if (processFileState == null && instanceLocalFileState != null)

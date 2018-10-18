@@ -512,8 +512,12 @@
     <Compile Include="CodeTaskFactory.cs" />
     <Compile Include="XamlTaskFactory\XamlTaskFactory.cs" />
     <Compile Include="StateFileBase.cs" />
+    <Compile Include="StateFileCache.cs" />
     <Compile Include="Dependencies.cs" />
     <Compile Include="SystemState.cs" />
+    <Compile Include="SystemStateCachePayload.cs" />
+    <Compile Include="SystemStateCacheHydrator.cs" />    
+    <Compile Include="SystemStateCachePayloadExtractor.cs" />
     <Compile Include="DependencyFile.cs" />
     <Compile Include="ZipDirectory.cs" />
   </ItemGroup>

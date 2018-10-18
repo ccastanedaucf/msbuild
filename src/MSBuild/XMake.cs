@@ -24,6 +24,7 @@ using Microsoft.Build.Framework;
 using Microsoft.Build.Logging;
 using Microsoft.Build.Shared;
 using Microsoft.Build.Shared.FileSystem;
+using Microsoft.Build.Tasks;
 using Microsoft.Build.Utilities;
 #if (!STANDALONEBUILD)
 using Microsoft.Internal.Performance;
@@ -479,6 +480,8 @@ namespace Microsoft.Build.CommandLine
 #endif
             )
         {
+            System.Threading.Tasks.Task.Run(() => { ResolveAssemblyReference.InitializeSerializers(); });
+
             // Indicate to the engine that it can toss extraneous file content
             // when it loads microsoft.*.targets. We can't do this in the general case,
             // because tasks in the build can (and occasionally do) load MSBuild format files
