@@ -11,6 +11,10 @@ using System.Reflection;
 using System.Text;
 using System.ComponentModel;
 
+
+#if MICROSOFT_BUILD_TASKS
+using Microsoft.Build.Tasks;
+#endif
 #if BUILDINGAPPXTASKS
 namespace Microsoft.Build.AppxPackage.Shared
 #else

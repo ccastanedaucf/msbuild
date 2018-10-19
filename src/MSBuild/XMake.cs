@@ -480,8 +480,6 @@ namespace Microsoft.Build.CommandLine
 #endif
             )
         {
-            System.Threading.Tasks.Task.Run(() => { ResolveAssemblyReference.InitializeSerializers(); });
-
             // Indicate to the engine that it can toss extraneous file content
             // when it loads microsoft.*.targets. We can't do this in the general case,
             // because tasks in the build can (and occasionally do) load MSBuild format files
