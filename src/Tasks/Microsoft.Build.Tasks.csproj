@@ -1,4 +1,4 @@
-﻿<Project Sdk="RoslynTools.RepoToolset">
+<Project Sdk="RoslynTools.RepoToolset">
 
   <Import Project="..\Shared\FileSystemSources.proj" />
 
@@ -63,11 +63,11 @@
       <ExcludeFromStyleCop>True</ExcludeFromStyleCop>
     </Compile>
     <Compile Include="AssemblyDependency\AssemblyMetadata.cs" />
-    <Compile Include="AssemblyDependency\Bond\InputBuffer.cs" />
-    <Compile Include="AssemblyDependency\Bond\InputStream.cs" />
-    <Compile Include="AssemblyDependency\Bond\IntegerHelper.cs" />
-    <Compile Include="AssemblyDependency\Bond\OutputBuffer.cs" />
-    <Compile Include="AssemblyDependency\Bond\OutputStream.cs" />
+    <Compile Include="Bond\InputBuffer.cs" />
+    <Compile Include="Bond\InputStream.cs" />
+    <Compile Include="Bond\IntegerHelper.cs" />
+    <Compile Include="Bond\OutputBuffer.cs" />
+    <Compile Include="Bond\OutputStream.cs" />
     <Compile Include="ConvertToAbsolutePath.cs">
       <ExcludeFromStyleCop>true</ExcludeFromStyleCop>
     </Compile>
