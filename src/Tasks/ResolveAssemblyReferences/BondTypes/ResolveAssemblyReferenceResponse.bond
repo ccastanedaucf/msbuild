@@ -1,0 +1,30 @@
+﻿import "ReadOnlyTaskItem.bond"
+
+namespace Microsoft.Build.Tasks.ResolveAssemblyReferences.BondTypes
+
+struct ResolveAssemblyReferenceResponse
+{
+	0: int32 CopyLocalFilesCount;
+
+	1: string DependsOnNETStandard;
+
+	2: string DependsOnSystemRuntime;
+
+	3: int32 FilesWrittenCount;
+
+	4: int32 RelatedFilesCount;
+
+	5: int32 ResolvedDependencyFilesCount;
+
+	6: int32 ResolvedFilesCount;
+
+	7: int32 SatelliteFilesCount;
+
+	8: int32 ScatterFilesCount;
+
+	9: int32 SerializationAssemblyFilesCount;
+
+	10: int32 SuggestedRedirectsCount;
+
+	11: vector<ReadOnlyTaskItem> TaskItems;
+}

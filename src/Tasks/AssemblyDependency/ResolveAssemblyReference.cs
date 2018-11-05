@@ -10,7 +10,6 @@ using System.Reflection;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-
 using Microsoft.Build.Framework;
 using Microsoft.Build.Shared;
 using Microsoft.Build.Utilities;
@@ -22,6 +21,7 @@ using FrameworkNameVersioning = System.Runtime.Versioning.FrameworkName;
 using SystemProcessorArchitecture = System.Reflection.ProcessorArchitecture;
 using System.Xml.Linq;
 using Microsoft.Build.Tasks.AssemblyDependency;
+using Microsoft.Build.Tasks.ResolveAssemblyReferences.NamedPipeClient;
 
 namespace Microsoft.Build.Tasks
 {
@@ -112,6 +112,137 @@ namespace Microsoft.Build.Tasks
         private bool _logVerboseSearchResults = false;
         private WarnOrErrorOnTargetArchitectureMismatchBehavior _warnOrErrorOnTargetArchitectureMismatch = WarnOrErrorOnTargetArchitectureMismatchBehavior.Warning;
         private bool _unresolveFrameworkAssembliesFromHigherFrameworks = false;
+
+        internal ResolveAssemblyReferenceIOTracker IoTracker { get; set; } = new ResolveAssemblyReferenceIOTracker();
+
+        internal ResolveAssemblyReferenceTaskInput Input
+        {
+            get => new ResolveAssemblyReferenceTaskInput
+            {
+                AllowedAssemblyExtensions = AllowedAssemblyExtensions,
+                AllowedRelatedFileExtensions = AllowedRelatedFileExtensions,
+                AppConfigFile = AppConfigFile,
+                Assemblies = Assemblies,
+                AssemblyFiles = AssemblyFiles,
+                AutoUnify = AutoUnify,
+                BuildEngine = BuildEngine,
+                CandidateAssemblyFiles = CandidateAssemblyFiles,
+                CopyLocalDependenciesWhenParentReferenceInGac = CopyLocalDependenciesWhenParentReferenceInGac,
+                DoNotCopyLocalIfInGac = DoNotCopyLocalIfInGac,
+                FindDependencies = FindDependencies,
+                FindDependenciesOfExternallyResolvedReferences = FindDependenciesOfExternallyResolvedReferences,
+                FindRelatedFiles = FindRelatedFiles,
+                FindSatellites = FindSatellites,
+                FindSerializationAssemblies = FindSerializationAssemblies,
+                FullFrameworkAssemblyTables = FullFrameworkAssemblyTables,
+                FullFrameworkFolders = FullFrameworkFolders,
+                FullTargetFrameworkSubsetNames = FullTargetFrameworkSubsetNames,
+                IgnoreDefaultInstalledAssemblySubsetTables = IgnoreDefaultInstalledAssemblySubsetTables,
+                IgnoreDefaultInstalledAssemblyTables = IgnoreDefaultInstalledAssemblyTables,
+                IgnoreTargetFrameworkAttributeVersionMismatch = IgnoreTargetFrameworkAttributeVersionMismatch,
+                IgnoreVersionForFrameworkReferences = IgnoreVersionForFrameworkReferences,
+                InstalledAssemblySubsetTables = InstalledAssemblySubsetTables,
+                InstalledAssemblyTables = InstalledAssemblyTables,
+                IoTracker = IoTracker,
+                LatestTargetFrameworkDirectories = LatestTargetFrameworkDirectories,
+                ProfileName = ProfileName,
+                ResolvedSDKReferences = ResolvedSDKReferences,
+                SearchPaths = SearchPaths,
+                ShouldUseOutOFProcRar = ShouldUseOutOfProcRar,
+                Silent = Silent,
+                StateFile = StateFile,
+                SupportsBindingRedirectGeneration = SupportsBindingRedirectGeneration,
+                TargetFrameworkDirectories = TargetFrameworkDirectories,
+                TargetFrameworkMoniker = TargetFrameworkMoniker,
+                TargetFrameworkMonikerDisplayName = TargetFrameworkMonikerDisplayName,
+                TargetFrameworkSubsets = TargetFrameworkSubsets,
+                TargetFrameworkVersion = TargetFrameworkVersion,
+                TargetProcessorArchitecture = TargetProcessorArchitecture,
+                TargetedRuntimeVersion = TargetedRuntimeVersion,
+                UnresolveFrameworkAssembliesFromHigherFrameworks = UnresolveFrameworkAssembliesFromHigherFrameworks,
+                WarnOrErrorOnTargetArchitectureMismatch = WarnOrErrorOnTargetArchitectureMismatch,
+            };
+
+            set
+            {
+                AllowedAssemblyExtensions = value.AllowedAssemblyExtensions;
+                AllowedRelatedFileExtensions = value.AllowedRelatedFileExtensions;
+                AppConfigFile = value.AppConfigFile;
+                Assemblies = value.Assemblies;
+                AssemblyFiles = value.AssemblyFiles;
+                AutoUnify = value.AutoUnify;
+                BuildEngine = value.BuildEngine;
+                CandidateAssemblyFiles = value.CandidateAssemblyFiles;
+                CopyLocalDependenciesWhenParentReferenceInGac = value.CopyLocalDependenciesWhenParentReferenceInGac;
+                DoNotCopyLocalIfInGac = value.DoNotCopyLocalIfInGac;
+                FindDependencies = value.FindDependencies;
+                FindDependenciesOfExternallyResolvedReferences = value.FindDependenciesOfExternallyResolvedReferences;
+                FindRelatedFiles = value.FindRelatedFiles;
+                FindSatellites = value.FindSatellites;
+                FindSerializationAssemblies = value.FindSerializationAssemblies;
+                FullFrameworkAssemblyTables = value.FullFrameworkAssemblyTables;
+                FullFrameworkFolders = value.FullFrameworkFolders;
+                FullTargetFrameworkSubsetNames = value.FullTargetFrameworkSubsetNames;
+                HostObject = null;
+                IgnoreDefaultInstalledAssemblySubsetTables = value.IgnoreDefaultInstalledAssemblySubsetTables;
+                IgnoreDefaultInstalledAssemblyTables = value.IgnoreDefaultInstalledAssemblyTables;
+                IgnoreTargetFrameworkAttributeVersionMismatch = value.IgnoreTargetFrameworkAttributeVersionMismatch;
+                IgnoreVersionForFrameworkReferences = value.IgnoreVersionForFrameworkReferences;
+                InstalledAssemblySubsetTables = value.InstalledAssemblySubsetTables;
+                InstalledAssemblyTables = value.InstalledAssemblyTables;
+                IoTracker = value.IoTracker;
+                LatestTargetFrameworkDirectories = value.LatestTargetFrameworkDirectories;
+                ProfileName = value.ProfileName;
+                ResolvedSDKReferences = value.ResolvedSDKReferences;
+                SearchPaths = value.SearchPaths;
+                ShouldUseOutOfProcRar = value.ShouldUseOutOFProcRar;
+                Silent = value.Silent;
+                StateFile = value.StateFile;
+                SupportsBindingRedirectGeneration = value.SupportsBindingRedirectGeneration;
+                TargetFrameworkDirectories = value.TargetFrameworkDirectories;
+                TargetFrameworkMoniker = value.TargetFrameworkMoniker;
+                TargetFrameworkMonikerDisplayName = value.TargetFrameworkMonikerDisplayName;
+                TargetFrameworkSubsets = value.TargetFrameworkSubsets;
+                TargetFrameworkVersion = value.TargetFrameworkVersion;
+                TargetProcessorArchitecture = value.TargetProcessorArchitecture;
+                TargetedRuntimeVersion = value.TargetedRuntimeVersion;
+                UnresolveFrameworkAssembliesFromHigherFrameworks = value.UnresolveFrameworkAssembliesFromHigherFrameworks;
+                WarnOrErrorOnTargetArchitectureMismatch = value.WarnOrErrorOnTargetArchitectureMismatch;
+            }
+        }
+
+        internal ResolveAssemblyReferenceTaskOutput Output
+        {
+            get => new ResolveAssemblyReferenceTaskOutput
+            {
+                CopyLocalFiles = CopyLocalFiles,
+                DependsOnNETStandard = DependsOnNETStandard,
+                DependsOnSystemRuntime = DependsOnSystemRuntime,
+                FilesWritten = FilesWritten,
+                RelatedFiles = RelatedFiles,
+                ResolvedDependencyFiles = ResolvedDependencyFiles,
+                ResolvedFiles = ResolvedFiles,
+                SatelliteFiles = SatelliteFiles,
+                ScatterFiles = ScatterFiles,
+                SerializationAssemblyFiles = SerializationAssemblyFiles,
+                SuggestedRedirects = SuggestedRedirects
+            };
+
+            private set
+            {
+                _copyLocalFiles = value.CopyLocalFiles;
+                DependsOnNETStandard = value.DependsOnNETStandard;
+                DependsOnSystemRuntime = value.DependsOnSystemRuntime;
+                _filesWritten = new ArrayList(value.FilesWritten);
+                _relatedFiles = value.RelatedFiles;
+                _resolvedDependencyFiles = value.ResolvedDependencyFiles;
+                _resolvedFiles = value.ResolvedFiles;
+                _satelliteFiles = value.SatelliteFiles;
+                _scatterFiles = value.ScatterFiles;
+                _serializationAssemblyFiles = value.SerializationAssemblyFiles;
+                _suggestedRedirects = value.SuggestedRedirects;
+            }
+        }
 
         /// <summary>
         /// If set to true, it forces to unresolve framework assemblies with versions higher or equal the version of the target framework, regardless of the target framework
@@ -2946,33 +3077,87 @@ namespace Microsoft.Build.Tasks
 #endif
         }
 
+        // Flag placeholder
+        public bool ShouldUseOutOfProcRar { get; set; } = false;
+
         /// <summary>
         /// Execute the task.
         /// </summary>
         /// <returns>True if there was success.</returns>
         public override bool Execute()
         {
-            return Execute
-            (
-                new FileExists(p => FileUtilities.FileExistsNoThrow(p)),
-                new DirectoryExists(p => FileUtilities.DirectoryExistsNoThrow(p)),
-                new GetDirectories(Directory.GetDirectories),
-                new GetAssemblyName(AssemblyNameExtension.GetAssemblyNameEx),
-                new GetAssemblyMetadata(AssemblyInformation.GetAssemblyMetadata),
+            return ShouldUseOutOfProcRar
+                ? ExecuteRarOutOfProc()
+                : Execute
+                (
+                    new FileExists(p =>
+                    {
+                        IoTracker.Track(p);
+                        return FileUtilities.FileExistsNoThrow(p);
+                    }),
+                    new DirectoryExists(p =>
+                    {
+                        IoTracker.Track(p);
+                        return FileUtilities.DirectoryExistsNoThrow(p);
+                    }),
+                    new GetDirectories((path, searchPattern) =>
+                    {
+                        IoTracker.Track(path);
+                        return Directory.GetDirectories(path, searchPattern);
+                    }),
+                    new GetAssemblyName(AssemblyNameExtension.GetAssemblyNameEx),
+                    new GetAssemblyMetadata(AssemblyInformation.GetAssemblyMetadata),
 #if FEATURE_WIN32_REGISTRY
-                new GetRegistrySubKeyNames(RegistryHelper.GetSubKeyNames),
-                new GetRegistrySubKeyDefaultValue(RegistryHelper.GetDefaultValue),
-#endif
-                new GetLastWriteTime(NativeMethodsShared.GetLastWriteFileUtcTime),
-                new GetAssemblyRuntimeVersion(AssemblyInformation.GetRuntimeVersion),
-#if FEATURE_WIN32_REGISTRY
-                new OpenBaseKey(RegistryHelper.OpenBaseKey),
-#endif
-                new GetAssemblyPathInGac(GetAssemblyPathInGac),
-                new IsWinMDFile(AssemblyInformation.IsWinMDFile),
-                new ReadMachineTypeFromPEHeader(ReferenceTable.ReadMachineTypeFromPEHeader)
-            );
+                    new GetRegistrySubKeyNames(RegistryHelper.GetSubKeyNames),
+                    new GetRegistrySubKeyDefaultValue(RegistryHelper.GetDefaultValue),
+    #endif
+                    new GetLastWriteTime(path =>
+                    {
+                        IoTracker.Track(path);
+                        return NativeMethodsShared.GetLastWriteFileUtcTime(path);
+                    }),
+                    new GetAssemblyRuntimeVersion(AssemblyInformation.GetRuntimeVersion),
+    #if FEATURE_WIN32_REGISTRY
+                    new OpenBaseKey(RegistryHelper.OpenBaseKey),
+    #endif
+                    new GetAssemblyPathInGac(GetAssemblyPathInGac),
+                    new IsWinMDFile(AssemblyInformation.IsWinMDFile),
+                    new ReadMachineTypeFromPEHeader(ReferenceTable.ReadMachineTypeFromPEHeader)
+                );
         }
+
+        private bool ExecuteRarOutOfProc()
+        {
+            var client = new ResolveAssemblyReferenceNamedPipeClient();
+            Output = client.Execute(Input);
+            return true;
+        }
+
+        /*
+private void LogBuildEvents(IList<LazyFormattedBuildEventArgs> buildEvents)
+{
+    return;
+
+    foreach (LazyFormattedBuildEventArgs buildEvent in buildEvents)
+    {
+        switch (buildEvent)
+        {
+            case CustomBuildEventArgs customEventArgs:
+                BuildEngine.LogCustomEvent(customEventArgs);
+                break;
+            case BuildErrorEventArgs errorEventArgs:
+                BuildEngine.LogErrorEvent(errorEventArgs);
+                break;
+            case BuildMessageEventArgs messageEventArgs:
+                BuildEngine.LogMessageEvent(messageEventArgs);
+                break;
+            case BuildWarningEventArgs warningEventArgs:
+                BuildEngine.LogWarningEvent(warningEventArgs);
+                break;
+        }
+    }
+}
+*/
 
         #endregion
     }

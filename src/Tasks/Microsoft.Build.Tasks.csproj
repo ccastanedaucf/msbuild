@@ -1,4 +1,4 @@
-<Project Sdk="RoslynTools.RepoToolset">
+﻿<Project Sdk="RoslynTools.RepoToolset">
 
   <Import Project="..\Shared\FileSystemSources.proj" />
 
@@ -63,6 +63,9 @@
       <ExcludeFromStyleCop>True</ExcludeFromStyleCop>
     </Compile>
     <Compile Include="AssemblyDependency\AssemblyMetadata.cs" />
+    <Compile Include="AssemblyDependency\ResolveAssemblyReferenceIOTracker.cs" />
+    <Compile Include="AssemblyDependency\ResolveAssemblyReferenceTaskInput.cs" />
+    <Compile Include="AssemblyDependency\ResolveAssemblyReferenceTaskOutput.cs" />
     <Compile Include="Bond\InputBuffer.cs" />
     <Compile Include="Bond\InputStream.cs" />
     <Compile Include="Bond\IntegerHelper.cs" />
@@ -475,6 +478,29 @@
     <Compile Include="RemoveDir.cs">
       <ExcludeFromStyleCop>true</ExcludeFromStyleCop>
     </Compile>
+    <Compile Include="ResolveAssemblyReferences\Abstractions\IResolveAssemblyReferenceTask.cs" />
+    <Compile Include="ResolveAssemblyReferences\Abstractions\IResolveAssemblyReferenceService.cs" />
+    <Compile Include="ResolveAssemblyReferences\Domain\ReadOnlyTaskItem_types.cs" />
+    <Compile Include="ResolveAssemblyReferences\Domain\ResolveAssemblyReferenceRequest_types.cs" />
+    <Compile Include="ResolveAssemblyReferences\Domain\ResolveAssemblyReferenceResponse_types.cs" />
+    <Compile Include="ResolveAssemblyReferences\Engine\ResolveAssemblyReferenceServiceGatewayTask.cs" />
+    <Compile Include="ResolveAssemblyReferences\Services\Cache\EvaluationWatcher.cs" />
+    <Compile Include="ResolveAssemblyReferences\Services\Cache\IEvaluationWatcher.cs" />
+    <Compile Include="ResolveAssemblyReferences\Services\Cache\ResolveAssemblyReferenceCacheService.cs" />
+    <Compile Include="ResolveAssemblyReferences\Services\TaskGateway\EventQueueBuildEngine.cs" />
+    <Compile Include="ResolveAssemblyReferences\Services\TaskGateway\ResolveAssemblyReferenceTaskGatewayService.cs" />
+    <None Include="ResolveAssemblyReferences\BondTypes\ResolveAssemblyReferenceRequest.bond" />
+    <None Include="ResolveAssemblyReferences\BondTypes\ResolveAssemblyReferenceResponse.bond" />
+    <None Include="ResolveAssemblyReferences\BondTypes\ReadOnlyTaskItem.bond" />
+    <Compile Include="ResolveAssemblyReferences\Domain\ReadOnlyTaskItem.cs" />
+    <Compile Include="ResolveAssemblyReferences\Domain\ResolveAssemblyReferenceEvaluation.cs" />
+    <Compile Include="ResolveAssemblyReferences\Domain\ResolveAssemblyReferenceRequestComparer.cs" />
+    <Compile Include="ResolveAssemblyReferences\Domain\ResolveAssemblyReferenceResponse.cs" />
+    <Compile Include="ResolveAssemblyReferences\Engine\ResolveAssemblyReferenceStatelessTask.cs" />
+    <Compile Include="ResolveAssemblyReferences\NamedPipeClient\ResolveAssemblyReferenceNamedPipeClient.cs" />
+    <Compile Include="ResolveAssemblyReferences\NamedPipeServer\ResolveAssemblyReferenceNamedPipeServer.cs" />
+    <Compile Include="ResolveAssemblyReferences\Serialization\BondDeserializer.cs" />
+    <Compile Include="ResolveAssemblyReferences\Serialization\BondSerializer.cs" />
     <Compile Include="ResolveCodeAnalysisRuleSet.cs" />
     <Compile Include="ResolveKeySource.cs">
       <ExcludeFromStyleCop>true</ExcludeFromStyleCop>

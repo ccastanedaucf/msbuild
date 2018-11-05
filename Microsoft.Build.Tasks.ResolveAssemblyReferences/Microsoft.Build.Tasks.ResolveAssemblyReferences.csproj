@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp2.1</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Abstractions\**" />
+    <Compile Remove="Domain\**" />
+    <Compile Remove="NamedPipeServer\**" />
+    <Compile Remove="Serialization\**" />
+    <Compile Remove="Services\**" />
+    <Compile Remove="Watchers\**" />
+    <EmbeddedResource Remove="Abstractions\**" />
+    <EmbeddedResource Remove="Domain\**" />
+    <EmbeddedResource Remove="NamedPipeServer\**" />
+    <EmbeddedResource Remove="Serialization\**" />
+    <EmbeddedResource Remove="Services\**" />
+    <EmbeddedResource Remove="Watchers\**" />
+    <None Remove="Abstractions\**" />
+    <None Remove="Domain\**" />
+    <None Remove="NamedPipeServer\**" />
+    <None Remove="Serialization\**" />
+    <None Remove="Services\**" />
+    <None Remove="Watchers\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\src\Tasks\Microsoft.Build.Tasks.csproj" />
+  </ItemGroup>
+
+</Project>
