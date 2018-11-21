@@ -4,13 +4,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Globalization;
-using System.Runtime.InteropServices;
 using System.Security;
-#if FEATURE_SECURITY_PERMISSIONS
-using System.Security.Permissions;
-#endif
 
 using Microsoft.Build.Framework;
 using Microsoft.Build.Shared;
@@ -102,7 +96,7 @@ namespace Microsoft.Build.Utilities
 
             if (itemMetadata.Count > 0)
             {
-                _metadata = new CopyOnWriteDictionary<string, string>(MSBuildNameIgnoreCaseComparer.Default);
+                _metadata = new CopyOnWriteDictionary<string, string>(itemMetadata.Count, MSBuildNameIgnoreCaseComparer.Default);
 
                 foreach (DictionaryEntry singleMetadata in itemMetadata)
                 {
@@ -139,6 +133,7 @@ namespace Microsoft.Build.Utilities
                 _definingProject = sourceItemAsITaskItem2.GetMetadataValueEscaped(FileUtilities.ItemSpecModifiers.DefiningProjectFullPath);
             }
 
+            _metadata = new CopyOnWriteDictionary<string, string>(sourceItem.MetadataCount, MSBuildNameIgnoreCaseComparer.Default);
             sourceItem.CopyMetadataTo(this);
         }
 
@@ -264,7 +259,7 @@ namespace Microsoft.Build.Utilities
             ErrorUtilities.VerifyThrowArgument(!FileUtilities.ItemSpecModifiers.IsDerivableItemSpecModifier(metadataName),
                 "Shared.CannotChangeItemSpecModifiers", metadataName);
 
-            _metadata = _metadata ?? new CopyOnWriteDictionary<string, string>(MSBuildNameIgnoreCaseComparer.Default);
+            _metadata = _metadata ?? new CopyOnWriteDictionary<string, string>(1, MSBuildNameIgnoreCaseComparer.Default);
 
             _metadata[metadataName] = metadataValue ?? string.Empty;
         }
@@ -360,7 +355,8 @@ namespace Microsoft.Build.Utilities
         /// </comments>
         public IDictionary CloneCustomMetadata()
         {
-            var dictionary = new CopyOnWriteDictionary<string, string>(MSBuildNameIgnoreCaseComparer.Default);
+            int capacity = _metadata?.Count ?? 0;            
+            var dictionary = new CopyOnWriteDictionary<string, string>(capacity, MSBuildNameIgnoreCaseComparer.Default);
 
             if (_metadata != null)
             {

@@ -6,7 +6,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
-using System.Globalization;
 using System.Linq;
 using System.IO;
 
@@ -699,7 +698,7 @@ namespace Microsoft.Build.Execution
             ProjectItemDefinitionInstance itemDefinition;
             if (projectToUse.ItemDefinitions.TryGetValue(itemTypeToUse, out itemDefinition))
             {
-                inheritedItemDefinitions = inheritedItemDefinitions ?? new List<ProjectItemDefinitionInstance>();
+                inheritedItemDefinitions = inheritedItemDefinitions ?? new List<ProjectItemDefinitionInstance>(1);
                 inheritedItemDefinitions.Add(itemDefinition);
             }
 
@@ -933,10 +932,7 @@ namespace Microsoft.Build.Execution
             /// Gets the number of metadata set on the item.
             /// Computed, not necessarily fast.
             /// </summary>
-            public int MetadataCount
-            {
-                get { return MetadataNames.Count; }
-            }
+            public int MetadataCount => CustomMetadataCount + FileUtilities.ItemSpecModifiers.All.Length;
 
             /// <summary>
             /// Gets the names of custom metadata on the item.
@@ -948,9 +944,10 @@ namespace Microsoft.Build.Execution
             {
                 get
                 {
-                    List<string> names = new List<string>();
+                    CopyOnWritePropertyDictionary<ProjectMetadataInstance> metadataCollection = MetadataCollection;
+                    List<string> names = new List<string>(metadataCollection.Count);
 
-                    foreach (ProjectMetadataInstance metadatum in MetadataCollection)
+                    foreach (ProjectMetadataInstance metadatum in metadataCollection)
                     {
                         names.Add(metadatum.Name);
                     }
@@ -964,10 +961,7 @@ namespace Microsoft.Build.Execution
             /// Does not include built-in metadata.
             /// Computed, not necessarily fast.
             /// </summary>
-            public int CustomMetadataCount
-            {
-                get { return CustomMetadataNames.Count; }
-            }
+            public int CustomMetadataCount => MetadataCollection.Count;
 
             /// <summary>
             /// Gets the evaluated include for this item, unescaped.
@@ -1386,9 +1380,10 @@ namespace Microsoft.Build.Execution
             /// <returns>The cloned metadata.</returns>
             public IDictionary CloneCustomMetadata()
             {
-                Dictionary<string, string> clonedMetadata = new Dictionary<string, string>(MSBuildNameIgnoreCaseComparer.Default);
+                CopyOnWritePropertyDictionary<ProjectMetadataInstance> metadataCollection = MetadataCollection;
+                Dictionary<string, string> clonedMetadata = new Dictionary<string, string>(metadataCollection.Count, MSBuildNameIgnoreCaseComparer.Default);
 
-                foreach (ProjectMetadataInstance metadatum in MetadataCollection)
+                foreach (ProjectMetadataInstance metadatum in metadataCollection)
                 {
                     clonedMetadata[metadatum.Name] = metadatum.EvaluatedValue;
                 }
@@ -1403,9 +1398,10 @@ namespace Microsoft.Build.Execution
             /// <returns>The cloned metadata.</returns>
             IDictionary ITaskItem2.CloneCustomMetadataEscaped()
             {
-                Dictionary<string, string> clonedMetadata = new Dictionary<string, string>(MSBuildNameIgnoreCaseComparer.Default);
+                CopyOnWritePropertyDictionary<ProjectMetadataInstance> metadataCollection = MetadataCollection;
+                Dictionary<string, string> clonedMetadata = new Dictionary<string, string>(metadataCollection.Count, MSBuildNameIgnoreCaseComparer.Default);
 
-                foreach (ProjectMetadataInstance metadatum in MetadataCollection)
+                foreach (ProjectMetadataInstance metadatum in metadataCollection)
                 {
                     clonedMetadata[metadatum.Name] = metadatum.EvaluatedValueEscaped;
                 }
@@ -1666,7 +1662,7 @@ namespace Microsoft.Build.Execution
             {
                 ProjectInstance.VerifyThrowNotImmutable(_isImmutable);
 
-                _directMetadata = _directMetadata ?? new CopyOnWritePropertyDictionary<ProjectMetadataInstance>();
+                _directMetadata = _directMetadata ?? new CopyOnWritePropertyDictionary<ProjectMetadataInstance>(1);
                 ProjectMetadataInstance metadatum = new ProjectMetadataInstance(name, metadataValueEscaped, allowItemSpecModifiers /* may not be built-in metadata name */);
                 _directMetadata.Set(metadatum);
 
@@ -1688,7 +1684,7 @@ namespace Microsoft.Build.Execution
 
                 if (!FileUtilities.ItemSpecModifiers.IsDerivableItemSpecModifier(name))
                 {
-                    _directMetadata = _directMetadata ?? new CopyOnWritePropertyDictionary<ProjectMetadataInstance>();
+                    _directMetadata = _directMetadata ?? new CopyOnWritePropertyDictionary<ProjectMetadataInstance>(1);
                     ProjectMetadataInstance metadatum = new ProjectMetadataInstance(name, evaluatedValueEscaped, true /* may be built-in metadata name */);
                     _directMetadata.Set(metadatum);
                 }
@@ -1897,7 +1893,7 @@ namespace Microsoft.Build.Execution
                     ProjectItemDefinitionInstance sourceItemDefinition;
                     if (_project.ItemDefinitions.TryGetValue(source.ItemType, out sourceItemDefinition))
                     {
-                        itemDefinitionsClone = itemDefinitionsClone ?? new List<ProjectItemDefinitionInstance>();
+                        itemDefinitionsClone = itemDefinitionsClone ?? new List<ProjectItemDefinitionInstance>(1);
                         itemDefinitionsClone.Add(sourceItemDefinition);
                     }
 
