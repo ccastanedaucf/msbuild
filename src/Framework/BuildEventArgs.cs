@@ -175,6 +175,10 @@ namespace Microsoft.Build.Framework
             set => buildEventContext = value;
         }
 
+        public string UnformattedMessage => message ?? string.Empty;
+
+        public DateTime UtcTimestamp => timestamp;
+
         #region CustomSerializationToStream
         /// <summary>
         /// Serializes to a stream through a binary writer

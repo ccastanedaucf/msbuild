@@ -219,6 +219,8 @@ namespace Microsoft.Build.Tasks
         private WarnOrErrorOnTargetArchitectureMismatchBehavior _warnOrErrorOnTargetArchitectureMismatch = WarnOrErrorOnTargetArchitectureMismatchBehavior.Warning;
         private bool _unresolveFrameworkAssembliesFromHigherFrameworks = false;
 
+        public bool ShouldExecuteInProcess { get; set; } = true;
+
         /// <summary>
         /// If set to true, it forces to unresolve framework assemblies with versions higher or equal the version of the target framework, regardless of the target framework
         /// </summary>
@@ -913,7 +915,8 @@ namespace Microsoft.Build.Tasks
         [Output]
         public ITaskItem[] ResolvedFiles
         {
-            get { return _resolvedFiles; }
+            get => _resolvedFiles;
+            internal set => _resolvedFiles = value;
         }
 
         /// <summary>
@@ -932,7 +935,8 @@ namespace Microsoft.Build.Tasks
         [Output]
         public ITaskItem[] ResolvedDependencyFiles
         {
-            get { return _resolvedDependencyFiles; }
+            get => _resolvedDependencyFiles;
+            internal set => _resolvedDependencyFiles = value;
         }
 
         /// <summary>
@@ -944,7 +948,8 @@ namespace Microsoft.Build.Tasks
         [Output]
         public ITaskItem[] RelatedFiles
         {
-            get { return _relatedFiles; }
+            get => _relatedFiles;
+            internal set => _relatedFiles = value;
         }
 
         /// <summary>
@@ -957,7 +962,8 @@ namespace Microsoft.Build.Tasks
         [Output]
         public ITaskItem[] SatelliteFiles
         {
-            get { return _satelliteFiles; }
+            get => _satelliteFiles;
+            internal set => _satelliteFiles = value;
         }
 
         /// <summary>
@@ -968,7 +974,8 @@ namespace Microsoft.Build.Tasks
         [Output]
         public ITaskItem[] SerializationAssemblyFiles
         {
-            get { return _serializationAssemblyFiles; }
+            get => _serializationAssemblyFiles;
+            internal set => _serializationAssemblyFiles = value;
         }
 
         /// <summary>
@@ -978,7 +985,8 @@ namespace Microsoft.Build.Tasks
         [Output]
         public ITaskItem[] ScatterFiles
         {
-            get { return _scatterFiles; }
+            get => _scatterFiles;
+            internal set => _scatterFiles = value;
         }
 
         /// <summary>
@@ -989,7 +997,8 @@ namespace Microsoft.Build.Tasks
         [Output]
         public ITaskItem[] CopyLocalFiles
         {
-            get { return _copyLocalFiles; }
+            get => _copyLocalFiles;
+            internal set => _copyLocalFiles = value;
         }
 
         /// <summary>
@@ -1004,13 +1013,14 @@ namespace Microsoft.Build.Tasks
         [Output]
         public ITaskItem[] SuggestedRedirects
         {
-            get { return _suggestedRedirects; }
+            get => _suggestedRedirects;
+            internal set => _suggestedRedirects = value;
         }
 
         /// <summary>
         /// Storage for names of all files writen to disk.
         /// </summary>
-        private List<ITaskItem> _filesWritten = new List<ITaskItem>();
+        private List<ITaskItem> _filesWritten = new();
 
         /// <summary>
         /// The names of all files written to disk.
@@ -1018,8 +1028,8 @@ namespace Microsoft.Build.Tasks
         [Output]
         public ITaskItem[] FilesWritten
         {
-            set { /*Do Nothing, Inputs not Allowed*/ }
-            get { return _filesWritten.ToArray(); }
+            get => [.. _filesWritten];
+            internal set => _filesWritten = new(value);
         }
 
         /// <summary>
@@ -1029,7 +1039,7 @@ namespace Microsoft.Build.Tasks
         public String DependsOnSystemRuntime
         {
             get;
-            private set;
+            internal set;
         }
 
         /// <summary>
@@ -1039,7 +1049,7 @@ namespace Microsoft.Build.Tasks
         public String DependsOnNETStandard
         {
             get;
-            private set;
+            internal set;
         }
 
         /// <summary>
@@ -1047,7 +1057,11 @@ namespace Microsoft.Build.Tasks
         /// been outputted in MSB3277. Otherwise empty.
         /// </summary>
         [Output]
-        public ITaskItem[] UnresolvedAssemblyConflicts => _unresolvedConflicts.ToArray();
+        public ITaskItem[] UnresolvedAssemblyConflicts
+        {
+            get => [.. _unresolvedConflicts];
+            internal set => _unresolvedConflicts = new(value);
+        }
 
         #endregion
         #region Logging
@@ -3206,6 +3220,14 @@ namespace Microsoft.Build.Tasks
         /// <returns>True if there was success.</returns>
         public override bool Execute()
         {
+            return ExecuteOutOfProcess();
+            // return !ShouldExecuteInProcess && ExecuteOutOfProcess()
+            //     ? true
+            //     : ExecuteInProcess();
+        }
+
+        public bool ExecuteInProcess()
+        {
             return Execute(
                 p => FileUtilities.FileExistsNoThrow(p),
                 p => FileUtilities.DirectoryExistsNoThrow(p),
@@ -3227,6 +3249,22 @@ namespace Microsoft.Build.Tasks
                 (string fullPath, GetAssemblyRuntimeVersion getAssemblyRuntimeVersion, FileExists fileExists, out string imageRuntimeVersion, out bool isManagedWinmd)
                     => AssemblyInformation.IsWinMDFile(fullPath, getAssemblyRuntimeVersion, fileExists, out imageRuntimeVersion, out isManagedWinmd),
                 p => ReferenceTable.ReadMachineTypeFromPEHeader(p));
+        }
+
+        private bool ExecuteOutOfProcess()
+        {
+            ResolveAssemblyReferenceClient client = new();
+
+            try
+            {
+                client.Execute(this);
+            }
+            catch (TimeoutException)
+            {
+                return false;
+            }
+
+            return true;
         }
 
         #endregion

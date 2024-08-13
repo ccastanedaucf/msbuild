@@ -34,6 +34,8 @@ namespace Microsoft.Build.Framework
             get => (argumentsOrFormattedMessage is string formattedMessage) ? formattedMessage : base.FormattedMessage;
         }
 
+        public object[] UnparsedArguments => (argumentsOrFormattedMessage is object[] arguments) ? arguments : [];
+
         /// <summary>
         /// This constructor allows all event data to be initialized.
         /// </summary>

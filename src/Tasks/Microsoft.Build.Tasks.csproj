@@ -66,6 +66,13 @@
     </Compile>
     <Compile Include="AssemblyDependency\AssemblyAttributes.cs" />
     <Compile Include="AssemblyDependency\AssemblyMetadata.cs" />
+    <Compile Include="AssemblyDependency\Client\ResolveAssemblyReferenceClient.cs" />
+    <Compile Include="AssemblyDependency\Serialization\ReadOnlyTaskItem.cs" />
+    <Compile Include="AssemblyDependency\Serialization\ResolveAssemblyReferenceBuildEventArgs.cs" />
+    <Compile Include="AssemblyDependency\Serialization\ResolveAssemblyReferenceRequest.cs" />
+    <Compile Include="AssemblyDependency\Serialization\ResolveAssemblyReferenceResponse.cs" />
+    <Compile Include="AssemblyDependency\Service\EventQueueBuildEngine.cs" />
+    <Compile Include="AssemblyDependency\Service\ResolveAssemblyReferenceService.cs" />
     <Compile Include="CombineTargetFrameworkInfoProperties.cs" />
     <Compile Include="CombineXmlElements.cs" />
     <Compile Include="ConvertToAbsolutePath.cs" />
