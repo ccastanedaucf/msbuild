@@ -57,7 +57,7 @@ namespace Microsoft.Build.Tasks
         /// <summary>
         /// Cache of system state information, used to optimize performance.
         /// </summary>
-        internal SystemState _cache = null;
+        internal SystemState Cache { get; set; }
 
         /// <summary>
         /// Construct
@@ -193,6 +193,7 @@ namespace Microsoft.Build.Tasks
         private ITaskItem[] _scatterFiles = Array.Empty<TaskItem>();
         private ITaskItem[] _copyLocalFiles = Array.Empty<TaskItem>();
         private ITaskItem[] _suggestedRedirects = Array.Empty<TaskItem>();
+        private List<ITaskItem> _filesWritten = new();
         private List<ITaskItem> _unresolvedConflicts = new List<ITaskItem>();
         private string[] _targetFrameworkSubsets = [];
         private string[] _fullTargetFrameworkSubsetNames = [];
@@ -218,6 +219,8 @@ namespace Microsoft.Build.Tasks
         private bool _logVerboseSearchResults = false;
         private WarnOrErrorOnTargetArchitectureMismatchBehavior _warnOrErrorOnTargetArchitectureMismatch = WarnOrErrorOnTargetArchitectureMismatchBehavior.Warning;
         private bool _unresolveFrameworkAssembliesFromHigherFrameworks = false;
+
+        public bool ShouldExecuteInProcess { get; set; } = true;
 
         /// <summary>
         /// If set to true, it forces to unresolve framework assemblies with versions higher or equal the version of the target framework, regardless of the target framework
@@ -913,7 +916,8 @@ namespace Microsoft.Build.Tasks
         [Output]
         public ITaskItem[] ResolvedFiles
         {
-            get { return _resolvedFiles; }
+            get => _resolvedFiles;
+            internal set => _resolvedFiles = value;
         }
 
         /// <summary>
@@ -932,7 +936,8 @@ namespace Microsoft.Build.Tasks
         [Output]
         public ITaskItem[] ResolvedDependencyFiles
         {
-            get { return _resolvedDependencyFiles; }
+            get => _resolvedDependencyFiles;
+            internal set => _resolvedDependencyFiles = value;
         }
 
         /// <summary>
@@ -944,7 +949,8 @@ namespace Microsoft.Build.Tasks
         [Output]
         public ITaskItem[] RelatedFiles
         {
-            get { return _relatedFiles; }
+            get => _relatedFiles;
+            internal set => _relatedFiles = value;
         }
 
         /// <summary>
@@ -957,7 +963,8 @@ namespace Microsoft.Build.Tasks
         [Output]
         public ITaskItem[] SatelliteFiles
         {
-            get { return _satelliteFiles; }
+            get => _satelliteFiles;
+            internal set => _satelliteFiles = value;
         }
 
         /// <summary>
@@ -968,7 +975,8 @@ namespace Microsoft.Build.Tasks
         [Output]
         public ITaskItem[] SerializationAssemblyFiles
         {
-            get { return _serializationAssemblyFiles; }
+            get => _serializationAssemblyFiles;
+            internal set => _serializationAssemblyFiles = value;
         }
 
         /// <summary>
@@ -978,7 +986,8 @@ namespace Microsoft.Build.Tasks
         [Output]
         public ITaskItem[] ScatterFiles
         {
-            get { return _scatterFiles; }
+            get => _scatterFiles;
+            internal set => _scatterFiles = value;
         }
 
         /// <summary>
@@ -989,7 +998,8 @@ namespace Microsoft.Build.Tasks
         [Output]
         public ITaskItem[] CopyLocalFiles
         {
-            get { return _copyLocalFiles; }
+            get => _copyLocalFiles;
+            internal set => _copyLocalFiles = value;
         }
 
         /// <summary>
@@ -1004,13 +1014,9 @@ namespace Microsoft.Build.Tasks
         [Output]
         public ITaskItem[] SuggestedRedirects
         {
-            get { return _suggestedRedirects; }
+            get => _suggestedRedirects;
+            internal set => _suggestedRedirects = value;
         }
-
-        /// <summary>
-        /// Storage for names of all files writen to disk.
-        /// </summary>
-        private List<ITaskItem> _filesWritten = new List<ITaskItem>();
 
         /// <summary>
         /// The names of all files written to disk.
@@ -1018,8 +1024,8 @@ namespace Microsoft.Build.Tasks
         [Output]
         public ITaskItem[] FilesWritten
         {
-            set { /*Do Nothing, Inputs not Allowed*/ }
-            get { return _filesWritten.ToArray(); }
+            get => _filesWritten.ToArray();
+            internal set => _filesWritten = new(value);
         }
 
         /// <summary>
@@ -1029,7 +1035,7 @@ namespace Microsoft.Build.Tasks
         public String DependsOnSystemRuntime
         {
             get;
-            private set;
+            internal set;
         }
 
         /// <summary>
@@ -1039,7 +1045,7 @@ namespace Microsoft.Build.Tasks
         public String DependsOnNETStandard
         {
             get;
-            private set;
+            internal set;
         }
 
         /// <summary>
@@ -1047,7 +1053,13 @@ namespace Microsoft.Build.Tasks
         /// been outputted in MSB3277. Otherwise empty.
         /// </summary>
         [Output]
-        public ITaskItem[] UnresolvedAssemblyConflicts => _unresolvedConflicts.ToArray();
+        public ITaskItem[] UnresolvedAssemblyConflicts
+        {
+            get => [.. _unresolvedConflicts];
+            internal set => _unresolvedConflicts = new(value);
+        }
+
+        public HashSet<string> TrackedPaths = new(StringComparer.OrdinalIgnoreCase);
 
         #endregion
         #region Logging
@@ -2049,17 +2061,17 @@ namespace Microsoft.Build.Tasks
         /// </summary>
         internal void ReadStateFile(FileExists fileExists)
         {
-            _cache = SystemState.DeserializeCache<SystemState>(_stateFile, Log);
+            Cache = SystemState.DeserializeCache<SystemState>(_stateFile, Log);
 
             // Construct the cache only if we can't find any caches.
-            if (_cache == null && AssemblyInformationCachePaths != null && AssemblyInformationCachePaths.Length > 0)
+            if (Cache == null && AssemblyInformationCachePaths != null && AssemblyInformationCachePaths.Length > 0)
             {
-                _cache = SystemState.DeserializePrecomputedCaches(AssemblyInformationCachePaths, Log, fileExists);
+                Cache = SystemState.DeserializePrecomputedCaches(AssemblyInformationCachePaths, Log, fileExists);
             }
 
-            if (_cache == null)
+            if (Cache == null)
             {
-                _cache = new SystemState();
+                Cache = new SystemState();
             }
         }
 
@@ -2070,13 +2082,13 @@ namespace Microsoft.Build.Tasks
         {
             if (!string.IsNullOrEmpty(AssemblyInformationCacheOutputPath))
             {
-                _cache.SerializePrecomputedCache(AssemblyInformationCacheOutputPath, Log);
+                Cache.SerializePrecomputedCache(AssemblyInformationCacheOutputPath, Log);
             }
-            else if (!string.IsNullOrEmpty(_stateFile) && (_cache.IsDirty || _cache.instanceLocalOutgoingFileStateCache.Count < _cache.instanceLocalFileStateCache.Count))
+            else if (!string.IsNullOrEmpty(_stateFile) && (Cache.IsDirty || Cache.instanceLocalOutgoingFileStateCache.Count < Cache.instanceLocalFileStateCache.Count))
             {
                 // Either the cache is dirty (we added or updated an item) or the number of items actually used is less than what
                 // we got by reading the state file prior to execution. Serialize the cache into the state file.
-                _cache.SerializeCache(_stateFile, Log);
+                Cache.SerializeCache(_stateFile, Log);
             }
         }
         #endregion
@@ -2305,18 +2317,18 @@ namespace Microsoft.Build.Tasks
 
                     // Load any prior saved state.
                     ReadStateFile(fileExists);
-                    _cache.SetInstalledAssemblyInformation(installedAssemblyTableInfo);
+                    Cache.SetInstalledAssemblyInformation(installedAssemblyTableInfo);
 
                     // Cache delegates.
-                    getAssemblyMetadata = _cache.CacheDelegate(getAssemblyMetadata);
-                    fileExists = _cache.CacheDelegate();
-                    directoryExists = _cache.CacheDelegate(directoryExists);
-                    getDirectories = _cache.CacheDelegate(getDirectories);
+                    getAssemblyMetadata = Cache.CacheDelegate(getAssemblyMetadata);
+                    fileExists = Cache.CacheDelegate();
+                    directoryExists = Cache.CacheDelegate(directoryExists);
+                    getDirectories = Cache.CacheDelegate(getDirectories);
 
                     ReferenceTable dependencyTable = null;
 
                     // Wrap the GetLastWriteTime callback with a check for SDK/immutable files.
-                    _cache.SetGetLastWriteTime(path =>
+                    Cache.SetGetLastWriteTime(path =>
                     {
                         if (dependencyTable?.IsImmutableFile(path) == true)
                         {
@@ -2329,14 +2341,14 @@ namespace Microsoft.Build.Tasks
 
                     // Wrap the GetAssemblyName and GetRuntimeVersion callbacks with a check for SDK/immutable files.
                     GetAssemblyName originalGetAssemblyName = getAssemblyName;
-                    getAssemblyName = _cache.CacheDelegate(path =>
+                    getAssemblyName = Cache.CacheDelegate(path =>
                     {
                         AssemblyNameExtension assemblyName = dependencyTable?.GetImmutableFileAssemblyName(path);
                         return assemblyName ?? originalGetAssemblyName(path);
                     });
 
                     GetAssemblyRuntimeVersion originalGetRuntimeVersion = getRuntimeVersion;
-                    getRuntimeVersion = _cache.CacheDelegate(path =>
+                    getRuntimeVersion = Cache.CacheDelegate(path =>
                     {
                         if (dependencyTable?.IsImmutableFile(path) == true)
                         {
@@ -3206,27 +3218,107 @@ namespace Microsoft.Build.Tasks
         /// <returns>True if there was success.</returns>
         public override bool Execute()
         {
+            return ExecuteOutOfProcess();
+            // return !ShouldExecuteInProcess && ExecuteOutOfProcess()
+            //     ? true
+            //     : ExecuteInProcess();
+        }
+
+        public bool ExecuteInProcess()
+        {
             return Execute(
-                p => FileUtilities.FileExistsNoThrow(p),
-                p => FileUtilities.DirectoryExistsNoThrow(p),
-                (p, searchPattern) => FileSystems.Default.EnumerateDirectories(p, searchPattern).ToArray(),
-                p => AssemblyNameExtension.GetAssemblyNameEx(p),
-                (string path, ConcurrentDictionary<string, AssemblyMetadata> assemblyMetadataCache, out AssemblyNameExtension[] dependencies, out string[] scatterFiles, out FrameworkNameVersioning frameworkName)
-                    => AssemblyInformation.GetAssemblyMetadata(path, assemblyMetadataCache, out dependencies, out scatterFiles, out frameworkName),
+                p =>
+                {
+                    // TrackPath("FileExists", p);
+                    return FileUtilities.FileExistsNoThrow(p);
+                },
+                p =>
+                {
+                    // TrackPath("DirectoryExists", p);
+                    return FileUtilities.DirectoryExistsNoThrow(p);
+                },
+                (p, searchPattern) =>
+                {
+                    // TrackPath("EnumerateDirectories", p);
+                    string[] results = FileSystems.Default.EnumerateDirectories(p, searchPattern).ToArray();
+
+                    // foreach (string result in results)
+                    // {
+                    //     TrackPath("    File", result);
+                    // }
+
+                    return results;
+                },
+                p =>
+                {
+                    // TrackPath("    File", p);
+                    return AssemblyNameExtension.GetAssemblyNameEx(p);
+                },
+                (string path, ConcurrentDictionary<string, AssemblyMetadata> assemblyMetadataCache, out AssemblyNameExtension[] dependencies, out string[] scatterFiles, out FrameworkNameVersioning frameworkName) =>
+                {
+                    // TrackPath("GetAssemblyMetadata", path);
+                    AssemblyInformation.GetAssemblyMetadata(path, assemblyMetadataCache, out dependencies, out scatterFiles, out frameworkName);
+                },
 #if FEATURE_WIN32_REGISTRY
                 (baseKey, subkey) => RegistryHelper.GetSubKeyNames(baseKey, subkey),
                 (baseKey, subkey) => RegistryHelper.GetDefaultValue(baseKey, subkey),
 #endif
-                p => NativeMethodsShared.GetLastWriteFileUtcTime(p),
-                p => AssemblyInformation.GetRuntimeVersion(p),
+                p =>
+                {
+                    // TrackPath("GetLastWriteTime", p);
+                    var lastWriteTime = NativeMethodsShared.GetLastWriteFileUtcTime(p);
+                    // Console.WriteLine(lastWriteTime);
+                    return lastWriteTime;
+                },
+                p =>
+                {
+                    // TrackPath("GetRuntimeVersion", p);
+                    return AssemblyInformation.GetRuntimeVersion(p);
+                },
 #if FEATURE_WIN32_REGISTRY
                 (hive, view) => RegistryHelper.OpenBaseKey(hive, view),
 #endif
-                (assemblyName, targetProcessorArchitecture, getRuntimeVersion, targetedRuntimeVersion, fileExists, fullFusionName, specificVersion)
-                    => GetAssemblyPathInGac(assemblyName, targetProcessorArchitecture, getRuntimeVersion, targetedRuntimeVersion, fileExists, fullFusionName, specificVersion),
-                (string fullPath, GetAssemblyRuntimeVersion getAssemblyRuntimeVersion, FileExists fileExists, out string imageRuntimeVersion, out bool isManagedWinmd)
-                    => AssemblyInformation.IsWinMDFile(fullPath, getAssemblyRuntimeVersion, fileExists, out imageRuntimeVersion, out isManagedWinmd),
-                p => ReferenceTable.ReadMachineTypeFromPEHeader(p));
+                (assemblyName, targetProcessorArchitecture, getRuntimeVersion, targetedRuntimeVersion, fileExists, fullFusionName, specificVersion) =>
+                {
+                    // Console.WriteLine($"GetAssemblyPathInGac: {assemblyName}");
+                    return GetAssemblyPathInGac(assemblyName, targetProcessorArchitecture, getRuntimeVersion, targetedRuntimeVersion, fileExists, fullFusionName, specificVersion);
+                },
+                (string fullPath, GetAssemblyRuntimeVersion getAssemblyRuntimeVersion, FileExists fileExists, out string imageRuntimeVersion, out bool isManagedWinmd) =>
+                {
+                    // TrackPath("IsWinMDFile", fullPath);
+                    return AssemblyInformation.IsWinMDFile(fullPath, getAssemblyRuntimeVersion, fileExists, out imageRuntimeVersion, out isManagedWinmd);
+                },
+                p =>
+                {
+                    // TrackPath("ReadMachineTypeFromPEHeader", p);
+                    return ReferenceTable.ReadMachineTypeFromPEHeader(p);
+                });
+        }
+
+        private void TrackPath(string prefix, string path)
+        {
+            if (string.IsNullOrEmpty(path))
+            {
+                return;
+            }
+
+            Console.WriteLine($"{prefix}: {path}");
+
+            _ = TrackedPaths.Add(path);
+        }
+
+        private bool ExecuteOutOfProcess()
+        {
+            ResolveAssemblyReferenceClient client = new();
+
+            try
+            {
+                return client.Execute(this);
+            }
+            catch (TimeoutException)
+            {
+                return false;
+            }
         }
 
         #endregion

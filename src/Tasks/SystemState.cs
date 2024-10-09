@@ -28,7 +28,7 @@ namespace Microsoft.Build.Tasks
         /// Cache at the SystemState instance level. Has the same contents as <see cref="instanceLocalFileStateCache"/>.
         /// It acts as a flag to enforce that an entry has been checked for staleness only once.
         /// </summary>
-        private Dictionary<string, FileState> upToDateLocalFileStateCache = new Dictionary<string, FileState>(StringComparer.OrdinalIgnoreCase);
+        internal Dictionary<string, FileState> upToDateLocalFileStateCache = new Dictionary<string, FileState>(StringComparer.OrdinalIgnoreCase);
 
         /// <summary>
         /// Cache at the SystemState instance level.
@@ -51,7 +51,7 @@ namespace Microsoft.Build.Tasks
         /// cache this for long periods of time since there's no way (without actually
         /// calling File.GetLastWriteTimeUtc) to tell whether the cache is out-of-date.
         /// </summary>
-        private Dictionary<string, DateTime> instanceLocalLastModifiedCache = new Dictionary<string, DateTime>(StringComparer.OrdinalIgnoreCase);
+        internal Dictionary<string, DateTime> instanceLocalLastModifiedCache = new Dictionary<string, DateTime>(StringComparer.OrdinalIgnoreCase);
 
         /// <summary>
         /// DirectoryExists information is purely instance-local. It doesn't make sense to

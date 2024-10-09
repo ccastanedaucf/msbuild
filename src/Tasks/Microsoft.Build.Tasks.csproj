@@ -66,6 +66,16 @@
     </Compile>
     <Compile Include="AssemblyDependency\AssemblyAttributes.cs" />
     <Compile Include="AssemblyDependency\AssemblyMetadata.cs" />
+    <Compile Include="AssemblyDependency\Client\ResolveAssemblyReferenceClient.cs" />
+    <Compile Include="AssemblyDependency\Serialization\ReadOnlyTaskItem.cs" />
+    <Compile Include="AssemblyDependency\Serialization\ResolveAssemblyReferencesReply.cs" />
+    <Compile Include="AssemblyDependency\Service\BuildEventProcessor.cs" />
+    <Compile Include="AssemblyDependency\Service\CacheWatcher.cs" />
+    <Compile Include="AssemblyDependency\Service\EventQueueBuildEngine.cs" />
+    <Compile Include="AssemblyDependency\Service\EvaluationCache.cs" />
+    <Compile Include="AssemblyDependency\Service\EvaluationCacheV2.cs" />
+    <Compile Include="AssemblyDependency\Service\ResolveAssemblyReferenceService.cs" />
+    <Compile Include="AssemblyDependency\Service\ResolveAssemblyReferenceServiceWorker.cs" />
     <Compile Include="CombineTargetFrameworkInfoProperties.cs" />
     <Compile Include="CombineXmlElements.cs" />
     <Compile Include="ConvertToAbsolutePath.cs" />
@@ -711,5 +721,16 @@
       to include third party notices.
     -->
     <Content Update="@(Content)" Pack="false" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Google.Protobuf"/>
+    <PackageReference Include="Grpc.Net.Client"/>
+    <PackageReference Include="Grpc.Tools">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="System.Threading.Channels" />
+    <Protobuf Include="AssemblyDependency/Protos/resolve_assembly_references.proto" />
   </ItemGroup>
 </Project>

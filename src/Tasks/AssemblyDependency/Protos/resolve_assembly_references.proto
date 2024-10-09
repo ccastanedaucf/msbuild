@@ -1,0 +1,103 @@
+syntax = "proto3";
+
+import "google/protobuf/wrappers.proto";
+
+option csharp_namespace = "Microsoft.Build.Tasks.AssemblyDependency";
+
+message ResolveAssemblyReferencesRequest {
+  repeated string allowed_assembly_extensions = 1;
+  repeated string allowed_related_file_extensions = 2;
+  google.protobuf.StringValue app_config_file = 3;
+  repeated ReadOnlyTaskItem assemblies = 4;
+  repeated ReadOnlyTaskItem assembly_files = 5;
+  bool auto_unify = 6;
+  repeated string candidate_assembly_files = 7;
+  bool copy_local_dependencies_when_parent_reference_in_gac = 8;
+  bool do_not_copy_local_if_in_gac = 9;
+  bool find_dependencies = 10;
+  bool find_dependencies_of_externally_resolved_references = 11;
+  bool find_related_files = 12;
+  bool find_satellites = 13;
+  bool find_serialization_assemblies = 14;
+  repeated ReadOnlyTaskItem full_framework_assembly_tables = 15;
+  repeated string full_framework_folders = 16;
+  repeated string full_target_framework_subset_names = 17;
+  bool ignore_default_installed_assembly_subset_tables = 18;
+  bool ignore_default_installed_assembly_tables = 19;
+  bool ignore_target_framework_attribute_version_mismatch = 20;
+  bool ignore_version_for_framework_references = 21;
+  repeated ReadOnlyTaskItem installed_assembly_subset_tables = 22;
+  repeated ReadOnlyTaskItem installed_assembly_tables = 23;
+  repeated string latest_target_framework_directories = 24;
+  google.protobuf.StringValue profile_name = 25;
+  repeated ReadOnlyTaskItem resolved_sdk_references = 26;
+  repeated string search_paths = 27;
+  bool silent = 28;
+  google.protobuf.StringValue state_file = 29;
+  bool supports_binding_redirect_generation = 30;
+  google.protobuf.StringValue targeted_runtime_version = 31;
+  repeated string target_framework_directories = 32;
+  google.protobuf.StringValue target_framework_moniker = 33;
+  google.protobuf.StringValue target_framework_moniker_display_name = 34;
+  repeated string target_framework_subsets = 35;
+  google.protobuf.StringValue target_framework_version = 36;
+  google.protobuf.StringValue target_processor_architecture = 37;
+  bool unresolve_framework_assemblies_from_higher_frameworks = 38;
+  google.protobuf.StringValue warn_or_error_on_target_architecture_mismatch = 39;
+  int32 minimum_message_importance = 40;
+  bool is_task_logging_enabled = 41;
+}
+
+message ResolveAssemblyReferencesReply {
+  bool success = 1;
+  repeated ResolveAssemblyReferenceBuildEventArgs build_event_args_queue = 2;
+  int32 num_copy_local_files = 3;
+  google.protobuf.StringValue depends_on_net_standard = 4;
+  google.protobuf.StringValue depends_on_system_runtime = 5;
+  repeated ReadOnlyTaskItem files_written = 6;
+  repeated ReadOnlyTaskItem related_files = 7;
+  repeated ReadOnlyTaskItem resolved_dependency_files = 8;
+  repeated ReadOnlyTaskItem resolved_files = 9;
+  repeated ReadOnlyTaskItem satellite_files = 10;
+  repeated ReadOnlyTaskItem scatter_files = 11;
+  repeated ReadOnlyTaskItem serialization_assembly_files = 12;
+  repeated ReadOnlyTaskItem suggested_redirects = 13;
+  repeated ReadOnlyTaskItem unresolved_assembly_conflicts = 14;
+  repeated string tracked_directories = 15;
+  repeated string tracked_files = 16;
+  bool isCompleted = 17;
+}
+
+message ReadOnlyTaskItem {
+  string item_spec = 1;
+  bool is_copy_local_file = 2;
+  repeated TaskItemMetadata metadata = 3;
+}
+
+message TaskItemMetadata {
+  string name = 1;
+  string value = 2;
+}
+
+message ResolveAssemblyReferenceBuildEventArgs {
+  BuildEventArgsType build_event_args_type = 1;
+  string message = 2;
+  google.protobuf.StringValue help_keyword = 3;
+  google.protobuf.StringValue sender_name = 4;
+  int64 event_timestamp = 5;
+  repeated string message_args = 6;
+  int32 importance = 7;
+  google.protobuf.StringValue subcategory = 8;
+  google.protobuf.StringValue code = 9;
+  google.protobuf.StringValue file = 10;
+  int32 line_number = 11;
+  int32 column_number = 12;
+  int32 end_line_number = 13;
+  int32 end_column_number = 14;
+}
+
+enum BuildEventArgsType {
+  ERROR = 0;
+  MESSAGE = 1;
+  WARNING = 2;
+}

@@ -138,6 +138,7 @@ namespace Microsoft.Build.Utilities
                 _definingProject = sourceItemAsITaskItem2.GetMetadataValueEscaped(FileUtilities.ItemSpecModifiers.DefiningProjectFullPath);
             }
 
+            _metadata = new CopyOnWriteDictionary<string>(MSBuildNameIgnoreCaseComparer.Default);
             sourceItem.CopyMetadataTo(this);
         }
 
