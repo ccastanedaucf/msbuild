@@ -3,20 +3,33 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Serialization;
+using Microsoft.Build.BackEnd;
 using Microsoft.Build.Collections;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Shared;
 using Microsoft.Build.Utilities;
 
+#nullable disable
+
 namespace Microsoft.Build.Tasks.AssemblyDependency
 {
-    public partial class ReadOnlyTaskItem : ITaskItem2
+    internal class TaskItemSlim : ITaskItem2, ITranslatable
     {
-        private Lazy<Dictionary<string, string>> _metadata;
+        private Dictionary<string, string> _metadata;
+
+        private bool _isCopyLocalFile;
+
+        private string _itemSpec;
+
+        public string ItemSpec { get => _itemSpec; set => _itemSpec = value; }
 
         public ICollection MetadataNames { get; } = Array.Empty<string>();
 
-        public int MetadataCount => Metadata.Count;
+        public bool IsCopyLocalFile => _isCopyLocalFile;
+
+        public Dictionary<string, string> Metadata => _metadata;
+
+        public int MetadataCount => _metadata.Count;
 
         public string EvaluatedIncludeEscaped
         {
@@ -25,64 +38,41 @@ namespace Microsoft.Build.Tasks.AssemblyDependency
             set => throw new NotImplementedException();
         }
 
-        partial void OnConstruction()
+        public TaskItemSlim()
         {
-            _metadata = new(() =>
-            {
-                Dictionary<string, string> metadata = new(Metadata.Count, MSBuildNameIgnoreCaseComparer.Default);
-
-                foreach (TaskItemMetadata itemMetadata in Metadata)
-                {
-                    metadata[itemMetadata.Name] = itemMetadata.Value;
-                }
-
-                return metadata;
-            });
         }
 
-        public ReadOnlyTaskItem(ITaskItem taskItem)
+        public TaskItemSlim(ITaskItem taskItem)
         {
-            ItemSpec = taskItem.ItemSpec;
+            _itemSpec = taskItem.ItemSpec;
 
             if (taskItem is ITaskItem2 taskItem2 && taskItem2.CloneCustomMetadataEscaped() is Dictionary<string, string> metadata)
             {
-                _metadata = new(() => metadata);
+                _metadata = metadata;
             }
             else
             {
-                _metadata = new(() => new(taskItem.MetadataCount, MSBuildNameIgnoreCaseComparer.Default));
+                _metadata = new(taskItem.MetadataCount, MSBuildNameIgnoreCaseComparer.Default);
                 taskItem.CopyMetadataTo(this);
-            }
-
-            foreach (KeyValuePair<string, string> kvp in _metadata.Value)
-            {
-                Metadata.Add(new TaskItemMetadata { Name = kvp.Key, Value = kvp.Value });
             }
         }
 
-        public ReadOnlyTaskItem(ITaskItem taskItem, bool isCopyLocalFile)
+        public TaskItemSlim(ITaskItem taskItem, bool isCopyLocalFile)
         {
-            IsCopyLocalFile = isCopyLocalFile;
-            ItemSpec = taskItem.ItemSpec;
-            _metadata = new(() => new(taskItem.MetadataCount, MSBuildNameIgnoreCaseComparer.Default));
+            _isCopyLocalFile = isCopyLocalFile;
+            _itemSpec = taskItem.ItemSpec;
+            _metadata = new(taskItem.MetadataCount, MSBuildNameIgnoreCaseComparer.Default);
 
-            // TODO: Perf improvement, copying metadata from Utilities.TaskItem accounts for ~10% of RAR-aas overhead
-            // due to slow copying of metadata from the backing CopyOnWriteDictionary.
             if (taskItem is ITaskItem2 taskItem2)
             {
                 foreach (DictionaryEntry metadataNameWithValue in taskItem2.CloneCustomMetadataEscaped())
                 {
-                    _metadata.Value[(string)metadataNameWithValue.Key!] = (string)metadataNameWithValue.Value!;
+                    _metadata[(string)metadataNameWithValue.Key!] = (string)metadataNameWithValue.Value!;
                 }
             }
             else
             {
                 taskItem.CopyMetadataTo(this);
-            }
-
-            foreach (KeyValuePair<string, string> kvp in _metadata.Value)
-            {
-                Metadata.Add(new TaskItemMetadata { Name = kvp.Key, Value = kvp.Value });
             }
         }
 
@@ -91,7 +81,7 @@ namespace Microsoft.Build.Tasks.AssemblyDependency
 
         public void SetMetadata(string metadataName, string metadataValue)
         {
-            _metadata.Value[metadataName] = metadataValue;
+            _metadata[metadataName] = metadataValue;
         }
 
         public void RemoveMetadata(string metadataName)
@@ -103,11 +93,11 @@ namespace Microsoft.Build.Tasks.AssemblyDependency
         {
             if (destinationItem is IMetadataContainer destinationAsTaskItem)
             {
-                destinationAsTaskItem.ImportMetadata(_metadata.Value);
+                destinationAsTaskItem.ImportMetadata(_metadata);
             }
             else
             {
-                foreach (KeyValuePair<string, string> metadataNameAndValue in _metadata.Value)
+                foreach (KeyValuePair<string, string> metadataNameAndValue in _metadata)
                 {
                     destinationItem.SetMetadata(metadataNameAndValue.Key, metadataNameAndValue.Value);
                 }
@@ -120,7 +110,7 @@ namespace Microsoft.Build.Tasks.AssemblyDependency
         }
 
         public string GetMetadataValueEscaped(string metadataName) =>
-            _metadata.Value.TryGetValue(metadataName, out string? metadataValue) ? metadataValue : string.Empty;
+            _metadata.TryGetValue(metadataName, out string metadataValue) ? metadataValue : string.Empty;
 
         public void SetMetadataValueLiteral(string metadataName, string metadataValue)
         {
@@ -130,6 +120,13 @@ namespace Microsoft.Build.Tasks.AssemblyDependency
         public IDictionary CloneCustomMetadataEscaped()
         {
             throw new NotImplementedException();
+        }
+
+        public void Translate(ITranslator translator)
+        {
+            translator.Translate(ref _itemSpec);
+            translator.Translate(ref _isCopyLocalFile);
+            translator.TranslateDictionary(ref _metadata, StringComparer.OrdinalIgnoreCase);
         }
     }
 }

@@ -12,7 +12,7 @@ namespace Microsoft.Build.Tasks.AssemblyDependency
 {
     internal class EvaluationCacheV2
     {
-        private ConcurrentDictionary<ByteString, ResolveAssemblyReferencesReply> _evaluationCache { get; } = [];
+        private ConcurrentDictionary<string, ResolveAssemblyReferenceResponse> _evaluationCache { get; } = [];
 
         private readonly SemaphoreSlim _ioSemaphore;
 
@@ -21,16 +21,17 @@ namespace Microsoft.Build.Tasks.AssemblyDependency
             _ioSemaphore = new SemaphoreSlim(ioParallelism);
         }
 
-        public async Task<ResolveAssemblyReferencesReply?> GetCachedEvaluation(ResolveAssemblyReferencesRequest req)
+        public async Task<ResolveAssemblyReferenceResponse?> GetCachedEvaluation(ResolveAssemblyReferenceRequest request)
         {
-            ByteString requestHash = req.ToByteString();
+            /*
+            string requestHash = request.ToByteString();
 
-            if (!_evaluationCache.TryGetValue(requestHash, out ResolveAssemblyReferencesReply cachedEvaluation))
+            if (!_evaluationCache.TryGetValue(requestHash, out ResolveAssemblyReferenceResponse cachedEvaluation))
             {
                 return null;
             }
 
-            SystemState cache = cachedEvaluation.Cache;
+            SystemState cache = cachedEvaluation.Cache!;
 
             List<Task> workerTasks = new(cache.instanceLocalFileStateCache.Count);
 
@@ -54,12 +55,16 @@ namespace Microsoft.Build.Tasks.AssemblyDependency
             await Task.WhenAll(workerTasks.ToArray());
 
             return cachedEvaluation;
+            */
+            return null;
         }
 
-        public void CacheEvaluation(ResolveAssemblyReferencesRequest req, ResolveAssemblyReferencesReply resp)
+        public void CacheEvaluation(ResolveAssemblyReferenceRequest request, ResolveAssemblyReferenceResponse response)
         {
-            ByteString requestHash = req.ToByteString();
-            _evaluationCache[requestHash] = resp;
+            /*
+            string requestHash = request.ToByteString();
+            _evaluationCache[requestHash] = response;
+            */
         }
     }
 }

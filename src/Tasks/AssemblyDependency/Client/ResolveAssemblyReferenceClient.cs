@@ -4,10 +4,12 @@ using System.IO;
 using System.IO.Pipes;
 using System.Linq;
 using System.Net.Http;
+using System.Text;
 using System.Xml.Serialization;
 using Google.Protobuf;
 using Google.Protobuf.Collections;
 using Grpc.Net.Client;
+using Microsoft.Build.BackEnd;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 
@@ -26,9 +28,8 @@ namespace Microsoft.Build.Tasks.AssemblyDependency
             // Allow the service to avoid processing messages which would never be logged by the client.
             MessageImportance minimumMessageImportance = GetMinimumMessageImportance(rarTask.Log);
 
-            ResolveAssemblyReferencesRequest req = new()
+            ResolveAssemblyReferenceRequest req = new()
             {
-                AppConfigFile = appConfigFile,
                 AutoUnify = rarTask.AutoUnify,
                 CopyLocalDependenciesWhenParentReferenceInGac = rarTask.CopyLocalDependenciesWhenParentReferenceInGac,
                 DoNotCopyLocalIfInGac = rarTask.DoNotCopyLocalIfInGac,
@@ -41,37 +42,38 @@ namespace Microsoft.Build.Tasks.AssemblyDependency
                 IgnoreDefaultInstalledAssemblyTables = rarTask.IgnoreDefaultInstalledAssemblyTables,
                 IgnoreTargetFrameworkAttributeVersionMismatch = rarTask.IgnoreTargetFrameworkAttributeVersionMismatch,
                 IgnoreVersionForFrameworkReferences = rarTask.IgnoreVersionForFrameworkReferences,
-                ProfileName = rarTask.ProfileName,
                 Silent = rarTask.Silent,
-                StateFile = stateFile,
                 SupportsBindingRedirectGeneration = rarTask.SupportsBindingRedirectGeneration,
+                UnresolveFrameworkAssembliesFromHigherFrameworks = rarTask.UnresolveFrameworkAssembliesFromHigherFrameworks,
+                IsTaskLoggingEnabled = rarTask.Log.IsTaskInputLoggingEnabled,
+                MinimumMessageImportance = minimumMessageImportance,
+                AppConfigFile = appConfigFile,
+                ProfileName = rarTask.ProfileName,
+                StateFile = stateFile,
+                TargetedRuntimeVersion = rarTask.TargetedRuntimeVersion,
                 TargetFrameworkMoniker = rarTask.TargetFrameworkMoniker,
                 TargetFrameworkMonikerDisplayName = rarTask.TargetFrameworkMonikerDisplayName,
                 TargetFrameworkVersion = rarTask.TargetFrameworkVersion,
                 TargetProcessorArchitecture = rarTask.TargetProcessorArchitecture,
-                TargetedRuntimeVersion = rarTask.TargetedRuntimeVersion,
-                UnresolveFrameworkAssembliesFromHigherFrameworks = rarTask.UnresolveFrameworkAssembliesFromHigherFrameworks,
                 WarnOrErrorOnTargetArchitectureMismatch = rarTask.WarnOrErrorOnTargetArchitectureMismatch,
-                MinimumMessageImportance = (int)minimumMessageImportance,
-                IsTaskLoggingEnabled = rarTask.Log.IsTaskInputLoggingEnabled,
+                AllowedAssemblyExtensions = rarTask.AllowedAssemblyExtensions,
+                AllowedRelatedFileExtensions = rarTask.AllowedRelatedFileExtensions,
+                Assemblies = CreateReadOnlyTaskItems(rarTask.Assemblies),
+                AssemblyFiles = CreateReadOnlyTaskItems(rarTask.AssemblyFiles),
+                CandidateAssemblyFiles = rarTask.CandidateAssemblyFiles,
+                FullFrameworkAssemblyTables = CreateReadOnlyTaskItems(rarTask.FullFrameworkAssemblyTables),
+                FullFrameworkFolders = rarTask.FullFrameworkFolders,
+                FullTargetFrameworkSubsetNames = rarTask.FullTargetFrameworkSubsetNames,
+                InstalledAssemblyTables = CreateReadOnlyTaskItems(rarTask.InstalledAssemblyTables),
+                InstalledAssemblySubsetTables = CreateReadOnlyTaskItems(rarTask.InstalledAssemblySubsetTables),
+                LatestTargetFrameworkDirectories = rarTask.LatestTargetFrameworkDirectories,
+                ResolvedSDKReferences = CreateReadOnlyTaskItems(rarTask.ResolvedSDKReferences),
+                SearchPaths = rarTask.SearchPaths,
+                TargetFrameworkDirectories = rarTask.TargetFrameworkDirectories,
+                TargetFrameworkSubsets = rarTask.TargetFrameworkSubsets,
             };
-            req.AllowedAssemblyExtensions.Add(rarTask.AllowedAssemblyExtensions);
-            req.AllowedRelatedFileExtensions.Add(rarTask.AllowedRelatedFileExtensions);
-            req.Assemblies.Add(CreateReadOnlyTaskItems(rarTask.Assemblies));
-            req.AssemblyFiles.Add(CreateReadOnlyTaskItems(rarTask.AssemblyFiles));
-            req.CandidateAssemblyFiles.Add(rarTask.CandidateAssemblyFiles);
-            req.FullFrameworkAssemblyTables.Add(CreateReadOnlyTaskItems(rarTask.FullFrameworkAssemblyTables));
-            req.FullFrameworkFolders.Add(rarTask.FullFrameworkFolders);
-            req.FullTargetFrameworkSubsetNames.Add(rarTask.FullTargetFrameworkSubsetNames);
-            req.InstalledAssemblySubsetTables.Add(CreateReadOnlyTaskItems(rarTask.InstalledAssemblySubsetTables));
-            req.InstalledAssemblyTables.Add(CreateReadOnlyTaskItems(rarTask.InstalledAssemblyTables));
-            req.LatestTargetFrameworkDirectories.Add(rarTask.LatestTargetFrameworkDirectories);
-            req.ResolvedSdkReferences.Add(CreateReadOnlyTaskItems(rarTask.ResolvedSDKReferences));
-            req.SearchPaths.Add(rarTask.SearchPaths);
-            req.TargetFrameworkDirectories.Add(rarTask.TargetFrameworkDirectories);
-            req.TargetFrameworkSubsets.Add(rarTask.TargetFrameworkSubsets);
 
-            ResolveAssemblyReferencesReply resp = ResolveAssemblyReferences(req, rarTask.BuildEngine);
+            ResolveAssemblyReferenceResponse resp = ResolveAssemblyReferences(req, rarTask.BuildEngine);
             SetTaskOutputs(rarTask, resp);
 
             return resp.Success;
@@ -92,64 +94,96 @@ namespace Microsoft.Build.Tasks.AssemblyDependency
             return MessageImportance.High;
         }
 
-        private ResolveAssemblyReferencesReply ResolveAssemblyReferences(ResolveAssemblyReferencesRequest req, IBuildEngine buildEngine)
+        private ResolveAssemblyReferenceResponse ResolveAssemblyReferences(ResolveAssemblyReferenceRequest request, IBuildEngine buildEngine)
         {
             using NamedPipeClientStream pipe = new(".", ResolveAssemblyReferenceService.PipeName, PipeDirection.InOut);
             pipe.Connect(FallbackTimeout);
 
-            MessageExtensions.WriteDelimitedTo(req, pipe);
-            ResolveAssemblyReferencesReply reply = ResolveAssemblyReferencesReply.Parser.ParseDelimitedFrom(pipe);
+            SendRequest(pipe, request);
+            ResolveAssemblyReferenceResponse response = ReadResponse(pipe);
 
             // The RAR service will reply with queued build events before the task has completed.
             // Process these while waiting for completion.
-            while (!reply.IsCompleted)
+            while (!response.IsComplete)
             {
-                LogBuildEvents(buildEngine, reply.BuildEventArgsQueue);
-                reply = ResolveAssemblyReferencesReply.Parser.ParseDelimitedFrom(pipe);
+                LogBuildEvents(buildEngine, response.BuildEventArgsQueue);
+                response = ReadResponse(pipe);
             }
 
-            LogBuildEvents(buildEngine, reply.BuildEventArgsQueue);
+            LogBuildEvents(buildEngine, response.BuildEventArgsQueue);
 
-            return reply;
+            return response;
         }
 
-        private static List<ReadOnlyTaskItem> CreateReadOnlyTaskItems(ITaskItem[] taskItems)
+        private void SendRequest(NamedPipeClientStream pipe, ResolveAssemblyReferenceRequest request)
         {
-            List<ReadOnlyTaskItem> readOnlyTaskItems = new(taskItems.Length);
+            // Serialize to temporary buffer to reduce IO calls.
+            using MemoryStream memoryStream = new();
+            ITranslator translator = BinaryTranslator.GetWriteTranslator(memoryStream);
+            translator.Translate(ref request);
+
+            // Delimit message with length.
+            pipe.Write(Encoding.UTF8.GetBytes(memoryStream.Length.ToString()));
+
+            // Send the serialized request.
+            memoryStream.CopyTo(pipe);
+        }
+
+        private ResolveAssemblyReferenceResponse ReadResponse(NamedPipeClientStream pipe)
+        {
+            // Read the message length.
+            using BinaryReader reader = new(pipe, Encoding.Default, leaveOpen: true);
+            int messageLength = reader.ReadInt32();
+
+            // Read raw bytes to a temporary buffer to reduce IO calls.
+            using MemoryStream memoryStream = new(messageLength);
+            byte[] buffer = memoryStream.GetBuffer();
+            pipe.Read(buffer, 0, buffer.Length);
+
+            // Deserialize the request.
+            memoryStream.Position = 0;
+            ITranslator translator = BinaryTranslator.GetReadTranslator(memoryStream, InterningBinaryReader.PoolingBuffer);
+            ResolveAssemblyReferenceResponse response = new();
+            translator.Translate(ref response);
+
+            return response;
+        }
+
+        private static TaskItemSlim[] CreateReadOnlyTaskItems(ITaskItem[] taskItems)
+        {
+            List<TaskItemSlim> readOnlyTaskItems = new(taskItems.Length);
 
             foreach (ITaskItem taskItem in taskItems)
             {
-                readOnlyTaskItems.Add(new ReadOnlyTaskItem(taskItem));
+                readOnlyTaskItems.Add(new TaskItemSlim(taskItem));
             }
 
-            return readOnlyTaskItems;
+            return readOnlyTaskItems.ToArray();
         }
 
-        private static void SetTaskOutputs(ResolveAssemblyReference rarTask, ResolveAssemblyReferencesReply resp)
+
+        private static void SetTaskOutputs(ResolveAssemblyReference rarTask, ResolveAssemblyReferenceResponse response)
         {
-            rarTask.DependsOnNETStandard = resp.DependsOnNetStandard;
-            rarTask.DependsOnSystemRuntime = resp.DependsOnSystemRuntime;
+            rarTask.DependsOnNETStandard = response.DependsOnNetStandard;
+            rarTask.DependsOnSystemRuntime = response.DependsOnSystemRuntime;
+            List<ITaskItem> copyLocalFiles = new(response.NumCopyLocalFiles);
+            rarTask.FilesWritten = ExtractTaskItems(response.FilesWritten);
+            rarTask.RelatedFiles = ExtractTaskItems(response.RelatedFiles);
+            rarTask.ResolvedDependencyFiles = ExtractTaskItems(response.ResolvedDependencyFiles);
+            rarTask.ResolvedFiles = ExtractTaskItems(response.ResolvedFiles);
+            rarTask.SatelliteFiles = ExtractTaskItems(response.SatelliteFiles);
+            rarTask.ScatterFiles = ExtractTaskItems(response.ScatterFiles);
+            rarTask.SerializationAssemblyFiles = ExtractTaskItems(response.SerializationAssemblyFiles);
+            rarTask.SuggestedRedirects = ExtractTaskItems(response.SuggestedRedirects);
+            rarTask.UnresolvedAssemblyConflicts = ExtractTaskItems(response.UnresolvedAssemblyConflicts);
 
-            List<ITaskItem> copyLocalFiles = new(resp.NumCopyLocalFiles);
-
-            rarTask.FilesWritten = ExtractTaskItems(resp.FilesWritten);
-            rarTask.RelatedFiles = ExtractTaskItems(resp.RelatedFiles);
-            rarTask.ResolvedDependencyFiles = ExtractTaskItems(resp.ResolvedDependencyFiles);
-            rarTask.ResolvedFiles = ExtractTaskItems(resp.ResolvedFiles);
-            rarTask.SatelliteFiles = ExtractTaskItems(resp.SatelliteFiles);
-            rarTask.ScatterFiles = ExtractTaskItems(resp.ScatterFiles);
-            rarTask.SerializationAssemblyFiles = ExtractTaskItems(resp.SerializationAssemblyFiles);
-            rarTask.SuggestedRedirects = ExtractTaskItems(resp.SuggestedRedirects);
-            rarTask.UnresolvedAssemblyConflicts = ExtractTaskItems(resp.UnresolvedAssemblyConflicts);
-            rarTask.CopyLocalFiles = [.. copyLocalFiles];
-
-            ITaskItem[] ExtractTaskItems(RepeatedField<ReadOnlyTaskItem> readOnlyTaskItems)
+            ITaskItem[] ExtractTaskItems(TaskItemSlim[] readOnlyTaskItems)
             {
-                ITaskItem[] taskItems = new ITaskItem[readOnlyTaskItems.Count];
+                ITaskItem[] taskItems = new ITaskItem[readOnlyTaskItems.Length];
 
-                for (int i = 0; i < readOnlyTaskItems.Count; i++)
+                for (int i = 0; i < readOnlyTaskItems.Length; i++)
                 {
-                    ReadOnlyTaskItem readOnlyTaskItem = readOnlyTaskItems[i];
+                    TaskItemSlim readOnlyTaskItem = readOnlyTaskItems[i];
 
                     TaskItem taskItem = new(readOnlyTaskItem);
                     taskItems[i] = taskItem;
@@ -164,7 +198,7 @@ namespace Microsoft.Build.Tasks.AssemblyDependency
             }
         }
 
-        private static void LogBuildEvents(IBuildEngine buildEngine, ICollection<ResolveAssemblyReferenceBuildEventArgs> buildEventsArgsQueue)
+        private static void LogBuildEvents(IBuildEngine buildEngine, ResolveAssemblyReferenceBuildEventArgs[] buildEventsArgsQueue)
         {
             foreach (ResolveAssemblyReferenceBuildEventArgs buildEventArgs in buildEventsArgsQueue)
             {

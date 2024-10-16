@@ -68,6 +68,8 @@
     <Compile Include="AssemblyDependency\AssemblyMetadata.cs" />
     <Compile Include="AssemblyDependency\Client\ResolveAssemblyReferenceClient.cs" />
     <Compile Include="AssemblyDependency\Serialization\ReadOnlyTaskItem.cs" />
+    <Compile Include="AssemblyDependency\Serialization\ResolveAssemblyReferenceRequest.cs" />
+    <Compile Include="AssemblyDependency\Serialization\ResolveAssemblyReferenceResponse.cs" />
     <Compile Include="AssemblyDependency\Serialization\ResolveAssemblyReferencesReply.cs" />
     <Compile Include="AssemblyDependency\Service\BuildEventProcessor.cs" />
     <Compile Include="AssemblyDependency\Service\CacheWatcher.cs" />
