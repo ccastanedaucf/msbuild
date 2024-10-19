@@ -13,7 +13,7 @@ using Microsoft.Build.Utilities;
 
 namespace Microsoft.Build.Tasks.AssemblyDependency
 {
-    internal class ResolveAssemblyReferenceResponse : ResolveAssemblyReferenceMessage, ITranslatable
+    internal class ResolveAssemblyReferenceResponseSlim : ITranslatable
     {
         private bool _isComplete;
         private bool _success;
@@ -73,18 +73,18 @@ namespace Microsoft.Build.Tasks.AssemblyDependency
         {
             translator.Translate(ref _isComplete);
             translator.Translate(ref _success);
-            translator.Translate(ref _dependsOnNetStandard);
-            translator.Translate(ref _dependsOnSystemRuntime);
-            translator.Translate(ref _numCopyLocalFiles);
-            translator.TranslateArray(ref _filesWritten);
-            translator.TranslateArray(ref _relatedFiles);
-            translator.TranslateArray(ref _resolvedDependencyFiles);
-            translator.TranslateArray(ref _resolvedFiles);
-            translator.TranslateArray(ref _satelliteFiles);
-            translator.TranslateArray(ref _scatterFiles);
-            translator.TranslateArray(ref _serializationAssemblyFiles);
-            translator.TranslateArray(ref _suggestedRedirects);
-            translator.TranslateArray(ref _unresolvedAssemblyConflicts);
+            // translator.Translate(ref _dependsOnNetStandard);
+            // translator.Translate(ref _dependsOnSystemRuntime);
+            // translator.Translate(ref _numCopyLocalFiles);
+            // translator.TranslateArray(ref _filesWritten);
+            // translator.TranslateArray(ref _relatedFiles);
+            // translator.TranslateArray(ref _resolvedDependencyFiles);
+            // translator.TranslateArray(ref _resolvedFiles);
+            // translator.TranslateArray(ref _satelliteFiles);
+            // translator.TranslateArray(ref _scatterFiles);
+            // translator.TranslateArray(ref _serializationAssemblyFiles);
+            // translator.TranslateArray(ref _suggestedRedirects);
+            // translator.TranslateArray(ref _unresolvedAssemblyConflicts);
         }
     }
 }

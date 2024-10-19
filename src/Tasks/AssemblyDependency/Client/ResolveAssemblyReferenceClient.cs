@@ -1,3 +1,6 @@
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -15,9 +18,11 @@ using Microsoft.Build.Utilities;
 
 namespace Microsoft.Build.Tasks.AssemblyDependency
 {
-    internal class ResolveAssemblyReferenceClient
+    internal class ResolveAssemblyReferenceClient : ResolveAssemblyReferenceNodeBase
     {
         private const int FallbackTimeout = 5000;
+
+        private static readonly byte[] ReusableBuffer = new byte[DefaultBufferSizeInBytes];
 
         public bool Execute(ResolveAssemblyReference rarTask)
         {
@@ -117,36 +122,41 @@ namespace Microsoft.Build.Tasks.AssemblyDependency
 
         private void SendRequest(NamedPipeClientStream pipe, ResolveAssemblyReferenceRequest request)
         {
+            const int DefaultRequestSizeInBytes = 81_920;
+            const int RequestOffsetInBytes = 4;
+
             // Serialize to temporary buffer to reduce IO calls.
-            using MemoryStream memoryStream = new();
+            using MemoryStream memoryStream = new(DefaultRequestSizeInBytes);
             ITranslator translator = BinaryTranslator.GetWriteTranslator(memoryStream);
+            memoryStream.Position = RequestOffsetInBytes;
             translator.Translate(ref request);
 
             // Delimit message with length.
-            pipe.Write(Encoding.UTF8.GetBytes(memoryStream.Length.ToString()));
+            int requestLength = (int)memoryStream.Length - RequestOffsetInBytes;
+            memoryStream.Position = 0;
+            translator.Writer.Write(requestLength);
 
             // Send the serialized request.
+            memoryStream.Position = 0;
             memoryStream.CopyTo(pipe);
         }
 
         private ResolveAssemblyReferenceResponse ReadResponse(NamedPipeClientStream pipe)
         {
-            // Read the message length.
-            using BinaryReader reader = new(pipe, Encoding.Default, leaveOpen: true);
-            int messageLength = reader.ReadInt32();
-
             // Read raw bytes to a temporary buffer to reduce IO calls.
-            using MemoryStream memoryStream = new(messageLength);
-            byte[] buffer = memoryStream.GetBuffer();
-            pipe.Read(buffer, 0, buffer.Length);
+            int bytesRead = ReadPipe(pipe, ReusableBuffer, 0, MessageOffsetInBytes);
+            int messageLength = ParseMessageLength(ReusableBuffer);
 
-            // Deserialize the request.
-            memoryStream.Position = 0;
-            ITranslator translator = BinaryTranslator.GetReadTranslator(memoryStream, InterningBinaryReader.PoolingBuffer);
-            ResolveAssemblyReferenceResponse response = new();
-            translator.Translate(ref response);
+            // Additional reads for the remaining message.
+            byte[] buffer = EnsureBufferSize(ReusableBuffer, messageLength);
+            bytesRead = ReadPipe(pipe, buffer, bytesRead, messageLength);
 
-            return response;
+            if (bytesRead > messageLength)
+            {
+                throw new Exception("Should not be reading into next message!");
+            }
+
+            return Deserialize<ResolveAssemblyReferenceResponse>(buffer, messageLength);
         }
 
         private static TaskItemSlim[] CreateReadOnlyTaskItems(ITaskItem[] taskItems)
@@ -158,9 +168,8 @@ namespace Microsoft.Build.Tasks.AssemblyDependency
                 readOnlyTaskItems.Add(new TaskItemSlim(taskItem));
             }
 
-            return readOnlyTaskItems.ToArray();
+            return [.. readOnlyTaskItems];
         }
-
 
         private static void SetTaskOutputs(ResolveAssemblyReference rarTask, ResolveAssemblyReferenceResponse response)
         {

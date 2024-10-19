@@ -1,3 +1,6 @@
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -23,8 +26,7 @@ namespace Microsoft.Build.Tasks.AssemblyDependency
 
         public async Task<ResolveAssemblyReferenceResponse?> GetCachedEvaluation(ResolveAssemblyReferenceRequest request)
         {
-            /*
-            string requestHash = request.ToByteString();
+            string requestHash = request.ByteString!;
 
             if (!_evaluationCache.TryGetValue(requestHash, out ResolveAssemblyReferenceResponse cachedEvaluation))
             {
@@ -55,16 +57,12 @@ namespace Microsoft.Build.Tasks.AssemblyDependency
             await Task.WhenAll(workerTasks.ToArray());
 
             return cachedEvaluation;
-            */
-            return null;
         }
 
         public void CacheEvaluation(ResolveAssemblyReferenceRequest request, ResolveAssemblyReferenceResponse response)
         {
-            /*
-            string requestHash = request.ToByteString();
+            string requestHash = request.ByteString!;
             _evaluationCache[requestHash] = response;
-            */
         }
     }
 }

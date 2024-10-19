@@ -14,7 +14,7 @@ using Microsoft.Build.Utilities;
 
 namespace Microsoft.Build.Tasks.AssemblyDependency
 {
-    internal class ResolveAssemblyReferenceRequest : ResolveAssemblyReferenceMessage, ITranslatable
+    internal class ResolveAssemblyReferenceRequestSlim : ITranslatable
     {
         private bool _autoUnify;
         private bool _copyLocalDependenciesWhenParentReferenceInGac;
@@ -143,46 +143,47 @@ namespace Microsoft.Build.Tasks.AssemblyDependency
         public void Translate(ITranslator translator)
         {
             translator.Translate(ref _autoUnify);
-            translator.Translate(ref _copyLocalDependenciesWhenParentReferenceInGac);
-            translator.Translate(ref _doNotCopyLocalIfInGac);
-            translator.Translate(ref _findDependencies);
-            translator.Translate(ref _findDependenciesOfExternallyResolvedReferences);
-            translator.Translate(ref _findRelatedFiles);
-            translator.Translate(ref _findSatellites);
-            translator.Translate(ref _findSerializationAssemblies);
-            translator.Translate(ref _ignoreDefaultInstalledAssemblySubsetTables);
-            translator.Translate(ref _ignoreDefaultInstalledAssemblyTables);
-            translator.Translate(ref _ignoreTargetFrameworkAttributeVersionMismatch);
-            translator.Translate(ref _ignoreVersionForFrameworkReferences);
-            translator.Translate(ref _silent);
-            translator.Translate(ref _supportsBindingRedirectGeneration);
-            translator.Translate(ref _unresolveFrameworkAssembliesFromHigherFrameworks);
-            translator.Translate(ref _isTaskLoggingEnabled);
-            translator.TranslateEnum(ref _minimumMessageImportance, (int)_minimumMessageImportance);
-            translator.Translate(ref _appConfigFile);
-            translator.Translate(ref _profileName);
-            translator.Translate(ref _stateFile);
-            translator.Translate(ref _targetedRuntimeVersion);
-            translator.Translate(ref _targetFrameworkMoniker);
-            translator.Translate(ref _targetFrameworkMonikerDisplayName);
-            translator.Translate(ref _targetFrameworkVersion);
-            translator.Translate(ref _targetProcessorArchitecture);
-            translator.Translate(ref _warnOrErrorOnTargetArchitectureMismatch);
-            translator.Translate(ref _allowedAssemblyExtensions);
-            translator.Translate(ref _allowedRelatedFileExtensions);
-            translator.TranslateArray(ref _assemblies);
-            translator.TranslateArray(ref _assemblyFiles);
-            translator.Translate(ref _candidateAssemblyFiles);
-            translator.TranslateArray(ref _fullFrameworkAssemblyTables);
-            translator.Translate(ref _fullFrameworkFolders);
-            translator.Translate(ref _fullTargetFrameworkSubsetNames);
-            translator.TranslateArray(ref _installedAssemblyTables);
-            translator.TranslateArray(ref _installedAssemblySubsetTables);
-            translator.Translate(ref _latestTargetFrameworkDirectories);
-            translator.TranslateArray(ref _resolvedSDKReferences);
-            translator.Translate(ref _searchPaths);
-            translator.Translate(ref _targetFrameworkDirectories);
-            translator.Translate(ref _targetFrameworkSubsets);
+
+            // translator.Translate(ref _copyLocalDependenciesWhenParentReferenceInGac);
+            // translator.Translate(ref _doNotCopyLocalIfInGac);
+            // translator.Translate(ref _findDependencies);
+            // translator.Translate(ref _findDependenciesOfExternallyResolvedReferences);
+            // translator.Translate(ref _findRelatedFiles);
+            // translator.Translate(ref _findSatellites);
+            // translator.Translate(ref _findSerializationAssemblies);
+            // translator.Translate(ref _ignoreDefaultInstalledAssemblySubsetTables);
+            // translator.Translate(ref _ignoreDefaultInstalledAssemblyTables);
+            // translator.Translate(ref _ignoreTargetFrameworkAttributeVersionMismatch);
+            // translator.Translate(ref _ignoreVersionForFrameworkReferences);
+            // translator.Translate(ref _silent);
+            // translator.Translate(ref _supportsBindingRedirectGeneration);
+            // translator.Translate(ref _unresolveFrameworkAssembliesFromHigherFrameworks);
+            // translator.Translate(ref _isTaskLoggingEnabled);
+            // translator.TranslateEnum(ref _minimumMessageImportance, (int)_minimumMessageImportance);
+            // translator.Translate(ref _appConfigFile);
+            // translator.Translate(ref _profileName);
+            // translator.Translate(ref _stateFile);
+            // translator.Translate(ref _targetedRuntimeVersion);
+            // translator.Translate(ref _targetFrameworkMoniker);
+            // translator.Translate(ref _targetFrameworkMonikerDisplayName);
+            // translator.Translate(ref _targetFrameworkVersion);
+            // translator.Translate(ref _targetProcessorArchitecture);
+            // translator.Translate(ref _warnOrErrorOnTargetArchitectureMismatch);
+            // translator.Translate(ref _allowedAssemblyExtensions);
+            // translator.Translate(ref _allowedRelatedFileExtensions);
+            // translator.TranslateArray(ref _assemblies);
+            // translator.TranslateArray(ref _assemblyFiles);
+            // translator.Translate(ref _candidateAssemblyFiles);
+            // translator.TranslateArray(ref _fullFrameworkAssemblyTables);
+            // translator.Translate(ref _fullFrameworkFolders);
+            // translator.Translate(ref _fullTargetFrameworkSubsetNames);
+            // translator.TranslateArray(ref _installedAssemblyTables);
+            // translator.TranslateArray(ref _installedAssemblySubsetTables);
+            // translator.Translate(ref _latestTargetFrameworkDirectories);
+            // translator.TranslateArray(ref _resolvedSDKReferences);
+            // translator.Translate(ref _searchPaths);
+            // translator.Translate(ref _targetFrameworkDirectories);
+            // translator.Translate(ref _targetFrameworkSubsets);
         }
     }
 }

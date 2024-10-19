@@ -1,3 +1,6 @@
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+
 using System;
 using System.Collections;
 using System.Collections.Concurrent;
@@ -18,8 +21,10 @@ using Microsoft.Build.Framework;
 
 namespace Microsoft.Build.Tasks.AssemblyDependency
 {
-    internal class ResolveAssemblyReferenceServiceWorker
+    internal class ResolveAssemblyReferenceServiceWorker : ResolveAssemblyReferenceNodeBase
     {
+        private const int MaxBuildEvents = 100;
+
         private readonly string _workerId;
 
         private readonly NamedPipeServerStream _pipe;
@@ -30,7 +35,7 @@ namespace Microsoft.Build.Tasks.AssemblyDependency
 
         private readonly Queue<ResolveAssemblyReferenceBuildEventArgs> _buildEventQueue;
 
-        private const int MaxBuildEvents = 100;
+        private readonly byte[] _resuableBuffer = new byte[DefaultBufferSizeInBytes];
 
         internal ResolveAssemblyReferenceServiceWorker(
             string workerId,
@@ -67,14 +72,10 @@ namespace Microsoft.Build.Tasks.AssemblyDependency
 
                     ResolveAssemblyReferenceRequest request = ReadRequest();
                     ResolveAssemblyReferenceResponse response = await ResolveAssemblyReferencesAsync(request, cancellationToken);
-
-                    Console.WriteLine($"({_workerId}) Writing response...");
                     SendResponse(response);
 
                     // Avoid replaying build events on future runs.
                     response.BuildEventArgsQueue = [];
-
-                    Console.WriteLine($"({_workerId}) Waiting for pipe drain...");
                     _pipe.WaitForPipeDrain();
 
                     e2eTime.Stop();
@@ -91,35 +92,32 @@ namespace Microsoft.Build.Tasks.AssemblyDependency
 
         private ResolveAssemblyReferenceRequest ReadRequest()
         {
-            // Read the message length.
-            using BinaryReader reader = new(_pipe, Encoding.Default, leaveOpen: true);
-            int messageLength = reader.ReadInt32();
-
             // Read raw bytes to a temporary buffer to reduce IO calls.
-            using MemoryStream memoryStream = new(messageLength);
-            byte[] buffer = memoryStream.GetBuffer();
-            _pipe.Read(buffer, 0, buffer.Length);
+            int bytesRead = ReadPipe(_pipe, _resuableBuffer, 0, MessageOffsetInBytes);
+            int messageLength = ParseMessageLength(_resuableBuffer);
 
-            // Deserialize the request.
-            memoryStream.Position = 0;
-            ITranslator translator = BinaryTranslator.GetReadTranslator(memoryStream, InterningBinaryReader.PoolingBuffer);
-            ResolveAssemblyReferenceRequest request = new();
-            translator.Translate(ref request);
+            // Additional reads for the remaining message.
+            byte[] buffer = EnsureBufferSize(_resuableBuffer, messageLength);
+            ReadPipe(_pipe, buffer, bytesRead, messageLength);
 
-            return request;
+            return Deserialize<ResolveAssemblyReferenceRequest>(buffer, messageLength, setHash: true);
         }
 
         private void SendResponse(ResolveAssemblyReferenceResponse response)
         {
             // Serialize to temporary buffer to reduce IO calls.
-            using MemoryStream memoryStream = new();
+            using MemoryStream memoryStream = new(DefaultBufferSizeInBytes);
             ITranslator translator = BinaryTranslator.GetWriteTranslator(memoryStream);
+            memoryStream.Position = MessageOffsetInBytes;
             translator.Translate(ref response);
 
             // Delimit message with length.
-            _pipe.Write(Encoding.UTF8.GetBytes(memoryStream.Length.ToString()));
+            int requestLength = (int)memoryStream.Length - MessageOffsetInBytes;
+            memoryStream.Position = 0;
+            translator.Writer.Write(requestLength);
 
-            // Send the serialized response.
+            // Send the serialized request.
+            memoryStream.Position = 0;
             memoryStream.CopyTo(_pipe);
         }
 
@@ -130,7 +128,6 @@ namespace Microsoft.Build.Tasks.AssemblyDependency
             // TODO: Determine proper project identifier which does not rely on state file.
             if (isCacheable)
             {
-                /*
                 ResolveAssemblyReferenceResponse? cachedResult = await _evaluationCache.GetCachedEvaluation(request);
 
                 if (cachedResult != null)
@@ -138,7 +135,6 @@ namespace Microsoft.Build.Tasks.AssemblyDependency
                     Console.WriteLine($"({_workerId}) Cache hit for '{request.StateFile}'. Skipping RAR.')");
                     return cachedResult;
                 }
-                */
             }
 
             Console.WriteLine($"({_workerId}) Executing RAR for '{request.StateFile}'.");

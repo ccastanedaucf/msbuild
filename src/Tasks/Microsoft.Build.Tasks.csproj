@@ -67,6 +67,10 @@
     <Compile Include="AssemblyDependency\AssemblyAttributes.cs" />
     <Compile Include="AssemblyDependency\AssemblyMetadata.cs" />
     <Compile Include="AssemblyDependency\Client\ResolveAssemblyReferenceClient.cs" />
+    <Compile Include="AssemblyDependency\Perf\ResolveAssemblyReferencePerfTester.cs" />
+    <Compile Include="AssemblyDependency\Perf\ResolveAssemblyReferenceRequestSlim.cs" />
+    <Compile Include="AssemblyDependency\Perf\ResolveAssemblyReferenceResponseSlim.cs" />
+    <Compile Include="AssemblyDependency\Serialization\ResolveAssemblyReferenceMessage.cs" />
     <Compile Include="AssemblyDependency\Serialization\ReadOnlyTaskItem.cs" />
     <Compile Include="AssemblyDependency\Serialization\ResolveAssemblyReferenceRequest.cs" />
     <Compile Include="AssemblyDependency\Serialization\ResolveAssemblyReferenceResponse.cs" />
@@ -76,6 +80,7 @@
     <Compile Include="AssemblyDependency\Service\EventQueueBuildEngine.cs" />
     <Compile Include="AssemblyDependency\Service\EvaluationCache.cs" />
     <Compile Include="AssemblyDependency\Service\EvaluationCacheV2.cs" />
+    <Compile Include="AssemblyDependency\Service\ResolveAssemblyReferenceNodeBase.cs" />
     <Compile Include="AssemblyDependency\Service\ResolveAssemblyReferenceService.cs" />
     <Compile Include="AssemblyDependency\Service\ResolveAssemblyReferenceServiceWorker.cs" />
     <Compile Include="CombineTargetFrameworkInfoProperties.cs" />

@@ -3319,6 +3319,12 @@ namespace Microsoft.Build.Tasks
             {
                 return false;
             }
+
+            // catch (Exception e)
+            // {
+            //     Console.WriteLine(e);
+            //     return false;
+            // }
         }
 
         #endregion
