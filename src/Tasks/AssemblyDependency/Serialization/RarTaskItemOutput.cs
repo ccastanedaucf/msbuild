@@ -12,18 +12,42 @@ using Microsoft.Build.Framework;
 using Microsoft.Build.Shared;
 using Microsoft.Build.Utilities;
 
-#nullable disable
-
 namespace Microsoft.Build.Tasks.AssemblyDependency
 {
-    // Shim for Utilities.TaskItem
-    internal class ResolveAssemblyReferenceResponseItem : ITaskItem2, ITranslatable
+    // Minimal shim for Utilities.TaskItem, which is used for RAR outputs.
+    // Code paths not hit by RAR are unimplmeneted and will throw an exception.
+    // This allows us to emit a smaller serialization payload and optimize hot paths.
+    internal class RarTaskItemOutput : ITaskItem2, ITranslatable
     {
-        private Dictionary<string, string> _metadata;
-
         private bool _isCopyLocalFile;
 
+        private Dictionary<string, string> _metadata;
+
         private string _evaluatedIncludeEscaped;
+
+        public RarTaskItemOutput()
+        {
+            _metadata = [];
+            _evaluatedIncludeEscaped = string.Empty;
+        }
+
+        public RarTaskItemOutput(ITaskItem taskItem, bool isCopyLocalFile)
+        {
+            // This should only be called with a Utilities.TaskItem.
+            if (taskItem is not ITaskItem2 taskItem2)
+            {
+                throw new ArgumentException("Type does not implement 'ITaskItem2'.", nameof(taskItem));
+            }
+
+            _isCopyLocalFile = isCopyLocalFile;
+            _evaluatedIncludeEscaped = taskItem2.EvaluatedIncludeEscaped;
+            _metadata = new Dictionary<string, string>(taskItem2.MetadataCount);
+
+            foreach (DictionaryEntry metadataNameWithValue in taskItem2.CloneCustomMetadataEscaped())
+            {
+                _metadata[(string)metadataNameWithValue.Key!] = (string)metadataNameWithValue.Value!;
+            }
+        }
 
         public string ItemSpec
         {
@@ -32,8 +56,6 @@ namespace Microsoft.Build.Tasks.AssemblyDependency
         }
 
         public ICollection MetadataNames { get => throw new NotImplementedException(); }
-
-        public bool IsCopyLocalFile => _isCopyLocalFile;
 
         public Dictionary<string, string> Metadata => throw new NotImplementedException();
 
@@ -45,28 +67,7 @@ namespace Microsoft.Build.Tasks.AssemblyDependency
             set => throw new NotImplementedException();
         }
 
-        public ResolveAssemblyReferenceResponseItem()
-        {
-        }
-
-        public ResolveAssemblyReferenceResponseItem(ITaskItem taskItem, bool isCopyLocalFile)
-        {
-            if (taskItem is not ITaskItem2 taskItem2)
-            {
-                // TODO: Better message
-                throw new Exception("Unexpected ITaskItem type given to RAR request.");
-            }
-
-            _evaluatedIncludeEscaped = taskItem2.EvaluatedIncludeEscaped;
-            _metadata = new Dictionary<string, string>(taskItem2.MetadataCount);
-
-            foreach (DictionaryEntry metadataNameWithValue in taskItem2.CloneCustomMetadataEscaped())
-            {
-                _metadata[(string)metadataNameWithValue.Key!] = (string)metadataNameWithValue.Value!;
-            }
-
-            _isCopyLocalFile = isCopyLocalFile;
-        }
+        public bool IsCopyLocalFile => _isCopyLocalFile;
 
         public string GetMetadata(string metadataName) => throw new NotImplementedException();
 
@@ -76,10 +77,10 @@ namespace Microsoft.Build.Tasks.AssemblyDependency
 
         public void CopyMetadataTo(ITaskItem destinationItem)
         {
+            // This should only be called with a Utilities.TaskItem.
             if (destinationItem is not IMetadataContainer metadataContainer)
             {
-                // TODO: Better message
-                throw new Exception("Unexpected ITaskItem type given to RAR request.");
+                throw new ArgumentException("Type does not implement 'IMetadataContainer'.", nameof(destinationItem));
             }
 
             // TODO: Figure out better perf as this still starts from an empty CopyOnWriteDictionary.
@@ -105,8 +106,8 @@ namespace Microsoft.Build.Tasks.AssemblyDependency
 
         public void Translate(ITranslator translator)
         {
-            translator.Translate(ref _evaluatedIncludeEscaped);
             translator.Translate(ref _isCopyLocalFile);
+            translator.Translate(ref _evaluatedIncludeEscaped);
             translator.TranslateDictionary(ref _metadata, MSBuildNameIgnoreCaseComparer.Default);
         }
     }

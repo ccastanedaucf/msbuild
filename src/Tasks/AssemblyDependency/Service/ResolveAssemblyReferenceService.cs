@@ -14,7 +14,6 @@ using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
-using Google.Protobuf;
 using Microsoft.Build.Framework;
 
 namespace Microsoft.Build.Tasks.AssemblyDependency
@@ -33,7 +32,7 @@ namespace Microsoft.Build.Tasks.AssemblyDependency
         public ResolveAssemblyReferenceService(int degreeOfParallelism)
         {
             ConcurrentDictionary<string, byte> seenStateFiles = new(StringComparer.OrdinalIgnoreCase);
-            EvaluationCacheV2 evaluationCache = new(degreeOfParallelism);
+            RarExecutionCache evaluationCache = new(degreeOfParallelism);
             _workers = new ResolveAssemblyReferenceServiceWorker[degreeOfParallelism];
 
             for (int i = 0; i < _workers.Length; i++)

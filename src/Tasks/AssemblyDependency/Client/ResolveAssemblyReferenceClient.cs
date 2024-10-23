@@ -9,9 +9,6 @@ using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Xml.Serialization;
-using Google.Protobuf;
-using Google.Protobuf.Collections;
-using Grpc.Net.Client;
 using Microsoft.Build.BackEnd;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
@@ -35,7 +32,7 @@ namespace Microsoft.Build.Tasks.AssemblyDependency
             // Allow the service to avoid processing messages which would never be logged by the client.
             MessageImportance minimumMessageImportance = GetMinimumMessageImportance(rarTask.Log);
 
-            ResolveAssemblyReferenceRequest req = new()
+            RarExecutionRequest req = new()
             {
                 AutoUnify = rarTask.AutoUnify,
                 CopyLocalDependenciesWhenParentReferenceInGac = rarTask.CopyLocalDependenciesWhenParentReferenceInGac,
@@ -80,18 +77,18 @@ namespace Microsoft.Build.Tasks.AssemblyDependency
                 TargetFrameworkSubsets = rarTask.TargetFrameworkSubsets,
             };
 
-            ResolveAssemblyReferenceResponse resp = ResolveAssemblyReferences(req, rarTask.BuildEngine);
+            RarExecutionResponse resp = ResolveAssemblyReferences(req, rarTask.BuildEngine);
             SetTaskOutputs(rarTask, resp);
 
             return resp.Success;
 
-            static ResolveAssemblyReferenceRequestItem[] ConvertTaskItems(ITaskItem[] taskItems)
+            static RarTaskItemInput[] ConvertTaskItems(ITaskItem[] taskItems)
             {
-                List<ResolveAssemblyReferenceRequestItem> requestItems = new(taskItems.Length);
+                List<RarTaskItemInput> requestItems = new(taskItems.Length);
 
                 foreach (ITaskItem taskItem in taskItems)
                 {
-                    requestItems.Add(new ResolveAssemblyReferenceRequestItem(taskItem));
+                    requestItems.Add(new RarTaskItemInput(taskItem));
                 }
 
                 return [.. requestItems];
@@ -113,13 +110,13 @@ namespace Microsoft.Build.Tasks.AssemblyDependency
             return MessageImportance.High;
         }
 
-        private ResolveAssemblyReferenceResponse ResolveAssemblyReferences(ResolveAssemblyReferenceRequest request, IBuildEngine buildEngine)
+        private RarExecutionResponse ResolveAssemblyReferences(RarExecutionRequest request, IBuildEngine buildEngine)
         {
             using NamedPipeClientStream pipe = new(".", ResolveAssemblyReferenceService.PipeName, PipeDirection.InOut);
             pipe.Connect(FallbackTimeout);
 
             SendRequest(pipe, request);
-            ResolveAssemblyReferenceResponse response = ReadResponse(pipe);
+            RarExecutionResponse response = ReadResponse(pipe);
 
             // The RAR service will reply with queued build events before the task has completed.
             // Process these while waiting for completion.
@@ -134,7 +131,7 @@ namespace Microsoft.Build.Tasks.AssemblyDependency
             return response;
         }
 
-        private void SendRequest(NamedPipeClientStream pipe, ResolveAssemblyReferenceRequest request)
+        private void SendRequest(NamedPipeClientStream pipe, RarExecutionRequest request)
         {
             // Serialize to temporary buffer to reduce IO calls.
             Serialize(request, _memoryStream);
@@ -142,7 +139,7 @@ namespace Microsoft.Build.Tasks.AssemblyDependency
             WritePipe(pipe, _memoryStream);
         }
 
-        private ResolveAssemblyReferenceResponse ReadResponse(NamedPipeClientStream pipe)
+        private RarExecutionResponse ReadResponse(NamedPipeClientStream pipe)
         {
             // Read raw bytes to a temporary buffer to reduce IO calls.
             int bytesRead = ReadPipe(pipe, ReusableBuffer, 0, MessageOffsetInBytes);
@@ -157,11 +154,11 @@ namespace Microsoft.Build.Tasks.AssemblyDependency
                 throw new Exception("Should not be reading into next message!");
             }
 
-            return Deserialize<ResolveAssemblyReferenceResponse>(buffer, messageLength);
+            return Deserialize<RarExecutionResponse>(buffer, messageLength);
         }
 
 
-        private static void SetTaskOutputs(ResolveAssemblyReference rarTask, ResolveAssemblyReferenceResponse response)
+        private static void SetTaskOutputs(ResolveAssemblyReference rarTask, RarExecutionResponse response)
         {
             rarTask.DependsOnNETStandard = response.DependsOnNetStandard;
             rarTask.DependsOnSystemRuntime = response.DependsOnSystemRuntime;
@@ -176,13 +173,13 @@ namespace Microsoft.Build.Tasks.AssemblyDependency
             rarTask.SuggestedRedirects = ExtractTaskItems(response.SuggestedRedirects);
             rarTask.UnresolvedAssemblyConflicts = ExtractTaskItems(response.UnresolvedAssemblyConflicts);
 
-            ITaskItem[] ExtractTaskItems(ResolveAssemblyReferenceResponseItem[] responseItems)
+            ITaskItem[] ExtractTaskItems(RarTaskItemOutput[] responseItems)
             {
                 ITaskItem[] taskItems = new ITaskItem[responseItems.Length];
 
                 for (int i = 0; i < responseItems.Length; i++)
                 {
-                    ResolveAssemblyReferenceResponseItem responseItem = responseItems[i];
+                    RarTaskItemOutput responseItem = responseItems[i];
 
                     TaskItem taskItem = new(responseItem.EvaluatedIncludeEscaped);
                     taskItems[i] = taskItem;
@@ -197,15 +194,15 @@ namespace Microsoft.Build.Tasks.AssemblyDependency
             }
         }
 
-        private static void LogBuildEvents(IBuildEngine buildEngine, ResolveAssemblyReferenceBuildEventArgs[] buildEventsArgsQueue)
+        private static void LogBuildEvents(IBuildEngine buildEngine, RarBuildEventArgs[] buildEventsArgsQueue)
         {
-            foreach (ResolveAssemblyReferenceBuildEventArgs buildEventArgs in buildEventsArgsQueue)
+            foreach (RarBuildEventArgs buildEventArgs in buildEventsArgsQueue)
             {
                 DateTime eventTimestamp = new(buildEventArgs.EventTimestamp, DateTimeKind.Utc);
 
-                switch (buildEventArgs.BuildEventArgsType)
+                switch (buildEventArgs.EventType)
                 {
-                    case BuildEventArgsType.Error:
+                    case RarBuildEventArgsType.Error:
                         BuildErrorEventArgs errorEventArgs = new(
                             buildEventArgs.Subcategory,
                             buildEventArgs.Code,
@@ -218,11 +215,11 @@ namespace Microsoft.Build.Tasks.AssemblyDependency
                             buildEventArgs.HelpKeyword,
                             buildEventArgs.SenderName,
                             eventTimestamp,
-                            buildEventArgs.MessageArgs.Count > 0 ? [.. buildEventArgs.MessageArgs] : null);
+                            buildEventArgs.MessageArgs);
 
                         buildEngine.LogErrorEvent(errorEventArgs);
                         break;
-                    case BuildEventArgsType.Message:
+                    case RarBuildEventArgsType.Message:
                         BuildMessageEventArgs messageEventArgs = new(
                             buildEventArgs.Subcategory,
                             buildEventArgs.Code,
@@ -236,11 +233,11 @@ namespace Microsoft.Build.Tasks.AssemblyDependency
                             buildEventArgs.SenderName,
                             (MessageImportance)buildEventArgs.Importance,
                             eventTimestamp,
-                            buildEventArgs.MessageArgs.Count > 0 ? [.. buildEventArgs.MessageArgs] : null);
+                            buildEventArgs.MessageArgs);
 
                         buildEngine.LogMessageEvent(messageEventArgs);
                         break;
-                    case BuildEventArgsType.Warning:
+                    case RarBuildEventArgsType.Warning:
                         BuildWarningEventArgs warningEventArgs = new(
                             buildEventArgs.Subcategory,
                             buildEventArgs.Code,
@@ -253,7 +250,7 @@ namespace Microsoft.Build.Tasks.AssemblyDependency
                             buildEventArgs.HelpKeyword,
                             buildEventArgs.SenderName,
                             eventTimestamp,
-                            buildEventArgs.MessageArgs.Count > 0 ? [.. buildEventArgs.MessageArgs] : null);
+                            buildEventArgs.MessageArgs);
 
                         buildEngine.LogWarningEvent(warningEventArgs);
                         break;

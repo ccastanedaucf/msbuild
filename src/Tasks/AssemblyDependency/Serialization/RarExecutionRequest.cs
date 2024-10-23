@@ -14,7 +14,7 @@ using Microsoft.Build.Utilities;
 
 namespace Microsoft.Build.Tasks.AssemblyDependency
 {
-    internal class ResolveAssemblyReferenceRequest : ResolveAssemblyReferenceMessage, ITranslatable
+    internal class RarExecutionRequest : RarSerializableMessageBase, ITranslatable
     {
         private bool _autoUnify;
         private bool _copyLocalDependenciesWhenParentReferenceInGac;
@@ -44,17 +44,17 @@ namespace Microsoft.Build.Tasks.AssemblyDependency
         private string? _warnOrErrorOnTargetArchitectureMismatch;
         private string[] _allowedAssemblyExtensions = [];
         private string[] _allowedRelatedFileExtensions = [];
-        private ResolveAssemblyReferenceRequestItem[] _assemblies = [];
-        private ResolveAssemblyReferenceRequestItem[] _assemblyFiles = [];
+        private RarTaskItemInput[] _assemblies = [];
+        private RarTaskItemInput[] _assemblyFiles = [];
         private string[] _candidateAssemblyFiles = [];
-        private ResolveAssemblyReferenceRequestItem[] _fullFrameworkAssemblyTables = [];
+        private RarTaskItemInput[] _fullFrameworkAssemblyTables = [];
         private string[] _fullFrameworkFolders = [];
         private string[] _fullTargetFrameworkSubsetNames = [];
-        private ResolveAssemblyReferenceRequestItem[] _installedAssemblySubsetTables = [];
-        private ResolveAssemblyReferenceRequestItem[] _installedAssemblyTables = [];
+        private RarTaskItemInput[] _installedAssemblySubsetTables = [];
+        private RarTaskItemInput[] _installedAssemblyTables = [];
         private string[] _searchPaths = [];
         private string[] _targetFrameworkDirectories = [];
-        private ResolveAssemblyReferenceRequestItem[] _resolvedSDKReferences = [];
+        private RarTaskItemInput[] _resolvedSDKReferences = [];
         private string[] _latestTargetFrameworkDirectories = [];
         private string[] _targetFrameworkSubsets = [];
 
@@ -114,25 +114,25 @@ namespace Microsoft.Build.Tasks.AssemblyDependency
 
         public string[] AllowedRelatedFileExtensions { get => _allowedRelatedFileExtensions; set => _allowedRelatedFileExtensions = value; }
 
-        public ResolveAssemblyReferenceRequestItem[] Assemblies { get => _assemblies; set => _assemblies = value; }
+        public RarTaskItemInput[] Assemblies { get => _assemblies; set => _assemblies = value; }
 
-        public ResolveAssemblyReferenceRequestItem[] AssemblyFiles { get => _assemblyFiles; set => _assemblyFiles = value; }
+        public RarTaskItemInput[] AssemblyFiles { get => _assemblyFiles; set => _assemblyFiles = value; }
 
         public string[] CandidateAssemblyFiles { get => _candidateAssemblyFiles; set => _candidateAssemblyFiles = value; }
 
-        public ResolveAssemblyReferenceRequestItem[] FullFrameworkAssemblyTables { get => _fullFrameworkAssemblyTables; set => _fullFrameworkAssemblyTables = value; }
+        public RarTaskItemInput[] FullFrameworkAssemblyTables { get => _fullFrameworkAssemblyTables; set => _fullFrameworkAssemblyTables = value; }
 
         public string[] FullFrameworkFolders { get => _fullFrameworkFolders; set => _fullFrameworkFolders = value; }
 
         public string[] FullTargetFrameworkSubsetNames { get => _fullTargetFrameworkSubsetNames; set => _fullTargetFrameworkSubsetNames = value; }
 
-        public ResolveAssemblyReferenceRequestItem[] InstalledAssemblyTables { get => _installedAssemblyTables; set => _installedAssemblyTables = value; }
+        public RarTaskItemInput[] InstalledAssemblyTables { get => _installedAssemblyTables; set => _installedAssemblyTables = value; }
 
-        public ResolveAssemblyReferenceRequestItem[] InstalledAssemblySubsetTables { get => _installedAssemblySubsetTables; set => _installedAssemblySubsetTables = value; }
+        public RarTaskItemInput[] InstalledAssemblySubsetTables { get => _installedAssemblySubsetTables; set => _installedAssemblySubsetTables = value; }
 
         public string[] LatestTargetFrameworkDirectories { get => _latestTargetFrameworkDirectories; set => _latestTargetFrameworkDirectories = value; }
 
-        public ResolveAssemblyReferenceRequestItem[] ResolvedSDKReferences { get => _resolvedSDKReferences; set => _resolvedSDKReferences = value; }
+        public RarTaskItemInput[] ResolvedSDKReferences { get => _resolvedSDKReferences; set => _resolvedSDKReferences = value; }
 
         public string[] SearchPaths { get => _searchPaths; set => _searchPaths = value; }
 

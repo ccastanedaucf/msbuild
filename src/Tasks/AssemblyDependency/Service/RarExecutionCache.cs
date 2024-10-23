@@ -9,26 +9,25 @@ using System.IO;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
-using Google.Protobuf;
 
 namespace Microsoft.Build.Tasks.AssemblyDependency
 {
-    internal class EvaluationCacheV2
+    internal class RarExecutionCache
     {
-        private ConcurrentDictionary<string, ResolveAssemblyReferenceResponse> _evaluationCache { get; } = [];
+        private ConcurrentDictionary<string, RarExecutionResponse> _evaluationCache { get; } = [];
 
         private readonly SemaphoreSlim _ioSemaphore;
 
-        internal EvaluationCacheV2(int ioParallelism)
+        internal RarExecutionCache(int ioParallelism)
         {
             _ioSemaphore = new SemaphoreSlim(ioParallelism);
         }
 
-        public async Task<ResolveAssemblyReferenceResponse?> GetCachedEvaluation(ResolveAssemblyReferenceRequest request)
+        public async Task<RarExecutionResponse?> GetCachedEvaluation(RarExecutionRequest request)
         {
             string requestHash = request.ByteString!;
 
-            if (!_evaluationCache.TryGetValue(requestHash, out ResolveAssemblyReferenceResponse cachedEvaluation))
+            if (!_evaluationCache.TryGetValue(requestHash, out RarExecutionResponse? cachedEvaluation))
             {
                 return null;
             }
@@ -59,7 +58,7 @@ namespace Microsoft.Build.Tasks.AssemblyDependency
             return cachedEvaluation;
         }
 
-        public void CacheEvaluation(ResolveAssemblyReferenceRequest request, ResolveAssemblyReferenceResponse response)
+        public void CacheEvaluation(RarExecutionRequest request, RarExecutionResponse response)
         {
             string requestHash = request.ByteString!;
             _evaluationCache[requestHash] = response;

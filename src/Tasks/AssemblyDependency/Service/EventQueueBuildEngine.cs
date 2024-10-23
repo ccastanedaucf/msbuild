@@ -6,11 +6,10 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
-using Google.Protobuf;
-using Google.Protobuf.Collections;
 using Microsoft.Build.Framework;
 
 namespace Microsoft.Build.Tasks.AssemblyDependency
@@ -36,7 +35,7 @@ namespace Microsoft.Build.Tasks.AssemblyDependency
                 SingleWriter = true,
                 SingleReader = true,
             };
-            _channel = Channel.CreateUnbounded<ResolveAssemblyReferenceBuildEventArgs>(channelOptions);
+            _channel = Channel.CreateUnbounded<RarBuildEventArgs>(channelOptions);
         }
 
         public bool IsRunningMultipleNodes => throw new NotImplementedException();
@@ -53,13 +52,9 @@ namespace Microsoft.Build.Tasks.AssemblyDependency
 
         public EngineServices EngineServices { get; }
 
-        internal ChannelReader<ResolveAssemblyReferenceBuildEventArgs> EventQueue => _channel.Reader;
+        internal ChannelReader<RarBuildEventArgs> EventQueue => _channel.Reader;
 
-        private readonly int _batchCount;
-
-        private readonly Channel<ResolveAssemblyReferenceBuildEventArgs> _channel;
-
-        private readonly Queue<ResolveAssemblyReferenceBuildEventArgs> _buildEventQueue = new();
+        private readonly Channel<RarBuildEventArgs> _channel;
 
         public bool BuildProjectFile(
             string projectFileName,
@@ -97,9 +92,9 @@ namespace Microsoft.Build.Tasks.AssemblyDependency
 
         public void LogErrorEvent(BuildErrorEventArgs e)
         {
-            ResolveAssemblyReferenceBuildEventArgs buildEventArgs = new()
+            RarBuildEventArgs buildEventArgs = new()
             {
-                BuildEventArgsType = BuildEventArgsType.Error,
+                EventType = RarBuildEventArgsType.Error,
                 Subcategory = e.Subcategory,
                 Code = e.Code,
                 File = e.File,
@@ -111,16 +106,16 @@ namespace Microsoft.Build.Tasks.AssemblyDependency
                 HelpKeyword = e.HelpKeyword,
                 SenderName = e.SenderName,
                 EventTimestamp = e.RawTimestamp.Ticks,
+                MessageArgs = ParseMessageArgs(e.RawArguments),
             };
-            AddMessageArguments(buildEventArgs.MessageArgs, e.RawArguments);
             _channel.Writer.TryWrite(buildEventArgs);
         }
 
         public void LogMessageEvent(BuildMessageEventArgs e)
         {
-            ResolveAssemblyReferenceBuildEventArgs buildEventArgs = new()
+            RarBuildEventArgs buildEventArgs = new()
             {
-                BuildEventArgsType = BuildEventArgsType.Message,
+                EventType = RarBuildEventArgsType.Message,
                 Subcategory = e.Subcategory,
                 Code = e.Code,
                 File = e.File,
@@ -133,8 +128,8 @@ namespace Microsoft.Build.Tasks.AssemblyDependency
                 SenderName = e.SenderName,
                 Importance = (int)e.Importance,
                 EventTimestamp = e.RawTimestamp.Ticks,
+                MessageArgs = ParseMessageArgs(e.RawArguments),
             };
-            AddMessageArguments(buildEventArgs.MessageArgs, e.RawArguments);
             _channel.Writer.TryWrite(buildEventArgs);
         }
 
@@ -142,9 +137,9 @@ namespace Microsoft.Build.Tasks.AssemblyDependency
 
         public void LogWarningEvent(BuildWarningEventArgs e)
         {
-            ResolveAssemblyReferenceBuildEventArgs buildEventArgs = new()
+            RarBuildEventArgs buildEventArgs = new()
             {
-                BuildEventArgsType = BuildEventArgsType.Warning,
+                EventType = RarBuildEventArgsType.Warning,
                 Subcategory = e.Subcategory,
                 Code = e.Code,
                 File = e.File,
@@ -156,25 +151,26 @@ namespace Microsoft.Build.Tasks.AssemblyDependency
                 HelpKeyword = e.HelpKeyword,
                 SenderName = e.SenderName,
                 EventTimestamp = e.RawTimestamp.Ticks,
+                MessageArgs = ParseMessageArgs(e.RawArguments),
             };
-            AddMessageArguments(buildEventArgs.MessageArgs, e.RawArguments);
             _channel.Writer.TryWrite(buildEventArgs);
         }
 
-        private static void AddMessageArguments(RepeatedField<string> messageArgs, object[]? rawArgs)
+        private static string[]? ParseMessageArgs(object[]? rawArgs)
         {
             if (rawArgs == null)
             {
-                return;
+                return null;
             }
 
-            messageArgs.Capacity = rawArgs.Length;
+            string[] messageArgs = new string[rawArgs.Length];
 
-            foreach (object rawArg in rawArgs)
+            for (int i = 0; i < rawArgs.Length; i++)
             {
-                string parsedArg = Convert.ToString(rawArg, CultureInfo.CurrentCulture) ?? string.Empty;
-                messageArgs.Add(parsedArg);
+                messageArgs[i] = Convert.ToString(rawArgs[i], CultureInfo.CurrentCulture) ?? string.Empty;
             }
+
+            return messageArgs;
         }
 
         public void Reacquire() => throw new NotImplementedException();
@@ -194,9 +190,6 @@ namespace Microsoft.Build.Tasks.AssemblyDependency
 
         public IReadOnlyDictionary<string, string> GetGlobalProperties() => throw new NotImplementedException();
 
-        internal void Complete()
-        {
-            _channel.Writer.Complete();
-        }
+        internal void Complete() => _channel.Writer.Complete();
     }
 }

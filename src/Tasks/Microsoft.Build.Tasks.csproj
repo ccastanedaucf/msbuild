@@ -67,21 +67,15 @@
     <Compile Include="AssemblyDependency\AssemblyAttributes.cs" />
     <Compile Include="AssemblyDependency\AssemblyMetadata.cs" />
     <Compile Include="AssemblyDependency\Client\ResolveAssemblyReferenceClient.cs" />
-    <Compile Include="AssemblyDependency\Perf\ResolveAssemblyReferencePerfTester.cs" />
-    <Compile Include="AssemblyDependency\Perf\ResolveAssemblyReferenceRequestSlim.cs" />
-    <Compile Include="AssemblyDependency\Perf\ResolveAssemblyReferenceResponseSlim.cs" />
-    <Compile Include="AssemblyDependency\Serialization\ResolveAssemblyReferenceMessage.cs" />
-    <Compile Include="AssemblyDependency\Serialization\TaskItemSlim.cs" />
-    <Compile Include="AssemblyDependency\Serialization\ResolveAssemblyReferenceRequest.cs" />
-    <Compile Include="AssemblyDependency\Serialization\ResolveAssemblyReferenceRequestItem.cs" />
-    <Compile Include="AssemblyDependency\Serialization\ResolveAssemblyReferenceResponse.cs" />
-    <Compile Include="AssemblyDependency\Serialization\ResolveAssemblyReferenceResponseItem.cs" />
-    <Compile Include="AssemblyDependency\Serialization\ResolveAssemblyReferencesReply.cs" />
-    <Compile Include="AssemblyDependency\Service\BuildEventProcessor.cs" />
-    <Compile Include="AssemblyDependency\Service\CacheWatcher.cs" />
+    <Compile Include="AssemblyDependency\Serialization\RarBuildEventArgsType.cs" />
+    <Compile Include="AssemblyDependency\Serialization\RarBuildEventArgs.cs" />
+    <Compile Include="AssemblyDependency\Serialization\RarSerializableMessageBase.cs" />
+    <Compile Include="AssemblyDependency\Serialization\RarTaskItemInput.cs" />
+    <Compile Include="AssemblyDependency\Serialization\RarTaskItemOutput.cs" />
+    <Compile Include="AssemblyDependency\Serialization\RarExecutionRequest.cs" />
+    <Compile Include="AssemblyDependency\Serialization\RarExecutionResponse.cs" />
     <Compile Include="AssemblyDependency\Service\EventQueueBuildEngine.cs" />
-    <Compile Include="AssemblyDependency\Service\EvaluationCache.cs" />
-    <Compile Include="AssemblyDependency\Service\EvaluationCacheV2.cs" />
+    <Compile Include="AssemblyDependency\Service\RarExecutionCache.cs" />
     <Compile Include="AssemblyDependency\Service\ResolveAssemblyReferenceNodeBase.cs" />
     <Compile Include="AssemblyDependency\Service\ResolveAssemblyReferenceService.cs" />
     <Compile Include="AssemblyDependency\Service\ResolveAssemblyReferenceServiceWorker.cs" />
@@ -734,13 +728,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Google.Protobuf"/>
-    <PackageReference Include="Grpc.Net.Client"/>
-    <PackageReference Include="Grpc.Tools">
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-      <PrivateAssets>all</PrivateAssets>
-    </PackageReference>
     <PackageReference Include="System.Threading.Channels" />
-    <Protobuf Include="AssemblyDependency/Protos/resolve_assembly_references.proto" />
   </ItemGroup>
 </Project>

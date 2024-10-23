@@ -6,7 +6,7 @@ using System.Text;
 
 namespace Microsoft.Build.Tasks.AssemblyDependency
 {
-    internal abstract class ResolveAssemblyReferenceMessage
+    internal abstract class RarSerializableMessageBase
     {
         internal string? ByteString { get; private set; }
 

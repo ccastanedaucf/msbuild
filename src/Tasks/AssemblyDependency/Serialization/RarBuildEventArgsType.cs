@@ -3,8 +3,10 @@
 
 namespace Microsoft.Build.Tasks.AssemblyDependency
 {
-    public partial class ResolveAssemblyReferencesReply
+    internal enum RarBuildEventArgsType
     {
-        internal SystemState Cache { get; set; }
+        Message,
+        Warning,
+        Error,
     }
 }

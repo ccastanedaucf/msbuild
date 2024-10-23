@@ -12,18 +12,47 @@ using Microsoft.Build.Framework;
 using Microsoft.Build.Shared;
 using Microsoft.Build.Utilities;
 
-#nullable disable
-
 namespace Microsoft.Build.Tasks.AssemblyDependency
 {
-    // Shim for ProjectItemInstance.TaskItem
-    internal class ResolveAssemblyReferenceRequestItem : ITaskItem2, ITranslatable
+    // Minimal shim for ProjectItemInstance.TaskItem, which is used for RAR inputs.
+    // Code paths not hit by RAR are unimplmeneted and will throw an exception.
+    // This allows us to emit a smaller serialization payload and optimize hot paths.
+    internal class RarTaskItemInput : ITaskItem2, ITranslatable
     {
         private Dictionary<string, string> _metadata;
 
         private string _evaluatedIncludeEscaped;
 
         private string _evaluatedIncludeUnescaped;
+
+        public RarTaskItemInput()
+        {
+            _metadata = [];
+            _evaluatedIncludeEscaped = string.Empty;
+            _evaluatedIncludeUnescaped = string.Empty;
+        }
+
+        public RarTaskItemInput(ITaskItem taskItem)
+        {
+            // This should only be called with a ProjectItemInstance.TaskItem.
+            if (taskItem is not ITaskItem2 taskItem2)
+            {
+                throw new ArgumentException("Type does not implement 'ITaskItem2'.", nameof(taskItem));
+            }
+
+            if (taskItem2.CloneCustomMetadataEscaped() is not Dictionary<string, string> metadata)
+            {
+                throw new ArgumentException(
+                    "Implementation of 'ITaskItem2.CloneCustomMetadataEscaped()' is not of type 'Dictionary<string, string>'.",
+                    nameof(taskItem));
+            }
+
+            // Store the unescaped value, as this is frequently used by RAR and is immutable.
+            // TODO: How many times does this get hit?
+            _evaluatedIncludeUnescaped = taskItem.ItemSpec;
+            _evaluatedIncludeEscaped = taskItem2.EvaluatedIncludeEscaped;
+            _metadata = metadata;
+        }
 
         public string ItemSpec
         {
@@ -44,23 +73,6 @@ namespace Microsoft.Build.Tasks.AssemblyDependency
             set => throw new NotImplementedException();
         }
 
-        public ResolveAssemblyReferenceRequestItem()
-        {
-        }
-
-        public ResolveAssemblyReferenceRequestItem(ITaskItem taskItem)
-        {
-            if (taskItem is not ITaskItem2 taskItem2 || taskItem2.CloneCustomMetadataEscaped() is not Dictionary<string, string> metadata)
-            {
-                throw new Exception("Unexpected ITaskItem type given to RAR request.");
-            }
-
-            // Store the unescaped value, as this is frequently used by RAR and is immutable.
-            _evaluatedIncludeUnescaped = taskItem.ItemSpec;
-            _evaluatedIncludeEscaped = taskItem2.EvaluatedIncludeEscaped;
-            _metadata = metadata;
-        }
-
         public string GetMetadata(string metadataName) =>
             EscapingUtilities.UnescapeAll(GetMetadataValueEscaped(metadataName));
 
@@ -70,36 +82,40 @@ namespace Microsoft.Build.Tasks.AssemblyDependency
 
         public void CopyMetadataTo(ITaskItem destinationItem)
         {
-            if (destinationItem is not IMetadataContainer destinationAsTaskItem)
+            // This should only by called with a Utilities.TaskItem.
+            if (destinationItem is not IMetadataContainer metadataContainer)
             {
-                // TODO: Better message
-                throw new Exception("Unexpected ITaskItem type.");
+                throw new ArgumentException("Type does not implement 'IMetadataContainer'.", nameof(destinationItem));
             }
 
-            destinationAsTaskItem.ImportMetadata(_metadata);
+            metadataContainer.ImportMetadata(_metadata);
         }
 
         public IDictionary CloneCustomMetadata() => throw new NotImplementedException();
 
         public string GetMetadataValueEscaped(string metadataName)
         {
-            string metadataValue;
+            if (_metadata.TryGetValue(metadataName, out string? metadataValue))
+            {
+                return metadataValue;
+            }
 
-            if (!_metadata.TryGetValue(metadataName, out metadataValue)
-                && FileUtilities.ItemSpecModifiers.IsItemSpecModifier(metadataName))
+            if (FileUtilities.ItemSpecModifiers.IsItemSpecModifier(metadataName))
             {
                 // Current directory is only required full full path evaluation
                 // Because we cache the full path ahead of time, it will never be called.
-                string dummy = null;
+                string? dummy = null;
                 metadataValue = FileUtilities.ItemSpecModifiers.GetItemSpecModifier(
                     null,
                     _evaluatedIncludeEscaped, // TODO: Is any defining project modifier called?
                     null,
                     metadataName,
                     ref dummy);
+
+                return metadataValue ?? string.Empty;
             }
 
-            return metadataValue ?? string.Empty;
+            return string.Empty;
         }
 
         public void SetMetadataValueLiteral(string metadataName, string metadataValue) => throw new NotImplementedException();

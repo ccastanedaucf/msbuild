@@ -15,7 +15,6 @@ using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
-using Google.Protobuf;
 using Microsoft.Build.BackEnd;
 using Microsoft.Build.Framework;
 
@@ -31,9 +30,9 @@ namespace Microsoft.Build.Tasks.AssemblyDependency
 
         private readonly ConcurrentDictionary<string, byte> _seenStateFiles;
 
-        private readonly EvaluationCacheV2 _evaluationCache;
+        private readonly RarExecutionCache _evaluationCache;
 
-        private readonly Queue<ResolveAssemblyReferenceBuildEventArgs> _buildEventQueue;
+        private readonly Queue<RarBuildEventArgs> _buildEventQueue;
 
         private readonly byte[] _resuableBuffer = new byte[DefaultBufferSizeInBytes];
 
@@ -42,7 +41,7 @@ namespace Microsoft.Build.Tasks.AssemblyDependency
         internal ResolveAssemblyReferenceServiceWorker(
             string workerId,
             string pipeName,
-            EvaluationCacheV2 evaluationCache,
+            RarExecutionCache evaluationCache,
             ConcurrentDictionary<string, byte> seenStateFiles)
         {
             _workerId = workerId;
@@ -72,8 +71,8 @@ namespace Microsoft.Build.Tasks.AssemblyDependency
                 try
                 {
 
-                    ResolveAssemblyReferenceRequest request = ReadRequest();
-                    ResolveAssemblyReferenceResponse response = await ResolveAssemblyReferencesAsync(request, cancellationToken);
+                    RarExecutionRequest request = ReadRequest();
+                    RarExecutionResponse response = await ResolveAssemblyReferencesAsync(request, cancellationToken);
                     SendResponse(response);
 
                     // Avoid replaying build events on future runs.
@@ -92,7 +91,7 @@ namespace Microsoft.Build.Tasks.AssemblyDependency
             }
         }
 
-        private ResolveAssemblyReferenceRequest ReadRequest()
+        private RarExecutionRequest ReadRequest()
         {
             // Read raw bytes to a temporary buffer to reduce IO calls.
             int bytesRead = ReadPipe(_pipe, _resuableBuffer, 0, MessageOffsetInBytes);
@@ -102,10 +101,10 @@ namespace Microsoft.Build.Tasks.AssemblyDependency
             byte[] buffer = EnsureBufferSize(_resuableBuffer, messageLength);
             ReadPipe(_pipe, buffer, bytesRead, messageLength);
 
-            return Deserialize<ResolveAssemblyReferenceRequest>(buffer, messageLength, setHash: true);
+            return Deserialize<RarExecutionRequest>(buffer, messageLength, setHash: true);
         }
 
-        private void SendResponse(ResolveAssemblyReferenceResponse response)
+        private void SendResponse(RarExecutionResponse response)
         {
             // Serialize to temporary buffer to reduce IO calls.
             Serialize(response, _memoryStream, setHash: true);
@@ -113,14 +112,14 @@ namespace Microsoft.Build.Tasks.AssemblyDependency
             WritePipe(_pipe, _memoryStream);
         }
 
-        private async Task<ResolveAssemblyReferenceResponse> ResolveAssemblyReferencesAsync(ResolveAssemblyReferenceRequest request, CancellationToken cancellationToken)
+        private async Task<RarExecutionResponse> ResolveAssemblyReferencesAsync(RarExecutionRequest request, CancellationToken cancellationToken)
         {
             bool isCacheable = request.StateFile != null;
 
             // TODO: Determine proper project identifier which does not rely on state file.
             if (isCacheable)
             {
-                ResolveAssemblyReferenceResponse? cachedResult = await _evaluationCache.GetCachedEvaluation(request);
+                RarExecutionResponse? cachedResult = await _evaluationCache.GetCachedEvaluation(request);
 
                 if (cachedResult != null)
                 {
@@ -139,7 +138,7 @@ namespace Microsoft.Build.Tasks.AssemblyDependency
             Task buildEventTask = Task.Run(
                 () => ProcessBuildEvents(buildEngine, cancellationToken),
                 cancellationToken);
-            ResolveAssemblyReferenceResponse result = HandleRequest(request, buildEngine);
+            RarExecutionResponse result = HandleRequest(request, buildEngine);
 
             execTime.Stop();
             Console.WriteLine($"({_workerId}) RAR completed for '{request.StateFile}' in {execTime.ElapsedMilliseconds} ms.'");
@@ -164,13 +163,13 @@ namespace Microsoft.Build.Tasks.AssemblyDependency
             {
                 while (cancellationToken.IsCancellationRequested)
                 {
-                    ResolveAssemblyReferenceBuildEventArgs buildEventArgs = await buildEngine.EventQueue.ReadAsync(cancellationToken);
+                    RarBuildEventArgs buildEventArgs = await buildEngine.EventQueue.ReadAsync(cancellationToken);
                     _buildEventQueue.Enqueue(buildEventArgs);
 
                     if (_buildEventQueue.Count == MaxBuildEvents)
                     {
                         Console.WriteLine($"({_workerId}) Flushing build events.");
-                        ResolveAssemblyReferenceResponse response = new()
+                        RarExecutionResponse response = new()
                         {
                             BuildEventArgsQueue = [.. _buildEventQueue],
                         };
@@ -184,7 +183,7 @@ namespace Microsoft.Build.Tasks.AssemblyDependency
             }
         }
 
-        private ResolveAssemblyReferenceResponse HandleRequest(ResolveAssemblyReferenceRequest request, EventQueueBuildEngine buildEngine)
+        private RarExecutionResponse HandleRequest(RarExecutionRequest request, EventQueueBuildEngine buildEngine)
         {
             // Only load the state file on the first run.
             bool shouldLoadStateFile = !string.IsNullOrEmpty(request.StateFile) && _seenStateFiles.TryAdd(request.StateFile!, 0);
@@ -236,19 +235,19 @@ namespace Microsoft.Build.Tasks.AssemblyDependency
 
             bool success = rarTask.ExecuteInProcess();
 
-            ResolveAssemblyReferenceResponse resp = CreateResponse(rarTask, buildEngine, success);
+            RarExecutionResponse resp = CreateResponse(rarTask, buildEngine, success);
 
             return resp;
         }
 
-        private static ResolveAssemblyReferenceResponse CreateResponse(
+        private static RarExecutionResponse CreateResponse(
             ResolveAssemblyReference rarTask,
             EventQueueBuildEngine buildEngine,
             bool success)
         {
             HashSet<ITaskItem> copyLocalFiles = new(rarTask.CopyLocalFiles);
 
-            ResolveAssemblyReferenceResponse resp = new()
+            RarExecutionResponse resp = new()
             {
                 IsComplete = true,
                 Success = success,
@@ -281,13 +280,13 @@ namespace Microsoft.Build.Tasks.AssemblyDependency
 
             return resp;
 
-            ResolveAssemblyReferenceResponseItem[] ConvertTaskItems(ICollection<ITaskItem> taskItems)
+            RarTaskItemOutput[] ConvertTaskItems(ICollection<ITaskItem> taskItems)
             {
-                List<ResolveAssemblyReferenceResponseItem> responseItems = new(taskItems.Count);
+                List<RarTaskItemOutput> responseItems = new(taskItems.Count);
 
                 foreach (ITaskItem taskItem in taskItems)
                 {
-                    responseItems.Add(new ResolveAssemblyReferenceResponseItem(
+                    responseItems.Add(new RarTaskItemOutput(
                         taskItem,
                         isCopyLocalFile: copyLocalFiles.Contains(taskItem)));
                 }

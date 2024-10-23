@@ -15,7 +15,6 @@ using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
-using Google.Protobuf;
 using Microsoft.Build.BackEnd;
 using Microsoft.Build.Framework;
 
@@ -28,7 +27,7 @@ namespace Microsoft.Build.Tasks.AssemblyDependency
         protected const int MessageOffsetInBytes = 4;
 
         protected static void Serialize<T>(T message, MemoryStream memoryStream, bool setHash = false)
-            where T : ResolveAssemblyReferenceMessage, ITranslatable, new()
+            where T : RarSerializableMessageBase, ITranslatable, new()
         {
             memoryStream.SetLength(MessageOffsetInBytes);
             memoryStream.Position = MessageOffsetInBytes;
@@ -53,7 +52,7 @@ namespace Microsoft.Build.Tasks.AssemblyDependency
         }
 
         protected static T Deserialize<T>(byte[] buffer, int messageLength, bool setHash = false)
-            where T : ResolveAssemblyReferenceMessage, ITranslatable, new()
+            where T : RarSerializableMessageBase, ITranslatable, new()
         {
             T message = new();
             using MemoryStream memoryStream = new(buffer, 0, messageLength, writable: true, publiclyVisible: true);
