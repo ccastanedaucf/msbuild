@@ -24,6 +24,8 @@ namespace Microsoft.Build.Tasks.AssemblyDependency
 
         private static readonly byte[] ReusableBuffer = new byte[DefaultBufferSizeInBytes];
 
+        private readonly MemoryStream _memoryStream = new(DefaultBufferSizeInBytes);
+
         public bool Execute(ResolveAssemblyReference rarTask)
         {
             // RAR service may have a different working directory, so convert potential relative paths to absolute.
@@ -63,16 +65,16 @@ namespace Microsoft.Build.Tasks.AssemblyDependency
                 WarnOrErrorOnTargetArchitectureMismatch = rarTask.WarnOrErrorOnTargetArchitectureMismatch,
                 AllowedAssemblyExtensions = rarTask.AllowedAssemblyExtensions,
                 AllowedRelatedFileExtensions = rarTask.AllowedRelatedFileExtensions,
-                Assemblies = CreateReadOnlyTaskItems(rarTask.Assemblies),
-                AssemblyFiles = CreateReadOnlyTaskItems(rarTask.AssemblyFiles),
+                Assemblies = ConvertTaskItems(rarTask.Assemblies),
+                AssemblyFiles = ConvertTaskItems(rarTask.AssemblyFiles),
                 CandidateAssemblyFiles = rarTask.CandidateAssemblyFiles,
-                FullFrameworkAssemblyTables = CreateReadOnlyTaskItems(rarTask.FullFrameworkAssemblyTables),
+                FullFrameworkAssemblyTables = ConvertTaskItems(rarTask.FullFrameworkAssemblyTables),
                 FullFrameworkFolders = rarTask.FullFrameworkFolders,
                 FullTargetFrameworkSubsetNames = rarTask.FullTargetFrameworkSubsetNames,
-                InstalledAssemblyTables = CreateReadOnlyTaskItems(rarTask.InstalledAssemblyTables),
-                InstalledAssemblySubsetTables = CreateReadOnlyTaskItems(rarTask.InstalledAssemblySubsetTables),
+                InstalledAssemblyTables = ConvertTaskItems(rarTask.InstalledAssemblyTables),
+                InstalledAssemblySubsetTables = ConvertTaskItems(rarTask.InstalledAssemblySubsetTables),
                 LatestTargetFrameworkDirectories = rarTask.LatestTargetFrameworkDirectories,
-                ResolvedSDKReferences = CreateReadOnlyTaskItems(rarTask.ResolvedSDKReferences),
+                ResolvedSDKReferences = ConvertTaskItems(rarTask.ResolvedSDKReferences),
                 SearchPaths = rarTask.SearchPaths,
                 TargetFrameworkDirectories = rarTask.TargetFrameworkDirectories,
                 TargetFrameworkSubsets = rarTask.TargetFrameworkSubsets,
@@ -82,6 +84,18 @@ namespace Microsoft.Build.Tasks.AssemblyDependency
             SetTaskOutputs(rarTask, resp);
 
             return resp.Success;
+
+            static ResolveAssemblyReferenceRequestItem[] ConvertTaskItems(ITaskItem[] taskItems)
+            {
+                List<ResolveAssemblyReferenceRequestItem> requestItems = new(taskItems.Length);
+
+                foreach (ITaskItem taskItem in taskItems)
+                {
+                    requestItems.Add(new ResolveAssemblyReferenceRequestItem(taskItem));
+                }
+
+                return [.. requestItems];
+            }
         }
 
         private MessageImportance GetMinimumMessageImportance(TaskLoggingHelper log)
@@ -122,23 +136,10 @@ namespace Microsoft.Build.Tasks.AssemblyDependency
 
         private void SendRequest(NamedPipeClientStream pipe, ResolveAssemblyReferenceRequest request)
         {
-            const int DefaultRequestSizeInBytes = 81_920;
-            const int RequestOffsetInBytes = 4;
-
             // Serialize to temporary buffer to reduce IO calls.
-            using MemoryStream memoryStream = new(DefaultRequestSizeInBytes);
-            ITranslator translator = BinaryTranslator.GetWriteTranslator(memoryStream);
-            memoryStream.Position = RequestOffsetInBytes;
-            translator.Translate(ref request);
-
-            // Delimit message with length.
-            int requestLength = (int)memoryStream.Length - RequestOffsetInBytes;
-            memoryStream.Position = 0;
-            translator.Writer.Write(requestLength);
-
-            // Send the serialized request.
-            memoryStream.Position = 0;
-            memoryStream.CopyTo(pipe);
+            Serialize(request, _memoryStream);
+            SetMessageLength(_memoryStream);
+            WritePipe(pipe, _memoryStream);
         }
 
         private ResolveAssemblyReferenceResponse ReadResponse(NamedPipeClientStream pipe)
@@ -159,17 +160,6 @@ namespace Microsoft.Build.Tasks.AssemblyDependency
             return Deserialize<ResolveAssemblyReferenceResponse>(buffer, messageLength);
         }
 
-        private static TaskItemSlim[] CreateReadOnlyTaskItems(ITaskItem[] taskItems)
-        {
-            List<TaskItemSlim> readOnlyTaskItems = new(taskItems.Length);
-
-            foreach (ITaskItem taskItem in taskItems)
-            {
-                readOnlyTaskItems.Add(new TaskItemSlim(taskItem));
-            }
-
-            return [.. readOnlyTaskItems];
-        }
 
         private static void SetTaskOutputs(ResolveAssemblyReference rarTask, ResolveAssemblyReferenceResponse response)
         {
@@ -186,18 +176,18 @@ namespace Microsoft.Build.Tasks.AssemblyDependency
             rarTask.SuggestedRedirects = ExtractTaskItems(response.SuggestedRedirects);
             rarTask.UnresolvedAssemblyConflicts = ExtractTaskItems(response.UnresolvedAssemblyConflicts);
 
-            ITaskItem[] ExtractTaskItems(TaskItemSlim[] readOnlyTaskItems)
+            ITaskItem[] ExtractTaskItems(ResolveAssemblyReferenceResponseItem[] responseItems)
             {
-                ITaskItem[] taskItems = new ITaskItem[readOnlyTaskItems.Length];
+                ITaskItem[] taskItems = new ITaskItem[responseItems.Length];
 
-                for (int i = 0; i < readOnlyTaskItems.Length; i++)
+                for (int i = 0; i < responseItems.Length; i++)
                 {
-                    TaskItemSlim readOnlyTaskItem = readOnlyTaskItems[i];
+                    ResolveAssemblyReferenceResponseItem responseItem = responseItems[i];
 
-                    TaskItem taskItem = new(readOnlyTaskItem);
+                    TaskItem taskItem = new(responseItem.EvaluatedIncludeEscaped);
                     taskItems[i] = taskItem;
 
-                    if (readOnlyTaskItem.IsCopyLocalFile)
+                    if (responseItem.IsCopyLocalFile)
                     {
                         copyLocalFiles.Add(taskItem);
                     }

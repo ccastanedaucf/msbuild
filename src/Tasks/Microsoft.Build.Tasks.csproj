@@ -71,9 +71,11 @@
     <Compile Include="AssemblyDependency\Perf\ResolveAssemblyReferenceRequestSlim.cs" />
     <Compile Include="AssemblyDependency\Perf\ResolveAssemblyReferenceResponseSlim.cs" />
     <Compile Include="AssemblyDependency\Serialization\ResolveAssemblyReferenceMessage.cs" />
-    <Compile Include="AssemblyDependency\Serialization\ReadOnlyTaskItem.cs" />
+    <Compile Include="AssemblyDependency\Serialization\TaskItemSlim.cs" />
     <Compile Include="AssemblyDependency\Serialization\ResolveAssemblyReferenceRequest.cs" />
+    <Compile Include="AssemblyDependency\Serialization\ResolveAssemblyReferenceRequestItem.cs" />
     <Compile Include="AssemblyDependency\Serialization\ResolveAssemblyReferenceResponse.cs" />
+    <Compile Include="AssemblyDependency\Serialization\ResolveAssemblyReferenceResponseItem.cs" />
     <Compile Include="AssemblyDependency\Serialization\ResolveAssemblyReferencesReply.cs" />
     <Compile Include="AssemblyDependency\Service\BuildEventProcessor.cs" />
     <Compile Include="AssemblyDependency\Service\CacheWatcher.cs" />
@@ -86,6 +88,7 @@
     <Compile Include="CombineTargetFrameworkInfoProperties.cs" />
     <Compile Include="CombineXmlElements.cs" />
     <Compile Include="ConvertToAbsolutePath.cs" />
+    <Compile Include="..\Shared\BuiltInMetadata.cs" />
     <Compile Include="..\Shared\CopyOnWriteDictionary.cs" />
     <Compile Include="..\Shared\ExtensionFoldersRegistryKey.cs">
       <Link>ExtensionFoldersRegistryKey.cs</Link>

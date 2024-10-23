@@ -37,6 +37,8 @@ namespace Microsoft.Build.Tasks.AssemblyDependency
 
         private readonly byte[] _resuableBuffer = new byte[DefaultBufferSizeInBytes];
 
+        private readonly MemoryStream _memoryStream = new(DefaultBufferSizeInBytes);
+
         internal ResolveAssemblyReferenceServiceWorker(
             string workerId,
             string pipeName,
@@ -106,19 +108,9 @@ namespace Microsoft.Build.Tasks.AssemblyDependency
         private void SendResponse(ResolveAssemblyReferenceResponse response)
         {
             // Serialize to temporary buffer to reduce IO calls.
-            using MemoryStream memoryStream = new(DefaultBufferSizeInBytes);
-            ITranslator translator = BinaryTranslator.GetWriteTranslator(memoryStream);
-            memoryStream.Position = MessageOffsetInBytes;
-            translator.Translate(ref response);
-
-            // Delimit message with length.
-            int requestLength = (int)memoryStream.Length - MessageOffsetInBytes;
-            memoryStream.Position = 0;
-            translator.Writer.Write(requestLength);
-
-            // Send the serialized request.
-            memoryStream.Position = 0;
-            memoryStream.CopyTo(_pipe);
+            Serialize(response, _memoryStream, setHash: true);
+            SetMessageLength(_memoryStream);
+            WritePipe(_pipe, _memoryStream);
         }
 
         private async Task<ResolveAssemblyReferenceResponse> ResolveAssemblyReferencesAsync(ResolveAssemblyReferenceRequest request, CancellationToken cancellationToken)
@@ -263,15 +255,15 @@ namespace Microsoft.Build.Tasks.AssemblyDependency
                 NumCopyLocalFiles = rarTask.CopyLocalFiles.Length,
                 DependsOnNetStandard = rarTask.DependsOnNETStandard,
                 DependsOnSystemRuntime = rarTask.DependsOnSystemRuntime,
-                FilesWritten = CreateReadOnlyTaskItems(rarTask.FilesWritten),
-                RelatedFiles = CreateReadOnlyTaskItems(rarTask.RelatedFiles),
-                ResolvedDependencyFiles = CreateReadOnlyTaskItems(rarTask.ResolvedDependencyFiles),
-                ResolvedFiles = CreateReadOnlyTaskItems(rarTask.ResolvedFiles),
-                SatelliteFiles = CreateReadOnlyTaskItems(rarTask.SatelliteFiles),
-                ScatterFiles = CreateReadOnlyTaskItems(rarTask.ScatterFiles),
-                SerializationAssemblyFiles = CreateReadOnlyTaskItems(rarTask.SerializationAssemblyFiles),
-                SuggestedRedirects = CreateReadOnlyTaskItems(rarTask.SuggestedRedirects),
-                UnresolvedAssemblyConflicts = CreateReadOnlyTaskItems(rarTask.UnresolvedAssemblyConflicts),
+                FilesWritten = ConvertTaskItems(rarTask.FilesWritten),
+                RelatedFiles = ConvertTaskItems(rarTask.RelatedFiles),
+                ResolvedDependencyFiles = ConvertTaskItems(rarTask.ResolvedDependencyFiles),
+                ResolvedFiles = ConvertTaskItems(rarTask.ResolvedFiles),
+                SatelliteFiles = ConvertTaskItems(rarTask.SatelliteFiles),
+                ScatterFiles = ConvertTaskItems(rarTask.ScatterFiles),
+                SerializationAssemblyFiles = ConvertTaskItems(rarTask.SerializationAssemblyFiles),
+                SuggestedRedirects = ConvertTaskItems(rarTask.SuggestedRedirects),
+                UnresolvedAssemblyConflicts = ConvertTaskItems(rarTask.UnresolvedAssemblyConflicts),
                 Cache = rarTask.Cache,
             };
 
@@ -289,18 +281,18 @@ namespace Microsoft.Build.Tasks.AssemblyDependency
 
             return resp;
 
-            TaskItemSlim[] CreateReadOnlyTaskItems(ICollection<ITaskItem> taskItems)
+            ResolveAssemblyReferenceResponseItem[] ConvertTaskItems(ICollection<ITaskItem> taskItems)
             {
-                List<TaskItemSlim> readOnlyTaskItems = new(taskItems.Count);
+                List<ResolveAssemblyReferenceResponseItem> responseItems = new(taskItems.Count);
 
                 foreach (ITaskItem taskItem in taskItems)
                 {
-                    readOnlyTaskItems.Add(new TaskItemSlim(
+                    responseItems.Add(new ResolveAssemblyReferenceResponseItem(
                         taskItem,
                         isCopyLocalFile: copyLocalFiles.Contains(taskItem)));
                 }
 
-                return [.. readOnlyTaskItems];
+                return [.. responseItems];
             }
 
             static bool IsDirectory(string path)

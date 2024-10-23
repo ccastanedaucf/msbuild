@@ -20,16 +20,16 @@ namespace Microsoft.Build.Tasks.AssemblyDependency
         private string? _dependsOnNetStandard;
         private string? _dependsOnSystemRuntime;
         private int _numCopyLocalFiles;
-        private TaskItemSlim[] _copyLocalFiles = [];
-        private TaskItemSlim[] _filesWritten = [];
-        private TaskItemSlim[] _relatedFiles = [];
-        private TaskItemSlim[] _resolvedDependencyFiles = [];
-        private TaskItemSlim[] _resolvedFiles = [];
-        private TaskItemSlim[] _satelliteFiles = [];
-        private TaskItemSlim[] _scatterFiles = [];
-        private TaskItemSlim[] _serializationAssemblyFiles = [];
-        private TaskItemSlim[] _suggestedRedirects = [];
-        private TaskItemSlim[] _unresolvedAssemblyConflicts = [];
+        private ResolveAssemblyReferenceResponseItem[] _copyLocalFiles = [];
+        private ResolveAssemblyReferenceResponseItem[] _filesWritten = [];
+        private ResolveAssemblyReferenceResponseItem[] _relatedFiles = [];
+        private ResolveAssemblyReferenceResponseItem[] _resolvedDependencyFiles = [];
+        private ResolveAssemblyReferenceResponseItem[] _resolvedFiles = [];
+        private ResolveAssemblyReferenceResponseItem[] _satelliteFiles = [];
+        private ResolveAssemblyReferenceResponseItem[] _scatterFiles = [];
+        private ResolveAssemblyReferenceResponseItem[] _serializationAssemblyFiles = [];
+        private ResolveAssemblyReferenceResponseItem[] _suggestedRedirects = [];
+        private ResolveAssemblyReferenceResponseItem[] _unresolvedAssemblyConflicts = [];
 
         public bool IsComplete { get => _isComplete; set => _isComplete = value; }
 
@@ -41,25 +41,25 @@ namespace Microsoft.Build.Tasks.AssemblyDependency
 
         public int NumCopyLocalFiles { get => _numCopyLocalFiles; set => _numCopyLocalFiles = value; }
 
-        public TaskItemSlim[] CopyLocalFiles { get => _copyLocalFiles; set => _copyLocalFiles = value; }
+        public ResolveAssemblyReferenceResponseItem[] CopyLocalFiles { get => _copyLocalFiles; set => _copyLocalFiles = value; }
 
-        public TaskItemSlim[] FilesWritten { get => _filesWritten; set => _filesWritten = value; }
+        public ResolveAssemblyReferenceResponseItem[] FilesWritten { get => _filesWritten; set => _filesWritten = value; }
 
-        public TaskItemSlim[] RelatedFiles { get => _relatedFiles; set => _relatedFiles = value; }
+        public ResolveAssemblyReferenceResponseItem[] RelatedFiles { get => _relatedFiles; set => _relatedFiles = value; }
 
-        public TaskItemSlim[] ResolvedDependencyFiles { get => _resolvedDependencyFiles; set => _resolvedDependencyFiles = value; }
+        public ResolveAssemblyReferenceResponseItem[] ResolvedDependencyFiles { get => _resolvedDependencyFiles; set => _resolvedDependencyFiles = value; }
 
-        public TaskItemSlim[] ResolvedFiles { get => _resolvedFiles; set => _resolvedFiles = value; }
+        public ResolveAssemblyReferenceResponseItem[] ResolvedFiles { get => _resolvedFiles; set => _resolvedFiles = value; }
 
-        public TaskItemSlim[] SatelliteFiles { get => _satelliteFiles; set => _satelliteFiles = value; }
+        public ResolveAssemblyReferenceResponseItem[] SatelliteFiles { get => _satelliteFiles; set => _satelliteFiles = value; }
 
-        public TaskItemSlim[] ScatterFiles { get => _scatterFiles; set => _scatterFiles = value; }
+        public ResolveAssemblyReferenceResponseItem[] ScatterFiles { get => _scatterFiles; set => _scatterFiles = value; }
 
-        public TaskItemSlim[] SerializationAssemblyFiles { get => _serializationAssemblyFiles; set => _serializationAssemblyFiles = value; }
+        public ResolveAssemblyReferenceResponseItem[] SerializationAssemblyFiles { get => _serializationAssemblyFiles; set => _serializationAssemblyFiles = value; }
 
-        public TaskItemSlim[] SuggestedRedirects { get => _suggestedRedirects; set => _suggestedRedirects = value; }
+        public ResolveAssemblyReferenceResponseItem[] SuggestedRedirects { get => _suggestedRedirects; set => _suggestedRedirects = value; }
 
-        public TaskItemSlim[] UnresolvedAssemblyConflicts { get => _unresolvedAssemblyConflicts; set => _unresolvedAssemblyConflicts = value; }
+        public ResolveAssemblyReferenceResponseItem[] UnresolvedAssemblyConflicts { get => _unresolvedAssemblyConflicts; set => _unresolvedAssemblyConflicts = value; }
 
         public ResolveAssemblyReferenceBuildEventArgs[] BuildEventArgsQueue { get; set; } = [];
 

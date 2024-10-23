@@ -27,6 +27,54 @@ namespace Microsoft.Build.Tasks.AssemblyDependency
 
         protected const int MessageOffsetInBytes = 4;
 
+        protected static void Serialize<T>(T message, MemoryStream memoryStream, bool setHash = false)
+            where T : ResolveAssemblyReferenceMessage, ITranslatable, new()
+        {
+            memoryStream.SetLength(MessageOffsetInBytes);
+            memoryStream.Position = MessageOffsetInBytes;
+
+            ITranslator translator = BinaryTranslator.GetWriteTranslator(memoryStream);
+
+            // Skip serialization if the result is cached. 
+            if (message.ByteHash != null)
+            {
+                using BinaryWriter binaryWriter = new(memoryStream, Encoding.Default, leaveOpen: true);
+                binaryWriter.Write(message.ByteHash);
+
+                return;
+            }
+
+            translator.Translate(ref message);
+
+            if (setHash)
+            {
+                message.SetByteString(memoryStream.GetBuffer(), MessageOffsetInBytes, (int)memoryStream.Length - MessageOffsetInBytes);
+            }
+        }
+
+        protected static T Deserialize<T>(byte[] buffer, int messageLength, bool setHash = false)
+            where T : ResolveAssemblyReferenceMessage, ITranslatable, new()
+        {
+            T message = new();
+            using MemoryStream memoryStream = new(buffer, 0, messageLength, writable: true, publiclyVisible: true);
+            memoryStream.Position = MessageOffsetInBytes;
+            ITranslator translator = BinaryTranslator.GetReadTranslator(memoryStream, InterningBinaryReader.PoolingBuffer);
+            translator.Translate(ref message);
+
+            if (setHash)
+            {
+                message.SetByteString(buffer, MessageOffsetInBytes, messageLength - MessageOffsetInBytes);
+            }
+
+            return message;
+        }
+
+        protected static void WritePipe(PipeStream pipe, MemoryStream memoryStream)
+        {
+            memoryStream.Position = 0;
+            memoryStream.CopyTo(pipe);
+        }
+
         protected static int ReadPipe(PipeStream pipe, byte[] buffer, int offset, int minBytesToRead)
         {
             int bytesRead = offset;
@@ -48,6 +96,15 @@ namespace Microsoft.Build.Tasks.AssemblyDependency
             return bytesRead;
         }
 
+        protected static void SetMessageLength(MemoryStream memoryStream)
+        {
+            int messageLength = (int)memoryStream.Length - MessageOffsetInBytes;
+
+            memoryStream.Position = 0;
+            using BinaryWriter binaryWriter = new(memoryStream, Encoding.Default, leaveOpen: true);
+            binaryWriter.Write(messageLength);
+        }
+
         protected static int ParseMessageLength(byte[] buffer)
         {
             using MemoryStream memoryStream = new(buffer, 0, MessageOffsetInBytes);
@@ -67,23 +124,6 @@ namespace Microsoft.Build.Tasks.AssemblyDependency
             buffer.CopyTo(newBuffer, 0);
 
             return newBuffer;
-        }
-
-        protected static T Deserialize<T>(byte[] buffer, int messageLength, bool setHash = false)
-            where T : ResolveAssemblyReferenceMessage, ITranslatable, new()
-        {
-            T message = new();
-            using MemoryStream memoryStream = new(buffer, 0, messageLength, writable: true, publiclyVisible: true);
-            memoryStream.Position = MessageOffsetInBytes;
-            ITranslator translator = BinaryTranslator.GetReadTranslator(memoryStream, InterningBinaryReader.PoolingBuffer);
-            translator.Translate(ref message);
-
-            if (setHash)
-            {
-                message.SetByteString(buffer, messageLength);
-            }
-
-            return message;
         }
     }
 }

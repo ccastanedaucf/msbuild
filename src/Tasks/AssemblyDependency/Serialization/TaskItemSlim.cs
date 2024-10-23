@@ -22,11 +22,21 @@ namespace Microsoft.Build.Tasks.AssemblyDependency
 
         private bool _isCopyLocalFile;
 
-        private string _itemSpec;
+        private string _evaluatedIncludeEscaped;
 
-        public string ItemSpec { get => _itemSpec; set => _itemSpec = value; }
+        private string _evaluatedIncludeUnescaped;
 
-        public ICollection MetadataNames { get; } = Array.Empty<string>();
+        private string _definingProject;
+
+        private string _fullPath;
+
+        public string ItemSpec
+        {
+            get => _evaluatedIncludeUnescaped;
+            set => throw new NotImplementedException();
+        }
+
+        public ICollection MetadataNames { get => throw new NotImplementedException(); }
 
         public bool IsCopyLocalFile => _isCopyLocalFile;
 
@@ -36,8 +46,8 @@ namespace Microsoft.Build.Tasks.AssemblyDependency
 
         public string EvaluatedIncludeEscaped
         {
-            get => EscapingUtilities.UnescapeAll(ItemSpec);
-
+            // Used by Utilities.TaskItem.ctor
+            get => _evaluatedIncludeEscaped;
             set => throw new NotImplementedException();
         }
 
@@ -45,38 +55,42 @@ namespace Microsoft.Build.Tasks.AssemblyDependency
         {
         }
 
-        public TaskItemSlim(ITaskItem taskItem)
+        public TaskItemSlim(ITaskItem taskItem, bool isCopyLocalFile = false)
         {
-            _itemSpec = taskItem.ItemSpec;
-
-            if (taskItem is ITaskItem2 taskItem2 && taskItem2.CloneCustomMetadataEscaped() is Dictionary<string, string> metadata)
-            {
-                _metadata = metadata;
-            }
-            else
-            {
-                _metadata = new(taskItem.MetadataCount, MSBuildNameIgnoreCaseComparer.Default);
-                taskItem.CopyMetadataTo(this);
-            }
-        }
-
-        public TaskItemSlim(ITaskItem taskItem, bool isCopyLocalFile)
-        {
-            _isCopyLocalFile = isCopyLocalFile;
-            _itemSpec = taskItem.ItemSpec;
-            _metadata = new(taskItem.MetadataCount, MSBuildNameIgnoreCaseComparer.Default);
+            // Store the unescaped value, as this is frequently used by RAR and is immutable.
+            _evaluatedIncludeUnescaped = taskItem.ItemSpec;
 
             if (taskItem is ITaskItem2 taskItem2)
             {
-                foreach (DictionaryEntry metadataNameWithValue in taskItem2.CloneCustomMetadataEscaped())
+                _evaluatedIncludeEscaped = taskItem2.EvaluatedIncludeEscaped;
+                _definingProject = taskItem2.GetMetadataValueEscaped(FileUtilities.ItemSpecModifiers.DefiningProjectFullPath);
+
+                IDictionary metadata = taskItem2.CloneCustomMetadataEscaped();
+
+                if (metadata is Dictionary<string, string> metadataDict)
                 {
-                    _metadata[(string)metadataNameWithValue.Key!] = (string)metadataNameWithValue.Value!;
+                    _metadata = metadataDict;
+                }
+                else
+                {
+                    _metadata = new(taskItem.MetadataCount, MSBuildNameIgnoreCaseComparer.Default);
+
+                    // Utilities.TaskItem returns CopyOnWriteDictionary
+                    foreach (DictionaryEntry metadataNameWithValue in metadata)
+                    {
+                        _metadata[(string)metadataNameWithValue.Key!] = (string)metadataNameWithValue.Value!;
+                    }
                 }
             }
             else
             {
+                _evaluatedIncludeEscaped = EscapingUtilities.Escape(_evaluatedIncludeUnescaped);
+                _definingProject = EscapingUtilities.EscapeWithCaching(taskItem.GetMetadata(FileUtilities.ItemSpecModifiers.DefiningProjectFullPath));
+                _metadata = new(taskItem.MetadataCount, MSBuildNameIgnoreCaseComparer.Default);
                 taskItem.CopyMetadataTo(this);
             }
+
+            _isCopyLocalFile = isCopyLocalFile;
         }
 
         public string GetMetadata(string metadataName) =>
@@ -112,8 +126,16 @@ namespace Microsoft.Build.Tasks.AssemblyDependency
             throw new NotImplementedException();
         }
 
-        public string GetMetadataValueEscaped(string metadataName) =>
-            _metadata.TryGetValue(metadataName, out string metadataValue) ? metadataValue : string.Empty;
+        public string GetMetadataValueEscaped(string metadataName)
+        {
+            if (FileUtilities.ItemSpecModifiers.IsDerivableItemSpecModifier(metadataName))
+            {
+                return FileUtilities.ItemSpecModifiers.GetItemSpecModifier(null, _evaluatedIncludeEscaped, _definingProject, metadataName, ref _fullPath)
+                    ?? string.Empty;
+            }
+
+            return _metadata.TryGetValue(metadataName, out string metadataValue) ? metadataValue : string.Empty;
+        }
 
         public void SetMetadataValueLiteral(string metadataName, string metadataValue)
         {
@@ -127,7 +149,9 @@ namespace Microsoft.Build.Tasks.AssemblyDependency
 
         public void Translate(ITranslator translator)
         {
-            translator.Translate(ref _itemSpec);
+            translator.Translate(ref _evaluatedIncludeUnescaped);
+            translator.Translate(ref _evaluatedIncludeEscaped);
+            translator.Translate(ref _definingProject);
             translator.Translate(ref _isCopyLocalFile);
             translator.TranslateDictionary(ref _metadata, MSBuildNameIgnoreCaseComparer.Default);
         }

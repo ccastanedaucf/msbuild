@@ -44,17 +44,17 @@ namespace Microsoft.Build.Tasks.AssemblyDependency
         private string? _warnOrErrorOnTargetArchitectureMismatch;
         private string[] _allowedAssemblyExtensions = [];
         private string[] _allowedRelatedFileExtensions = [];
-        private TaskItemSlim[] _assemblies = [];
-        private TaskItemSlim[] _assemblyFiles = [];
+        private ResolveAssemblyReferenceRequestItem[] _assemblies = [];
+        private ResolveAssemblyReferenceRequestItem[] _assemblyFiles = [];
         private string[] _candidateAssemblyFiles = [];
-        private TaskItemSlim[] _fullFrameworkAssemblyTables = [];
+        private ResolveAssemblyReferenceRequestItem[] _fullFrameworkAssemblyTables = [];
         private string[] _fullFrameworkFolders = [];
         private string[] _fullTargetFrameworkSubsetNames = [];
-        private TaskItemSlim[] _installedAssemblySubsetTables = [];
-        private TaskItemSlim[] _installedAssemblyTables = [];
+        private ResolveAssemblyReferenceRequestItem[] _installedAssemblySubsetTables = [];
+        private ResolveAssemblyReferenceRequestItem[] _installedAssemblyTables = [];
         private string[] _searchPaths = [];
         private string[] _targetFrameworkDirectories = [];
-        private TaskItemSlim[] _resolvedSDKReferences = [];
+        private ResolveAssemblyReferenceRequestItem[] _resolvedSDKReferences = [];
         private string[] _latestTargetFrameworkDirectories = [];
         private string[] _targetFrameworkSubsets = [];
 
@@ -114,25 +114,25 @@ namespace Microsoft.Build.Tasks.AssemblyDependency
 
         public string[] AllowedRelatedFileExtensions { get => _allowedRelatedFileExtensions; set => _allowedRelatedFileExtensions = value; }
 
-        public TaskItemSlim[] Assemblies { get => _assemblies; set => _assemblies = value; }
+        public ResolveAssemblyReferenceRequestItem[] Assemblies { get => _assemblies; set => _assemblies = value; }
 
-        public TaskItemSlim[] AssemblyFiles { get => _assemblyFiles; set => _assemblyFiles = value; }
+        public ResolveAssemblyReferenceRequestItem[] AssemblyFiles { get => _assemblyFiles; set => _assemblyFiles = value; }
 
         public string[] CandidateAssemblyFiles { get => _candidateAssemblyFiles; set => _candidateAssemblyFiles = value; }
 
-        public TaskItemSlim[] FullFrameworkAssemblyTables { get => _fullFrameworkAssemblyTables; set => _fullFrameworkAssemblyTables = value; }
+        public ResolveAssemblyReferenceRequestItem[] FullFrameworkAssemblyTables { get => _fullFrameworkAssemblyTables; set => _fullFrameworkAssemblyTables = value; }
 
         public string[] FullFrameworkFolders { get => _fullFrameworkFolders; set => _fullFrameworkFolders = value; }
 
         public string[] FullTargetFrameworkSubsetNames { get => _fullTargetFrameworkSubsetNames; set => _fullTargetFrameworkSubsetNames = value; }
 
-        public TaskItemSlim[] InstalledAssemblyTables { get => _installedAssemblyTables; set => _installedAssemblyTables = value; }
+        public ResolveAssemblyReferenceRequestItem[] InstalledAssemblyTables { get => _installedAssemblyTables; set => _installedAssemblyTables = value; }
 
-        public TaskItemSlim[] InstalledAssemblySubsetTables { get => _installedAssemblySubsetTables; set => _installedAssemblySubsetTables = value; }
+        public ResolveAssemblyReferenceRequestItem[] InstalledAssemblySubsetTables { get => _installedAssemblySubsetTables; set => _installedAssemblySubsetTables = value; }
 
         public string[] LatestTargetFrameworkDirectories { get => _latestTargetFrameworkDirectories; set => _latestTargetFrameworkDirectories = value; }
 
-        public TaskItemSlim[] ResolvedSDKReferences { get => _resolvedSDKReferences; set => _resolvedSDKReferences = value; }
+        public ResolveAssemblyReferenceRequestItem[] ResolvedSDKReferences { get => _resolvedSDKReferences; set => _resolvedSDKReferences = value; }
 
         public string[] SearchPaths { get => _searchPaths; set => _searchPaths = value; }
 
