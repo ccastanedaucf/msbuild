@@ -14,7 +14,7 @@ namespace Microsoft.Build.Tasks.AssemblyDependency
 {
     internal class RarExecutionCache
     {
-        private ConcurrentDictionary<string, RarExecutionResponse> _evaluationCache { get; } = [];
+        private ConcurrentDictionary<ulong, RarExecutionResponse> _evaluationCache { get; } = [];
 
         private readonly SemaphoreSlim _ioSemaphore;
 
@@ -25,9 +25,7 @@ namespace Microsoft.Build.Tasks.AssemblyDependency
 
         public async Task<RarExecutionResponse?> GetCachedEvaluation(RarExecutionRequest request)
         {
-            string requestHash = request.ByteString!;
-
-            if (!_evaluationCache.TryGetValue(requestHash, out RarExecutionResponse? cachedEvaluation))
+            if (request.ByteHash == 0 || !_evaluationCache.TryGetValue(request.ByteHash, out RarExecutionResponse? cachedEvaluation))
             {
                 return null;
             }
@@ -53,15 +51,19 @@ namespace Microsoft.Build.Tasks.AssemblyDependency
                 }));
             }
 
-            await Task.WhenAll(workerTasks.ToArray());
+            await Task.WhenAll([.. workerTasks]);
 
             return cachedEvaluation;
         }
 
         public void CacheEvaluation(RarExecutionRequest request, RarExecutionResponse response)
         {
-            string requestHash = request.ByteString!;
-            _evaluationCache[requestHash] = response;
+            if (request.ByteHash == 0)
+            {
+                return;
+            }
+
+            _evaluationCache[request.ByteHash] = response;
         }
     }
 }

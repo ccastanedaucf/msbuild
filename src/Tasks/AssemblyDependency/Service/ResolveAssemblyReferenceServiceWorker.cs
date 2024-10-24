@@ -280,15 +280,14 @@ namespace Microsoft.Build.Tasks.AssemblyDependency
 
             return resp;
 
-            RarTaskItemOutput[] ConvertTaskItems(ICollection<ITaskItem> taskItems)
+            RarTaskItemOutput[] ConvertTaskItems(ITaskItem[] taskItems)
             {
-                List<RarTaskItemOutput> responseItems = new(taskItems.Count);
+                RarTaskItemOutput[] responseItems = new RarTaskItemOutput[taskItems.Length];
 
-                foreach (ITaskItem taskItem in taskItems)
+                for (int i = 0; i < taskItems.Length; i++)
                 {
-                    responseItems.Add(new RarTaskItemOutput(
-                        taskItem,
-                        isCopyLocalFile: copyLocalFiles.Contains(taskItem)));
+                    ITaskItem taskItem = taskItems[i];
+                    responseItems[i] = new RarTaskItemOutput(taskItem, copyLocalFiles.Contains(taskItem));
                 }
 
                 return [.. responseItems];

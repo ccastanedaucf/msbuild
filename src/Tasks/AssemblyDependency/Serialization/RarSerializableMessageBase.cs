@@ -3,20 +3,23 @@
 
 using System;
 using System.Text;
+using System.IO.Hashing;
 
 namespace Microsoft.Build.Tasks.AssemblyDependency
 {
     internal abstract class RarSerializableMessageBase
     {
-        internal string? ByteString { get; private set; }
+        internal ulong ByteHash { get; private set; }
 
-        internal byte[]? ByteHash { get; private set; }
+        internal byte[]? ByteArray { get; private set; }
 
         internal void SetByteString(byte[] buffer, int sourceIndex, int messageLength)
         {
-            ByteString = Encoding.UTF8.GetString(buffer, sourceIndex, messageLength);
-            ByteHash = new byte[messageLength];
-            Array.Copy(buffer, sourceIndex, ByteHash, 0, messageLength);
+            ByteArray = new byte[messageLength];
+            Array.Copy(buffer, sourceIndex, ByteArray, 0, messageLength);
+
+            // TODO: Properly implement IEquatable
+            ByteHash = XxHash64.HashToUInt64(ByteArray);
         }
     }
 }

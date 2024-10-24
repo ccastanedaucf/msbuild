@@ -35,10 +35,10 @@ namespace Microsoft.Build.Tasks.AssemblyDependency
             ITranslator translator = BinaryTranslator.GetWriteTranslator(memoryStream);
 
             // Skip serialization if the result is cached. 
-            if (message.ByteHash != null)
+            if (message.ByteArray != null)
             {
                 using BinaryWriter binaryWriter = new(memoryStream, Encoding.Default, leaveOpen: true);
-                binaryWriter.Write(message.ByteHash);
+                binaryWriter.Write(message.ByteArray);
 
                 return;
             }

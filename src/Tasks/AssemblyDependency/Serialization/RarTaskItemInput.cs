@@ -52,6 +52,11 @@ namespace Microsoft.Build.Tasks.AssemblyDependency
             _evaluatedIncludeUnescaped = taskItem.ItemSpec;
             _evaluatedIncludeEscaped = taskItem2.EvaluatedIncludeEscaped;
             _metadata = metadata;
+
+            foreach (KeyValuePair<string, string> kvp in _metadata)
+            {
+                Console.WriteLine($"key={kvp.Key},val={kvp.Value}");
+            }
         }
 
         public string ItemSpec

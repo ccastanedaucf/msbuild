@@ -30,6 +30,7 @@ namespace Microsoft.Build.Tasks.AssemblyDependency
         private RarTaskItemOutput[] _serializationAssemblyFiles = [];
         private RarTaskItemOutput[] _suggestedRedirects = [];
         private RarTaskItemOutput[] _unresolvedAssemblyConflicts = [];
+        private RarBuildEventArgs[] _buildEventArgsQueue = [];
 
         public bool IsComplete { get => _isComplete; set => _isComplete = value; }
 
@@ -61,7 +62,7 @@ namespace Microsoft.Build.Tasks.AssemblyDependency
 
         public RarTaskItemOutput[] UnresolvedAssemblyConflicts { get => _unresolvedAssemblyConflicts; set => _unresolvedAssemblyConflicts = value; }
 
-        public RarBuildEventArgs[] BuildEventArgsQueue { get; set; } = [];
+        public RarBuildEventArgs[] BuildEventArgsQueue { get => _buildEventArgsQueue; set => _buildEventArgsQueue = value; }
 
         public List<string> TrackedDirectories { get; set; } = [];
 
@@ -85,6 +86,7 @@ namespace Microsoft.Build.Tasks.AssemblyDependency
             translator.TranslateArray(ref _serializationAssemblyFiles);
             translator.TranslateArray(ref _suggestedRedirects);
             translator.TranslateArray(ref _unresolvedAssemblyConflicts);
+            translator.TranslateArray(ref _buildEventArgsQueue);
         }
     }
 }

@@ -84,14 +84,14 @@ namespace Microsoft.Build.Tasks.AssemblyDependency
 
             static RarTaskItemInput[] ConvertTaskItems(ITaskItem[] taskItems)
             {
-                List<RarTaskItemInput> requestItems = new(taskItems.Length);
+                RarTaskItemInput[] requestItems = new RarTaskItemInput[taskItems.Length];
 
-                foreach (ITaskItem taskItem in taskItems)
+                for (int i = 0; i < taskItems.Length; i++)
                 {
-                    requestItems.Add(new RarTaskItemInput(taskItem));
+                    requestItems[i] = new RarTaskItemInput(taskItems[i]);
                 }
 
-                return [.. requestItems];
+                return requestItems;
             }
         }
 
@@ -151,12 +151,12 @@ namespace Microsoft.Build.Tasks.AssemblyDependency
 
             if (bytesRead > messageLength)
             {
+                // TODO: Check event args are handled correctly. Server may send multiple responses for one request.
                 throw new Exception("Should not be reading into next message!");
             }
 
             return Deserialize<RarExecutionResponse>(buffer, messageLength);
         }
-
 
         private static void SetTaskOutputs(ResolveAssemblyReference rarTask, RarExecutionResponse response)
         {
@@ -190,7 +190,7 @@ namespace Microsoft.Build.Tasks.AssemblyDependency
                     }
                 }
 
-                return [.. taskItems];
+                return taskItems;
             }
         }
 
@@ -202,23 +202,6 @@ namespace Microsoft.Build.Tasks.AssemblyDependency
 
                 switch (buildEventArgs.EventType)
                 {
-                    case RarBuildEventArgsType.Error:
-                        BuildErrorEventArgs errorEventArgs = new(
-                            buildEventArgs.Subcategory,
-                            buildEventArgs.Code,
-                            buildEventArgs.File,
-                            buildEventArgs.LineNumber,
-                            buildEventArgs.ColumnNumber,
-                            buildEventArgs.EndLineNumber,
-                            buildEventArgs.EndColumnNumber,
-                            buildEventArgs.Message,
-                            buildEventArgs.HelpKeyword,
-                            buildEventArgs.SenderName,
-                            eventTimestamp,
-                            buildEventArgs.MessageArgs);
-
-                        buildEngine.LogErrorEvent(errorEventArgs);
-                        break;
                     case RarBuildEventArgsType.Message:
                         BuildMessageEventArgs messageEventArgs = new(
                             buildEventArgs.Subcategory,
@@ -253,6 +236,23 @@ namespace Microsoft.Build.Tasks.AssemblyDependency
                             buildEventArgs.MessageArgs);
 
                         buildEngine.LogWarningEvent(warningEventArgs);
+                        break;
+                    case RarBuildEventArgsType.Error:
+                        BuildErrorEventArgs errorEventArgs = new(
+                            buildEventArgs.Subcategory,
+                            buildEventArgs.Code,
+                            buildEventArgs.File,
+                            buildEventArgs.LineNumber,
+                            buildEventArgs.ColumnNumber,
+                            buildEventArgs.EndLineNumber,
+                            buildEventArgs.EndColumnNumber,
+                            buildEventArgs.Message,
+                            buildEventArgs.HelpKeyword,
+                            buildEventArgs.SenderName,
+                            eventTimestamp,
+                            buildEventArgs.MessageArgs);
+
+                        buildEngine.LogErrorEvent(errorEventArgs);
                         break;
                 }
             }
