@@ -226,8 +226,12 @@
     <Compile Include="..\Shared\LoadedType.cs" />
     <Compile Include="..\Shared\AssemblyLoadInfo.cs" />
     <Compile Include="..\Shared\TaskHostTaskCancelled.cs" />
+    <Compile Include="..\Framework\InterningReadTranslator.cs" />
+    <Compile Include="..\Framework\InterningWriteTranslator.cs" />
     <Compile Include="..\Shared\TaskParameter.cs" />
     <Compile Include="..\Shared\AssemblyNameExtension.cs" />
+    <Compile Include="..\Shared\IConstrainedEqualityComparer.cs" />
+    <Compile Include="..\Shared\MSBuildNameIgnoreCaseComparer.cs" />
 
     <Compile Include="..\Shared\FileSystem\IFileSystem.cs" />
     <Compile Include="..\Shared\FileSystem\FileSystems.cs" />

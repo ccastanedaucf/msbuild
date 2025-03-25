@@ -2,7 +2,9 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using System;
+using System.Collections.Concurrent;
 using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.Build.BackEnd;
 using Microsoft.Build.Internal;
 using Microsoft.Build.Shared;
@@ -18,7 +20,9 @@ namespace Microsoft.Build.Tasks.AssemblyDependency
 
         private readonly NodePipeServer _pipeServer;
 
-        internal OutOfProcRarNodeEndpoint(int endpointId, ServerNodeHandshake handshake, int maxNumberOfServerInstances)
+        private readonly ConcurrentDictionary<string, byte> _seenStateFiles;
+
+        internal OutOfProcRarNodeEndpoint(int endpointId, ServerNodeHandshake handshake, int maxNumberOfServerInstances, ConcurrentDictionary<string, byte> seenStateFiles)
         {
             _endpointId = endpointId;
             _pipeServer = new NodePipeServer(NamedPipeUtil.GetRarNodeEndpointPipeName(handshake), handshake, maxNumberOfServerInstances);
@@ -26,17 +30,19 @@ namespace Microsoft.Build.Tasks.AssemblyDependency
             NodePacketFactory packetFactory = new();
             packetFactory.RegisterPacketHandler(NodePacketType.RarNodeExecuteRequest, RarNodeExecuteRequest.FactoryForDeserialization, null);
             _pipeServer.RegisterPacketFactory(packetFactory);
+
+            _seenStateFiles = seenStateFiles;
         }
 
         public void Dispose() => _pipeServer.Dispose();
 
-        internal void Run(CancellationToken cancellationToken = default)
+        internal async Task RunAsync(CancellationToken cancellationToken = default)
         {
             CommunicationsUtilities.Trace("({0}) Starting RAR endpoint.", _endpointId);
 
             try
             {
-                RunInternal(cancellationToken);
+                await RunInternalAsync(cancellationToken);
             }
             catch (OperationCanceledException)
             {
@@ -46,7 +52,7 @@ namespace Microsoft.Build.Tasks.AssemblyDependency
             }
         }
 
-        private void RunInternal(CancellationToken cancellationToken)
+        private async Task RunInternalAsync(CancellationToken cancellationToken)
         {
             while (!cancellationToken.IsCancellationRequested)
             {
@@ -59,7 +65,7 @@ namespace Microsoft.Build.Tasks.AssemblyDependency
 
                 try
                 {
-                    INodePacket packet = _pipeServer.ReadPacket();
+                    INodePacket packet = await _pipeServer.ReadPacketAsync(cancellationToken);
 
                     if (packet.Type == NodePacketType.NodeShutdown)
                     {
@@ -71,14 +77,8 @@ namespace Microsoft.Build.Tasks.AssemblyDependency
                         continue;
                     }
 
-                    RarNodeExecuteRequest request = (RarNodeExecuteRequest)packet;
-
-                    // TODO: Use request packet to set inputs on the RAR task.
-                    ResolveAssemblyReference rarTask = new();
-
-                    // TODO: bool success = rarTask.ExecuteInProcess();
-                    // TODO: Use RAR task outputs to create response packet.
-                    _pipeServer.WritePacket(new RarNodeExecuteResponse());
+                    RarNodeExecuteResponse response = ExecuteRequest((RarNodeExecuteRequest)packet);
+                    await _pipeServer.WritePacketAsync(response, cancellationToken);
 
                     CommunicationsUtilities.Trace("({0}) Completed RAR request.", _endpointId);
                 }
@@ -89,6 +89,23 @@ namespace Microsoft.Build.Tasks.AssemblyDependency
             }
 
             _pipeServer.Disconnect();
+        }
+
+        private RarNodeExecuteResponse ExecuteRequest(RarNodeExecuteRequest request)
+        {
+            RarNodeBuildEngine buildEngine = new(request.MinimumMessageImportance, request.IsTaskInputLoggingEnabled);
+            ResolveAssemblyReference rarTask = new() { BuildEngine = buildEngine };
+            request.ToTask(rarTask);
+
+            // Only load the state file on the first run.
+            if (rarTask.StateFile != null && !_seenStateFiles.TryAdd(rarTask.StateFile, 0))
+            {
+                rarTask.StateFile = null;
+            }
+
+            bool success = rarTask.Execute();
+
+            return new RarNodeExecuteResponse(rarTask, success);
         }
     }
 }

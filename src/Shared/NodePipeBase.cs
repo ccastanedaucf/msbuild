@@ -100,6 +100,11 @@ namespace Microsoft.Build.Internal
             int messageLength = WritePacketToBuffer(packet);
             byte[] buffer = _writeBuffer.GetBuffer();
 
+            if (Environment.GetEnvironmentVariable("MSBuildTraceRarPacketSize") == "1")
+            {
+                CommunicationsUtilities.Trace("packet:{0}", messageLength);
+            }
+
             for (int i = 0; i < messageLength; i += MaxPacketWriteSize)
             {
                 int lengthToWrite = Math.Min(messageLength - i, MaxPacketWriteSize);
@@ -135,6 +140,11 @@ namespace Microsoft.Build.Internal
             // Read the packet. Set the buffer length now to avoid additional resizing during the read.
             _readBuffer.Position = 0;
             _readBuffer.SetLength(packetLength);
+            if (Environment.GetEnvironmentVariable("MSBuildTraceRarPacketSize") == "1")
+            {
+                CommunicationsUtilities.Trace("packet:{0}", packetLength);
+            }
+
             int packetBytesRead = Read(_readBuffer.GetBuffer(), packetLength);
 
             if (packetBytesRead < packetLength)
@@ -150,6 +160,11 @@ namespace Microsoft.Build.Internal
         {
             int messageLength = WritePacketToBuffer(packet);
             byte[] buffer = _writeBuffer.GetBuffer();
+
+            if (Environment.GetEnvironmentVariable("MSBuildTraceRarPacketSize") == "1")
+            {
+                CommunicationsUtilities.Trace("packet:{0}", messageLength);
+            }
 
             for (int i = 0; i < messageLength; i += MaxPacketWriteSize)
             {
@@ -182,6 +197,11 @@ namespace Microsoft.Build.Internal
 
             int packetLength = BinaryPrimitives.ReadInt32LittleEndian(new Span<byte>(_headerData, 1, 4));
             MSBuildEventSource.Log.PacketReadSize(packetLength);
+
+            if (Environment.GetEnvironmentVariable("MSBuildTraceRarPacketSize") == "1")
+            {
+                CommunicationsUtilities.Trace("packet:{0}", packetLength);
+            }
 
             // Read the packet. Set the buffer length now to avoid additional resizing during the read.
             _readBuffer.Position = 0;

@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using System;
+using System.Collections.Generic;
 using Microsoft.Build.BackEnd;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Internal;
@@ -58,13 +59,20 @@ namespace Microsoft.Build.Tasks.AssemblyDependency
                 _pipeClient.ConnectToServer(0);
             }
 
-            // TODO: Use RAR task to create the request packet.
-            _pipeClient.WritePacket(new RarNodeExecuteRequest());
+            _pipeClient.WritePacket(new RarNodeExecuteRequest(rarTask));
 
-            // TODO: Use response packet to set RAR task outputs.
-            _ = (RarNodeExecuteResponse)_pipeClient.ReadPacket();
+            INodePacket packet = _pipeClient.ReadPacket();
+            if (packet.Type != NodePacketType.RarNodeExecuteResponse)
+            {
+                ErrorUtilities.ThrowInternalError($"Received unexpected packet type ${packet.Type}");
+            }
 
-            return true;
+            RarNodeExecuteResponse response = (RarNodeExecuteResponse)packet;
+            response.ToTask(rarTask);
+
+            CommunicationsUtilities.Trace("Result: {0}.", response.Success);
+
+            return response.Success;
         }
     }
 }

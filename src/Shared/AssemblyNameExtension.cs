@@ -980,7 +980,7 @@ namespace Microsoft.Build.Shared
         public void Translate(ITranslator translator)
         {
             translator.Translate(ref asAssemblyName);
-            translator.Translate(ref asString);
+            translator.InternPath(ref asString, nullable: true);
             translator.Translate(ref isSimpleName);
             translator.Translate(ref hasProcessorArchitectureInFusionName);
             translator.Translate(ref immutable);

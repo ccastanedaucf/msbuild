@@ -29,9 +29,9 @@ namespace Microsoft.Build.Tasks
                 profile = frameworkName.Profile;
             }
 
-            translator.Translate(ref identifier);
+            translator.Intern(ref identifier, nullable: true);
             translator.Translate(ref version);
-            translator.Translate(ref profile);
+            translator.Intern(ref profile, nullable: true);
 
             if (translator.Mode == TranslationDirection.ReadFromStream)
             {

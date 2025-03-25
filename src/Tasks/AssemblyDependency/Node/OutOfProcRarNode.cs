@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using System;
+using System.Collections.Concurrent;
+using System.Runtime;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Build.BackEnd;
@@ -133,14 +135,17 @@ namespace Microsoft.Build.Tasks.AssemblyDependency
 
         private async Task RunNodeEndpointsAsync(CancellationToken cancellationToken)
         {
+            // _ = new ResolveAssemblyReference();
+            ConcurrentDictionary<string, byte> seenStateFiles = new(StringComparer.OrdinalIgnoreCase);
+
             OutOfProcRarNodeEndpoint[] endpoints = new OutOfProcRarNodeEndpoint[_maxNumberOfConcurrentTasks];
             Task[] endpointTasks = new Task[endpoints.Length];
 
             for (int i = 0; i < endpoints.Length; i++)
             {
-                OutOfProcRarNodeEndpoint endpoint = new(endpointId: i + 1, _handshake, _maxNumberOfConcurrentTasks);
+                OutOfProcRarNodeEndpoint endpoint = new(endpointId: i + 1, _handshake, _maxNumberOfConcurrentTasks, seenStateFiles);
                 endpoints[i] = endpoint;
-                endpointTasks[i] = Task.Run(() => endpoint.Run(cancellationToken), cancellationToken);
+                endpointTasks[i] = Task.Run(() => endpoint.RunAsync(cancellationToken), cancellationToken);
             }
 
             CommunicationsUtilities.Trace("{0} RAR endpoints started.", _maxNumberOfConcurrentTasks);
