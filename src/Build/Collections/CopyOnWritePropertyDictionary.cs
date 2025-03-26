@@ -36,6 +36,7 @@ namespace Microsoft.Build.Collections
     /// </remarks>
     /// <typeparam name="T">Property or Metadata class type to store</typeparam>
     [DebuggerDisplay("#Entries={Count}")]
+
     internal sealed class CopyOnWritePropertyDictionary<T> : ICopyOnWritePropertyDictionary<T>, IEquatable<CopyOnWritePropertyDictionary<T>>
         where T : class, IKeyed, IValued, IEquatable<T>, IImmutable
     {
@@ -60,6 +61,11 @@ namespace Microsoft.Build.Collections
         private CopyOnWritePropertyDictionary(CopyOnWritePropertyDictionary<T> that)
         {
             _backing = that._backing;
+        }
+
+        public CopyOnWritePropertyDictionary(ImmutableDictionary<string, T> that)
+        {
+            _backing = that;
         }
 
         /// <summary>
@@ -366,5 +372,29 @@ namespace Microsoft.Build.Collections
         {
             return new CopyOnWritePropertyDictionary<T>(this);
         }
+
+        public bool IsSameBacking(ICollection<KeyValuePair<string, T>> other)
+        {
+            if (other == null)
+            {
+                return false;
+            }
+            else if (other is CopyOnWritePropertyDictionary<T> copyOnWritePropertyDictionary)
+            {
+                return ReferenceEquals(_backing, copyOnWritePropertyDictionary._backing);
+            }
+            else if (other is CopyOnWriteDictionary<string, T> copyOnWriteDictionary)
+            {
+                return ReferenceEquals(_backing, copyOnWriteDictionary.ToImmutableDictionary());
+            }
+            else if (other is ImmutableDictionary<string, T> immutableDictionary)
+            {
+                return ReferenceEquals(_backing, immutableDictionary);
+            }
+
+            return false;
+        }
+
+        public ImmutableDictionary<string, T> ToImmutableDictionary() => _backing;
     }
 }

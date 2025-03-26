@@ -80,6 +80,14 @@ namespace Microsoft.Build.BackEnd
             translator.TranslateArray(ref array, AdaptFactory(valueFactory));
         }
 
+        public static void TranslateArray<I, T>(
+            this ITranslator translator,
+            ref T[] array,
+            NodePacketValueFactory<T> valueFactory) where T : class, ITranslatable
+        {
+            translator.TranslateArray(ref array, AdaptFactory(valueFactory));
+        }
+
         public static void TranslateDictionary<T>(
             this ITranslator translator,
             ref Dictionary<string, T> dictionary,

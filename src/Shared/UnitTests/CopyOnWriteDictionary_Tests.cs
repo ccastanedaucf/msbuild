@@ -27,7 +27,7 @@ namespace Microsoft.Build.UnitTests.OM.Collections
             string k1 = new string(nameof(Indexer_ReferenceFound).ToCharArray()); // force create new string
             object v1 = new Object();
 
-            var dictionary = new CopyOnWriteDictionary<object>();
+            var dictionary = CopyOnWriteDictionary<object>.Create();
             dictionary[k1] = v1;
 
             // Now look for the same key we inserted
@@ -45,7 +45,7 @@ namespace Microsoft.Build.UnitTests.OM.Collections
         {
             Assert.Throws<KeyNotFoundException>(() =>
             {
-                var dictionary = new CopyOnWriteDictionary<object>();
+                var dictionary = CopyOnWriteDictionary<object>.Create();
                 object value = dictionary[string.Empty];
             });
         }
@@ -58,7 +58,7 @@ namespace Microsoft.Build.UnitTests.OM.Collections
             string k1 = new string(nameof(TryGetValue_ReferenceFound).ToCharArray());
             object v1 = new Object();
 
-            var dictionary = new CopyOnWriteDictionary<object>();
+            var dictionary = CopyOnWriteDictionary<object>.Create();
             dictionary[k1] = v1;
 
             // Now look for the same key we inserted
@@ -75,7 +75,7 @@ namespace Microsoft.Build.UnitTests.OM.Collections
         [Fact]
         public void TryGetValue_ReferenceNotFound()
         {
-            var dictionary = new CopyOnWriteDictionary<object>();
+            var dictionary = CopyOnWriteDictionary<object>.Create();
 
             object v;
             bool result = dictionary.TryGetValue(string.Empty, out v);
@@ -94,7 +94,7 @@ namespace Microsoft.Build.UnitTests.OM.Collections
             string k1 = String.Concat("ke", "y");
             object v1 = new Object();
 
-            var dictionary = new CopyOnWriteDictionary<object>();
+            var dictionary = CopyOnWriteDictionary<object>.Create();
             dictionary[k1] = v1;
 
             // Now look for a different but equatable key
@@ -114,7 +114,7 @@ namespace Microsoft.Build.UnitTests.OM.Collections
         [Fact]
         public void CloneVisibility()
         {
-            var dictionary = new CopyOnWriteDictionary<string>();
+            var dictionary = CopyOnWriteDictionary<string>.Create();
             dictionary["test"] = "1";
             Assert.Equal("1", dictionary["test"]);
 
@@ -130,7 +130,7 @@ namespace Microsoft.Build.UnitTests.OM.Collections
         [Fact]
         public void CloneComparer()
         {
-            var dictionary = new CopyOnWriteDictionary<string>(StringComparer.OrdinalIgnoreCase);
+            var dictionary = CopyOnWriteDictionary<string>.Create(StringComparer.OrdinalIgnoreCase);
             dictionary["test"] = "1";
             Assert.Equal("1", dictionary["test"]);
 
@@ -145,7 +145,7 @@ namespace Microsoft.Build.UnitTests.OM.Collections
         [Fact]
         public void OriginalWritesNotVisibleToClones()
         {
-            var dictionary = new CopyOnWriteDictionary<string>();
+            var dictionary = CopyOnWriteDictionary<string>.Create();
             dictionary["test"] = "1";
             dictionary["test"].ShouldBe("1");
 
@@ -171,7 +171,7 @@ namespace Microsoft.Build.UnitTests.OM.Collections
         [Fact]
         public void CloneWritesNotVisibleToOriginal()
         {
-            var dictionary = new CopyOnWriteDictionary<string>();
+            var dictionary = CopyOnWriteDictionary<string>.Create();
             dictionary["test"] = "1";
             Assert.Equal("1", dictionary["test"]);
 

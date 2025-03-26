@@ -56,6 +56,10 @@ namespace Microsoft.Build.Framework
 
         public ICollection MetadataNames => (ICollection)Metadata.Keys;
 
+        public bool OverwriteBacking => throw new NotImplementedException();
+
+        public bool RealTime { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+
         public IDictionary CloneCustomMetadata()
         {
             // against the guidance for CloneCustomMetadata this returns the original collection.
@@ -89,5 +93,11 @@ namespace Microsoft.Build.Framework
         {
             return $"{ItemSpec} Metadata: {MetadataCount}";
         }
+
+        public bool HasSameBacking(ICollection<KeyValuePair<string, string>> backingCollection) => false;
+        public bool HasCustomMetadata() => Metadata?.Count > 0;
+        public ICollection<KeyValuePair<string, string>> GetBacking() => throw new NotImplementedException();
+        public void UseSameBacking(IMetadataContainer metadataContainer) => throw new NotImplementedException();
+        public void UseSameBacking(ICollection<KeyValuePair<string, string>> metadataContainer) => throw new NotImplementedException();
     }
 }

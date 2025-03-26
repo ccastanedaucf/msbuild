@@ -61,5 +61,9 @@ namespace Microsoft.Build.Collections
         /// directly.
         /// </summary>
         string GetEscapedValue(string name);
+
+        bool IsSameBacking(ICollection<KeyValuePair<string, T>> other);
+
+        ImmutableDictionary<string, T> ToImmutableDictionary();
     }
 }

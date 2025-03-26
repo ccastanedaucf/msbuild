@@ -356,6 +356,11 @@ namespace Microsoft.Build.Execution
             get { return _project.FullPath; }
         }
 
+        public bool OverwriteBacking => _taskItem.OverwriteBacking;
+
+        // Ignored.
+        public bool RealTime { get; set; }
+
         /// <summary>
         /// Get any metadata in the item that has the specified name,
         /// otherwise returns null.
@@ -635,6 +640,13 @@ namespace Microsoft.Build.Execution
             _taskItem.SetMetadata(metadataDictionary);
         }
 
+        internal void SetMetadata(TaskItem taskItem)
+        {
+            _project.VerifyThrowNotImmutable();
+
+            _taskItem.SetMetadata(taskItem);
+        }
+
         /// <summary>
         /// Sets metadata where one built-in metadata is allowed to be set: RecursiveDir.
         /// This is not normally legal to set outside of evaluation. However, the CreateItem
@@ -743,6 +755,14 @@ namespace Microsoft.Build.Execution
                             _project.IsImmutable,
                             definingFileEscaped);
         }
+
+        bool IMetadataContainer.HasSameBacking(ICollection<KeyValuePair<string, string>> backingCollection) => _taskItem.HasSameBacking(backingCollection);
+
+        bool IMetadataContainer.HasCustomMetadata() => _taskItem.HasCustomMetadata();
+
+        ICollection<KeyValuePair<string, string>> IMetadataContainer.GetBacking() => _taskItem.GetBacking();
+
+        void IMetadataContainer.UseSameBacking(ICollection<KeyValuePair<string, string>> metadataContainer) => _taskItem.UseSameBacking(metadataContainer);
 
         /// <summary>
         /// An item without an item type. Cast to an ITaskItem, this is
@@ -1188,6 +1208,11 @@ namespace Microsoft.Build.Execution
 
             IEnumerable<ProjectMetadataInstance> IItem<ProjectMetadataInstance>.Metadata => MetadataCollection;
 
+            public bool OverwriteBacking => true;
+
+            // Ignored.
+            public bool RealTime { get; set; }
+
             #region Operators
 
             /// <summary>
@@ -1373,6 +1398,37 @@ namespace Microsoft.Build.Execution
                 SetMetadata(metadataName, EscapingUtilities.Escape(metadataValue));
             }
 
+            internal void SetMetadata(TaskItem sourceItem)
+            {
+                ProjectInstance.VerifyThrowNotImmutable(_isImmutable);
+
+                if (_directMetadata == null)
+                {
+                    // This optimized path is hit most often
+                    _directMetadata = sourceItem._directMetadata?.DeepClone(); // copy on write!
+                }
+                else if (sourceItem._directMetadata != null && !sourceItem._directMetadata.IsSameBacking(_directMetadata))
+                {
+                    IEnumerable<ProjectMetadataInstance> metadataToImport = ((IEnumerable<ProjectMetadataInstance>)sourceItem._directMetadata)
+                        .Where(metadatum => string.IsNullOrEmpty(_directMetadata.GetEscapedValue(metadatum.Name)));
+                    _directMetadata.ImportProperties(metadataToImport);
+                }
+
+                // If the destination item already has item definitions then we want to maintain them
+                // But ours will be of less precedence than those already on the item
+                if (_itemDefinitions == null)
+                {
+                    _itemDefinitions = (sourceItem._itemDefinitions == null) ? null : new List<ProjectItemDefinitionInstance>(sourceItem._itemDefinitions);
+                }
+                else if (sourceItem._itemDefinitions != null)
+                {
+                    for (int i = 0; i < sourceItem._itemDefinitions.Count; i++)
+                    {
+                        _itemDefinitions.Add(sourceItem._itemDefinitions[i]);
+                    }
+                }
+            }
+
             /// <summary>
             /// ITaskItem implementation which removed the named piece of metadata.
             /// If the metadata is not present, does nothing.
@@ -1422,66 +1478,118 @@ namespace Microsoft.Build.Execution
                     originalItemSpec = destinationItem.GetMetadata("OriginalItemSpec");
                 }
 
-                if (destinationItem is TaskItem destinationAsTaskItem && destinationAsTaskItem._directMetadata == null)
+                if (destinationItem is TaskItem destinationAsTaskItem)
                 {
-                    ProjectInstance.VerifyThrowNotImmutable(destinationAsTaskItem._isImmutable);
+                    CopyToProjectTaskItem(destinationAsTaskItem);
+                }
+                else if (destinationItem is IMetadataContainer destinationAsMetadataContainer)
+                {
+                    CopyToMetadataContainer(destinationItem, destinationAsMetadataContainer);
+                }
+                else
+                {
+                    CopyToTaskItem(destinationItem);
+                }
 
-                    // This optimized path is hit most often
-                    destinationAsTaskItem._directMetadata = _directMetadata?.DeepClone(); // copy on write!
+                if (addOriginalItemSpec)
+                {
+                    if (string.IsNullOrEmpty(originalItemSpec))
+                    {
+                        // This does not appear to significantly cause a copy-on-write; otherwise, it could go in its own slot.
+                        destinationItem.SetMetadata("OriginalItemSpec", _includeEscaped);
+                    }
+                }
+
+                void CopyToProjectTaskItem(TaskItem destinationItem)
+                {
+                    ProjectInstance.VerifyThrowNotImmutable(destinationItem._isImmutable);
+
+                    if (destinationItem._directMetadata == null)
+                    {
+                        // This optimized path is hit most often
+                        destinationItem._directMetadata = _directMetadata?.DeepClone(); // copy on write!
+                    }
+                    else if (_directMetadata != null && !_directMetadata.IsSameBacking(destinationItem._directMetadata))
+                    {
+                        IEnumerable<ProjectMetadataInstance> metadataToImport = ((IEnumerable<ProjectMetadataInstance>)_directMetadata)
+                            .Where(metadatum => string.IsNullOrEmpty(destinationItem._directMetadata.GetEscapedValue(metadatum.Name)));
+                        destinationItem._directMetadata.ImportProperties(metadataToImport);
+                    }
 
                     // If the destination item already has item definitions then we want to maintain them
                     // But ours will be of less precedence than those already on the item
-                    if (destinationAsTaskItem._itemDefinitions == null)
+                    if (destinationItem._itemDefinitions == null)
                     {
-                        destinationAsTaskItem._itemDefinitions = (_itemDefinitions == null) ? null : new List<ProjectItemDefinitionInstance>(_itemDefinitions);
+                        destinationItem._itemDefinitions = (_itemDefinitions == null) ? null : new List<ProjectItemDefinitionInstance>(_itemDefinitions);
                     }
                     else if (_itemDefinitions != null)
                     {
                         for (int i = 0; i < _itemDefinitions.Count; i++)
                         {
-                            destinationAsTaskItem._itemDefinitions.Add(_itemDefinitions[i]);
+                            destinationItem._itemDefinitions.Add(_itemDefinitions[i]);
                         }
                     }
                 }
-                else if (destinationItem is IMetadataContainer destinationItemAsMetadataContainer)
+
+                void CopyToMetadataContainer(ITaskItem destinationItem, IMetadataContainer destinationMetadata)
                 {
+                    CopyOnWriteDictionary<string, ProjectMetadataInstance> copyOnWriteDictionary = new(
+                        static (key, value) => new ProjectMetadataInstance(key, value),
+                        static instance => instance.EvaluatedValueEscaped,
+                        _directMetadata?.ToImmutableDictionary());
+
+                    if (_itemDefinitions == null)
+                    {
+                        if (_directMetadata == null)
+                        {
+                            return;
+                        }
+
+                        if (destinationMetadata.HasSameBacking(copyOnWriteDictionary))
+                        {
+                            return;
+                        }
+
+                        if (!destinationMetadata.HasCustomMetadata())
+                        {
+                            destinationMetadata.UseSameBacking(copyOnWriteDictionary);
+                            destinationMetadata.ImportMetadata(copyOnWriteDictionary);
+                            return;
+                        }
+                    }
+
+                    destinationMetadata.UseSameBacking(copyOnWriteDictionary);
+
                     // The destination implements IMetadataContainer so we can use the ImportMetadata bulk-set operation.
+                    // O(n) walk * O(log n) lookupkk
                     IEnumerable<ProjectMetadataInstance> metadataEnumerable = MetadataCollection;
                     IEnumerable<KeyValuePair<string, string>> metadataToImport = metadataEnumerable
                         .Where(metadatum => string.IsNullOrEmpty(destinationItem.GetMetadata(metadatum.Name)))
                         .Select(metadatum => new KeyValuePair<string, string>(metadatum.Name, GetMetadataEscaped(metadatum.Name)));
 
 #if FEATURE_APPDOMAIN
-                    if (RemotingServices.IsTransparentProxy(destinationItem))
+                    if (RemotingServices.IsTransparentProxy(destinationMetadata))
                     {
                         // Linq is not serializable so materialize the collection before making the call.
                         metadataToImport = metadataToImport.ToList();
                     }
 #endif
 
-                    destinationItemAsMetadataContainer.ImportMetadata(metadataToImport);
+                    destinationMetadata.ImportMetadata(metadataToImport);
                 }
-                else
+
+                void CopyToTaskItem(ITaskItem destinationItem)
                 {
                     // OK, most likely the destination item was a Microsoft.Build.Utilities.TaskItem.
                     foreach (ProjectMetadataInstance metadatum in (IEnumerable<ProjectMetadataInstance>)MetadataCollection)
                     {
                         // When copying metadata, we do NOT overwrite metadata already on the destination item.
                         string destinationValue = destinationItem.GetMetadata(metadatum.Name);
-                        if (String.IsNullOrEmpty(destinationValue))
+                        if (string.IsNullOrEmpty(destinationValue))
                         {
                             // Utilities.TaskItem's don't know about item definition metadata. So merge that into the values.
                             destinationItem.SetMetadata(metadatum.Name, GetMetadataEscaped(metadatum.Name));
                         }
-                    }
-                }
-
-                if (addOriginalItemSpec)
-                {
-                    if (String.IsNullOrEmpty(originalItemSpec))
-                    {
-                        // This does not appear to significantly cause a copy-on-write; otherwise, it could go in its own slot.
-                        destinationItem.SetMetadata("OriginalItemSpec", _includeEscaped);
                     }
                 }
             }
@@ -1511,9 +1619,10 @@ namespace Microsoft.Build.Execution
             /// <returns>The cloned metadata.</returns>
             IDictionary ITaskItem2.CloneCustomMetadataEscaped()
             {
-                Dictionary<string, string> clonedMetadata = new Dictionary<string, string>(MSBuildNameIgnoreCaseComparer.Default);
+                var metadata = MetadataCollection;
+                Dictionary<string, string> clonedMetadata = new Dictionary<string, string>(metadata.Count, MSBuildNameIgnoreCaseComparer.Default);
 
-                foreach (ProjectMetadataInstance metadatum in (IEnumerable<ProjectMetadataInstance>)MetadataCollection)
+                foreach (ProjectMetadataInstance metadatum in (IEnumerable<ProjectMetadataInstance>)metadata)
                 {
                     clonedMetadata[metadatum.Name] = metadatum.EvaluatedValueEscaped;
                 }
@@ -1957,6 +2066,32 @@ namespace Microsoft.Build.Execution
                 }
 
                 return null;
+            }
+
+            public bool HasSameBacking(ICollection<KeyValuePair<string, string>> backingCollection)
+            {
+                if (_directMetadata == null || backingCollection == null)
+                {
+                    return false;
+                }
+                else if (backingCollection is CopyOnWriteDictionary<string, ProjectMetadataInstance> copyOnWriteDictionary)
+                {
+                    return _directMetadata.IsSameBacking(copyOnWriteDictionary.ToImmutableDictionary());
+                }
+
+                return false;
+            }
+
+            public bool HasCustomMetadata() => _directMetadata?.Count > 0;
+
+            public ICollection<KeyValuePair<string, string>> GetBacking() =>
+                new CopyOnWriteDictionary<string, ProjectMetadataInstance>(
+                    static (key, value) => new ProjectMetadataInstance(key, value, allowItemSpecModifiers: true),
+                    static instance => instance.EvaluatedValueEscaped,
+                    _directMetadata?.ToImmutableDictionary());
+
+            public void UseSameBacking(ICollection<KeyValuePair<string, string>> metadataContainer)
+            {
             }
 
             /// <summary>

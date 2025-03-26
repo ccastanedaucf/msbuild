@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using Microsoft.Build.Collections;
 
 namespace Microsoft.Build.Instance
@@ -68,5 +69,9 @@ namespace Microsoft.Build.Instance
 
             return true;
         }
+
+        public bool IsSameBacking(ICollection<KeyValuePair<string, T>> other) => false;
+
+        public ImmutableDictionary<string, T> ToImmutableDictionary() => throw new NotImplementedException();
     }
 }

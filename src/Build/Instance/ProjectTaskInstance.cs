@@ -137,7 +137,7 @@ namespace Microsoft.Build.Execution
             continueOnError,
             msbuildRuntime,
             msbuildArchitecture,
-            new CopyOnWriteDictionary<(string, ElementLocation)>(StringComparer.OrdinalIgnoreCase),
+            CopyOnWriteDictionary<(string, ElementLocation)>.Create(StringComparer.OrdinalIgnoreCase),
             new List<ProjectTaskInstanceChild>(),
             location,
             condition == string.Empty ? null : ElementLocation.EmptyLocation,
@@ -380,7 +380,7 @@ namespace Microsoft.Build.Execution
                 ref localParameters,
                 ParametersKeyTranslator,
                 ParametersValueTranslator,
-                count => new CopyOnWriteDictionary<(string, ElementLocation)>());
+                count => CopyOnWriteDictionary<(string, ElementLocation)>.Create());
 
             if (translator.Mode == TranslationDirection.ReadFromStream && localParameters != null)
             {

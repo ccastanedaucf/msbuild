@@ -13,6 +13,8 @@ using System.Security;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Shared;
 using Microsoft.Build.Collections;
+using System.Collections.Immutable;
+using System.Reflection;
 
 #nullable disable
 
@@ -37,6 +39,8 @@ namespace Microsoft.Build.Utilities
         IMetadataContainer // expose direct underlying metadata for fast access in binary logger
     {
         #region Member Data
+
+        private static CopyOnWriteDictionary<string> s_sourceType;
 
         // This is the final evaluated item specification.  Stored in escaped form.
         private string _itemSpec;
@@ -120,7 +124,7 @@ namespace Microsoft.Build.Utilities
 
             if (itemMetadata.Count > 0)
             {
-                _metadata = new CopyOnWriteDictionary<string>(MSBuildNameIgnoreCaseComparer.Default);
+                _metadata = s_sourceType?.CloneEmpty() ?? CopyOnWriteDictionary<string>.Create(MSBuildNameIgnoreCaseComparer.Default);
 
                 foreach (DictionaryEntry singleMetadata in itemMetadata)
                 {
@@ -250,6 +254,8 @@ namespace Microsoft.Build.Utilities
             }
         }
 
+        public bool OverwriteBacking => false;
+
         #endregion
 
         #region Methods
@@ -286,7 +292,7 @@ namespace Microsoft.Build.Utilities
             ErrorUtilities.VerifyThrowArgument(!FileUtilities.ItemSpecModifiers.IsDerivableItemSpecModifier(metadataName),
                 "Shared.CannotChangeItemSpecModifiers", metadataName);
 
-            _metadata ??= new CopyOnWriteDictionary<string>(MSBuildNameIgnoreCaseComparer.Default);
+            _metadata ??= s_sourceType?.CloneEmpty() ?? CopyOnWriteDictionary<string>.Create(MSBuildNameIgnoreCaseComparer.Default);
 
             _metadata[metadataName] = metadataValue ?? string.Empty;
         }
@@ -397,7 +403,7 @@ namespace Microsoft.Build.Utilities
         /// </comments>
         public IDictionary CloneCustomMetadata()
         {
-            var dictionary = new CopyOnWriteDictionary<string>(MSBuildNameIgnoreCaseComparer.Default);
+            var dictionary = s_sourceType?.CloneEmpty() ?? CopyOnWriteDictionary<string>.Create(MSBuildNameIgnoreCaseComparer.Default);
 
             if (_metadata != null)
             {
@@ -481,7 +487,7 @@ namespace Microsoft.Build.Utilities
         /// </summary>
         /// <returns>The cloned metadata.</returns>
         IDictionary ITaskItem2.CloneCustomMetadataEscaped() => _metadata == null
-            ? new CopyOnWriteDictionary<string>(MSBuildNameIgnoreCaseComparer.Default)
+            ? s_sourceType?.CloneEmpty() ?? CopyOnWriteDictionary<string>.Create(MSBuildNameIgnoreCaseComparer.Default)
             : _metadata.Clone();
 
         #endregion
@@ -504,7 +510,13 @@ namespace Microsoft.Build.Utilities
 
         void IMetadataContainer.ImportMetadata(IEnumerable<KeyValuePair<string, string>> metadata)
         {
-            _metadata ??= new CopyOnWriteDictionary<string>(MSBuildNameIgnoreCaseComparer.Default);
+            if (_metadata == null && metadata is CopyOnWriteDictionary<string> copyOnWriteDictionary)
+            {
+                _metadata = copyOnWriteDictionary.Clone();
+                return;
+            }
+
+            _metadata ??= s_sourceType?.CloneEmpty() ?? CopyOnWriteDictionary<string>.Create(MSBuildNameIgnoreCaseComparer.Default);
             _metadata.SetItems(metadata.Select(kvp => new KeyValuePair<string, string>(kvp.Key, kvp.Value ?? string.Empty)));
         }
 
@@ -538,6 +550,59 @@ namespace Microsoft.Build.Utilities
             {
                 var unescaped = new KeyValuePair<string, string>(kvp.Key, EscapingUtilities.UnescapeAll(kvp.Value));
                 yield return unescaped;
+            }
+        }
+
+        bool IMetadataContainer.HasSameBacking(ICollection<KeyValuePair<string, string>> backingCollection)
+        {
+            if (_metadata == null || backingCollection == null)
+            {
+                return false;
+            }
+            else if (backingCollection is CopyOnWriteDictionary<string> copyOnWriteDictionary)
+            {
+                return _metadata.HasSameBacking(copyOnWriteDictionary);
+            }
+
+            return false;
+        }
+
+        bool IMetadataContainer.HasCustomMetadata() => _metadata?.Count > 0;
+
+        void IMetadataContainer.UseSameBacking(ICollection<KeyValuePair<string, string>> backingCollection)
+        {
+            if (s_sourceType == null && backingCollection is CopyOnWriteDictionary<string> copyOnWriteDictionary)
+            {
+                s_sourceType = copyOnWriteDictionary.CloneEmpty();
+
+
+                if (_metadata != null && s_sourceType != null && !ReferenceEquals(_metadata.CloneEmpty(), s_sourceType.CloneEmpty()))
+                {
+                    _metadata = s_sourceType.CloneFrom(_metadata);
+                }
+            }
+        }
+
+        ICollection<KeyValuePair<string, string>> IMetadataContainer.GetBacking() => _metadata;
+
+        public bool RealTime
+        {
+            get
+            {
+                return _metadata == null || !_metadata.IsBuilder;
+            }
+            set
+            {
+                _metadata ??= s_sourceType?.CloneEmpty() ?? CopyOnWriteDictionary<string>.Create(MSBuildNameIgnoreCaseComparer.Default);
+
+                if (value == true && _metadata.IsBuilder)
+                {
+                    _metadata = _metadata.FromBuilder();
+                }
+                else if (value == false && !_metadata.IsBuilder)
+                {
+                    _metadata = _metadata.ToBuilder();
+                }
             }
         }
     }

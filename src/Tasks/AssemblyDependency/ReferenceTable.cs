@@ -2663,6 +2663,7 @@ namespace Microsoft.Build.Tasks
         {
             // Set up the main item.
             TaskItem referenceItem = new TaskItem();
+            referenceItem.RealTime = false;
             referenceItem.ItemSpec = reference.FullPath;
 
             IMetadataContainer referenceItemAsMetadataContainer = referenceItem;
@@ -2842,6 +2843,8 @@ namespace Microsoft.Build.Tasks
             {
                 referenceItemAsMetadataContainer.ImportMetadata(nonForwardableMetadata);
             }
+
+            referenceItem.RealTime = true;
 
             return referenceItem;
 
