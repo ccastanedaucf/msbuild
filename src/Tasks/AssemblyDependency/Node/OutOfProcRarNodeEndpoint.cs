@@ -21,6 +21,8 @@ namespace Microsoft.Build.Tasks.AssemblyDependency
     {
         private const int MaxBuildEventsBeforeFlush = 100;
 
+        private static readonly bool s_disableIncrementalCache = Environment.GetEnvironmentVariable("MSBuildRarNodeDisableCache") == "1";
+
         private readonly int _endpointId;
 
         private readonly NodePipeServer _pipeServer;
@@ -119,7 +121,7 @@ namespace Microsoft.Build.Tasks.AssemblyDependency
         {
             ReadOnlyMemory<byte> requestBuffer = _pipeServer.GetReadBuffer();
 
-            if (_incrementalCache.TryGetValue(requestBuffer, out byte[]? cachedResponse))
+            if (!s_disableIncrementalCache && _incrementalCache.TryGetValue(requestBuffer, out byte[]? cachedResponse))
             {
                 await _pipeServer.WritePacketAsync(cachedResponse, cancellationToken);
                 CommunicationsUtilities.Trace("({0}) Completed RAR request from cache. Skipping execution.", _endpointId);
@@ -159,8 +161,11 @@ namespace Microsoft.Build.Tasks.AssemblyDependency
 
             CommunicationsUtilities.Trace("({0}) Completed RAR request.", _endpointId);
 
-            ReadOnlyMemory<byte> responseBuffer = _pipeServer.GetWriteBuffer();
-            _incrementalCache.Add(requestBuffer.ToArray(), responseBuffer.ToArray(), rarTask._cache);
+            if (!s_disableIncrementalCache)
+            {
+                ReadOnlyMemory<byte> responseBuffer = _pipeServer.GetWriteBuffer();
+                _incrementalCache.Add(requestBuffer.ToArray(), responseBuffer.ToArray(), rarTask._cache);
+            }
         }
 
         private async Task ProcessLogEvents(RarNodeBuildEngine buildEngine, CancellationToken cancellationToken)

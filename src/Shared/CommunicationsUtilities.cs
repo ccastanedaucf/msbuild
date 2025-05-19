@@ -83,6 +83,11 @@ namespace Microsoft.Build.Internal
 
     internal class Handshake
     {
+        // Allow a .NET Framework build to connect to a .NET Core RAR node for better performance.
+        // Since MSBuild cannot locate cross-framework assemblies, this should only be used when the RAR node has been
+        // manually launched.
+        private static readonly bool s_frameworkAgnosticRarNode = Environment.GetEnvironmentVariable("MSBuildRarNodeFrameworkAgnostic") == "1";
+
         protected readonly int options;
         protected readonly int salt;
         protected readonly int fileVersionMajor;
@@ -108,8 +113,7 @@ namespace Microsoft.Build.Internal
             string handshakeSalt = Environment.GetEnvironmentVariable("MSBUILDNODEHANDSHAKESALT");
             CommunicationsUtilities.Trace("Handshake salt is {0}", handshakeSalt);
 
-            // This reaches out to NtQuerySystemInformation. Due to latency, allow skipping for derived handshake if unused.
-            if (includeSessionId)
+            if (!s_frameworkAgnosticRarNode || includeSessionId)
             {
                 string toolsDirectory = BuildEnvironmentHelper.Instance.MSBuildToolsDirectoryRoot;
                 CommunicationsUtilities.Trace("Tools directory root is {0}", toolsDirectory);
@@ -119,6 +123,11 @@ namespace Microsoft.Build.Internal
                 fileVersionMinor = fileVersion.Minor;
                 fileVersionBuild = fileVersion.Build;
                 fileVersionPrivate = fileVersion.Revision;
+            }
+
+            // This reaches out to NtQuerySystemInformation. Due to latency, allow skipping for derived handshake if unused.
+            if (includeSessionId)
+            {
                 using Process currentProcess = Process.GetCurrentProcess();
                 sessionId = currentProcess.SessionId;
             }
