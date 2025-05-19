@@ -54,6 +54,8 @@ namespace Microsoft.Build.Internal
 
         private readonly ITranslator _readTranslator;
 
+        private readonly ITranslator _tempReadTranslator;
+
         private readonly ITranslator _writeTranslator;
 
         /// <summary>
@@ -66,6 +68,7 @@ namespace Microsoft.Build.Internal
             PipeName = pipeName;
             HandshakeComponents = handshake.RetrieveHandshakeComponents();
             _readTranslator = BinaryTranslator.GetReadTranslator(_readBuffer, InterningBinaryReader.CreateSharedBuffer());
+            _tempReadTranslator = BinaryTranslator.GetWriteTranslator(_readBuffer);
             _writeTranslator = BinaryTranslator.GetWriteTranslator(_writeBuffer);
         }
 
@@ -161,7 +164,27 @@ namespace Microsoft.Build.Internal
             }
         }
 
+        internal async Task WritePacketAsync(byte[] buffer, CancellationToken cancellationToken = default)
+        {
+            int messageLength = buffer.Length;
+            for (int i = 0; i < messageLength; i += MaxPacketWriteSize)
+            {
+                int lengthToWrite = Math.Min(messageLength - i, MaxPacketWriteSize);
+#if NET
+                await NodeStream.WriteAsync(buffer.AsMemory(i, lengthToWrite), cancellationToken).ConfigureAwait(false);
+#else
+                await NodeStream.WriteAsync(buffer, i, lengthToWrite, cancellationToken).ConfigureAwait(false);
+#endif
+            }
+        }
+
         internal async Task<INodePacket> ReadPacketAsync(CancellationToken cancellationToken = default)
+        {
+            await StageReadAsync(cancellationToken).ConfigureAwait(false);
+            return DeserializePacket();
+        }
+
+        internal async Task StageReadAsync(CancellationToken cancellationToken = default)
         {
             // Read the header.
             int headerBytesRead = await ReadAsync(_headerData, HeaderLength, cancellationToken).ConfigureAwait(false);
@@ -172,7 +195,8 @@ namespace Microsoft.Build.Internal
             // this was intentional.
             if (headerBytesRead == 0)
             {
-                return new NodeShutdown(NodeShutdownReason.ConnectionFailed);
+                StageShutdownPacket();
+                return;
             }
             else if (headerBytesRead != HeaderLength)
             {
@@ -191,8 +215,20 @@ namespace Microsoft.Build.Internal
             {
                 throw new IOException($"Incomplete packet read. {packetBytesRead} of {packetLength} bytes read.");
             }
+        }
 
-            return DeserializePacket();
+        private void StageShutdownPacket()
+        {
+            _readBuffer.Position = 0;
+            _readBuffer.SetLength(0);
+
+            NodeShutdown nodeShutdownPacket = new(NodeShutdownReason.ConnectionFailed);
+            nodeShutdownPacket.Translate(_tempReadTranslator);
+
+            _headerData[0] = (byte)nodeShutdownPacket.Type;
+            BinaryPrimitives.WriteInt32LittleEndian(new Span<byte>(_headerData, 1, 4), (int)_readBuffer.Length);
+
+            _readBuffer.Position = 0;
         }
 #endif
 
@@ -258,7 +294,15 @@ namespace Microsoft.Build.Internal
         }
 #endif
 
-        private INodePacket DeserializePacket()
+        internal ReadOnlyMemory<byte> GetReadBuffer()
+            => _readBuffer.GetBuffer().AsMemory(0, (int)_readBuffer.Length);
+
+        internal ReadOnlyMemory<byte> GetWriteBuffer()
+            => _writeBuffer.GetBuffer().AsMemory(0, (int)_writeBuffer.Length);
+
+        internal NodePacketType DeserializePacketType() => (NodePacketType)_headerData[0];
+
+        internal INodePacket DeserializePacket()
         {
             if (_packetFactory == null)
             {

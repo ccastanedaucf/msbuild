@@ -2,9 +2,13 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 using Microsoft.Build.BackEnd;
+using Microsoft.Build.Framework;
 using Microsoft.Build.Internal;
 using Microsoft.Build.Shared;
 
@@ -15,18 +19,30 @@ namespace Microsoft.Build.Tasks.AssemblyDependency
     /// </summary>
     internal sealed class OutOfProcRarNodeEndpoint : IDisposable
     {
+        private const int MaxBuildEventsBeforeFlush = 100;
+
         private readonly int _endpointId;
 
         private readonly NodePipeServer _pipeServer;
 
-        internal OutOfProcRarNodeEndpoint(int endpointId, ServerNodeHandshake handshake, int maxNumberOfServerInstances)
+        private readonly ConcurrentDictionary<string, byte> _seenStateFiles;
+
+        private readonly RarIncrementalCache _incrementalCache;
+
+        private readonly Queue<RarNodeBuildEventArgs> _buildEventQueue = new(MaxBuildEventsBeforeFlush);
+
+        internal OutOfProcRarNodeEndpoint(
+                int endpointId,
+                NodePipeServer pipeServer,
+                NodePacketFactory packetFactory,
+                ConcurrentDictionary<string, byte> seenStateFiles,
+                RarIncrementalCache incrementalCache)
         {
             _endpointId = endpointId;
-            _pipeServer = new NodePipeServer(NamedPipeUtil.GetRarNodeEndpointPipeName(handshake), handshake, maxNumberOfServerInstances);
-
-            NodePacketFactory packetFactory = new();
-            packetFactory.RegisterPacketHandler(NodePacketType.RarNodeExecuteRequest, RarNodeExecuteRequest.FactoryForDeserialization, null);
+            _pipeServer = pipeServer;
             _pipeServer.RegisterPacketFactory(packetFactory);
+            _seenStateFiles = seenStateFiles;
+            _incrementalCache = incrementalCache;
         }
 
         public void Dispose() => _pipeServer.Dispose();
@@ -60,28 +76,35 @@ namespace Microsoft.Build.Tasks.AssemblyDependency
 
                 try
                 {
-                    INodePacket packet = await _pipeServer.ReadPacketAsync(cancellationToken);
+                    await _pipeServer.StageReadAsync(cancellationToken);
+                    NodePacketType packetType = _pipeServer.DeserializePacketType();
 
-                    if (packet.Type == NodePacketType.NodeShutdown)
+                    switch (packetType)
                     {
-                        // Although the client has already disconnected, it is still necessary to Diconnect() so the
-                        // pipe can transition into PipeState.Disonnected, which is treated as an intentional pipe break.
-                        // Otherwise, all future operations on the pipe will throw an exception.
-                        CommunicationsUtilities.Trace("({0}) RAR client disconnected.", _endpointId);
-                        _pipeServer.Disconnect();
-                        continue;
+                        case NodePacketType.RarNodeExecuteRequest:
+                            await ExecuteRequest(cancellationToken);
+                            break;
+                        case NodePacketType.RarNodeConnectionSetup:
+                            RarNodeConnectionSetup setup = (RarNodeConnectionSetup)_pipeServer.DeserializePacket();
+
+                            foreach (string immutableDirectory in setup.ImmutableDirectories)
+                            {
+                                // Set as custom logic locations as we don't verify the directories ahead of time.
+                                FileClassifier.Shared.RegisterImmutableDirectory(immutableDirectory, isCustomLogicLocation: true);
+                            }
+
+                            break;
+                        case NodePacketType.NodeShutdown:
+                            // Although the client has already disconnected, it is still necessary to Diconnect() so the
+                            // pipe can transition into PipeState.Disonnected, which is treated as an intentional pipe break.
+                            // Otherwise, all future operations on the pipe will throw an exception.
+                            CommunicationsUtilities.Trace("({0}) RAR client disconnected.", _endpointId);
+                            _pipeServer.Disconnect();
+                            break;
+                        default:
+                            ErrorUtilities.ThrowInternalError($"Received unexpected packet type {packetType}");
+                            break;
                     }
-
-                    RarNodeExecuteRequest request = (RarNodeExecuteRequest)packet;
-
-                    // TODO: Use request packet to set inputs on the RAR task.
-                    ResolveAssemblyReference rarTask = new();
-
-                    // TODO: bool success = rarTask.ExecuteInProcess();
-                    // TODO: Use RAR task outputs to create response packet.
-                    await _pipeServer.WritePacketAsync(new RarNodeExecuteResponse(), cancellationToken);
-
-                    CommunicationsUtilities.Trace("({0}) Completed RAR request.", _endpointId);
                 }
                 catch (Exception e) when (e is not OperationCanceledException)
                 {
@@ -90,6 +113,83 @@ namespace Microsoft.Build.Tasks.AssemblyDependency
             }
 
             _pipeServer.Disconnect();
+        }
+
+        private async Task ExecuteRequest(CancellationToken cancellationToken)
+        {
+            ReadOnlyMemory<byte> requestBuffer = _pipeServer.GetReadBuffer();
+
+            if (_incrementalCache.TryGetValue(requestBuffer, out byte[]? cachedResponse))
+            {
+                await _pipeServer.WritePacketAsync(cachedResponse, cancellationToken);
+                CommunicationsUtilities.Trace("({0}) Completed RAR request from cache. Skipping execution.", _endpointId);
+                return;
+            }
+
+            CommunicationsUtilities.Trace("({0}) Executing RAR...", _endpointId);
+
+            RarNodeExecuteRequest request = (RarNodeExecuteRequest)_pipeServer.DeserializePacket();
+
+            // TODO: Should be able to reuse the Channel across requests.
+            RarNodeBuildEngine buildEngine = new(request.MinimumMessageImportance, request.IsTaskInputLoggingEnabled);
+            ResolveAssemblyReference rarTask = new() { BuildEngine = buildEngine };
+            request.SetTask(rarTask);
+
+            // Only load the state file on the first run.
+            if (rarTask.StateFile != null && !_seenStateFiles.TryAdd(rarTask.StateFile, 0))
+            {
+                rarTask.StateFile = null;
+            }
+
+            // Send log events asynchronously to avoid sending back a large response packet.
+            Task buildEventTask = Task.Run(
+                () => ProcessLogEvents(buildEngine, cancellationToken),
+                cancellationToken);
+
+            bool success = rarTask.Execute();
+            RarNodeExecuteResponse response = new(rarTask, success);
+
+            // Ensure we've flushed out any remaining build events.
+            // Ideally we'd send them with the packet, but that slightly complicates response caching.
+            buildEngine.Complete();
+            await buildEventTask;
+            await FlushBuildEventsAsync(cancellationToken);
+
+            await _pipeServer.WritePacketAsync(response, cancellationToken);
+
+            CommunicationsUtilities.Trace("({0}) Completed RAR request.", _endpointId);
+
+            ReadOnlyMemory<byte> responseBuffer = _pipeServer.GetWriteBuffer();
+            _incrementalCache.Add(requestBuffer.ToArray(), responseBuffer.ToArray(), rarTask._cache);
+        }
+
+        private async Task ProcessLogEvents(RarNodeBuildEngine buildEngine, CancellationToken cancellationToken)
+        {
+            try
+            {
+                while (cancellationToken.IsCancellationRequested)
+                {
+                    RarNodeBuildEventArgs buildEventArgs = await buildEngine.EventQueue.ReadAsync(cancellationToken);
+                    _buildEventQueue.Enqueue(buildEventArgs);
+
+                    if (_buildEventQueue.Count == MaxBuildEventsBeforeFlush)
+                    {
+                        CommunicationsUtilities.Trace($"({_endpointId}) Flushing build events.");
+                        await FlushBuildEventsAsync(cancellationToken);
+                    }
+                }
+            }
+            catch (ChannelClosedException)
+            {
+                // This is expected when we shut down the channel.
+            }
+        }
+
+        private async Task FlushBuildEventsAsync(CancellationToken cancellationToken)
+        {
+            RarNodeLogEvents logEvents = new([.. _buildEventQueue]);
+            await _pipeServer.WritePacketAsync(logEvents, cancellationToken);
+            _buildEventQueue.Clear();
         }
     }
 }

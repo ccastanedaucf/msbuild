@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using System;
+using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Build.BackEnd;
@@ -80,6 +81,7 @@ namespace Microsoft.Build.Tasks.AssemblyDependency
             // Because multi-instance pipes can live across multiple processes, we can't rely on the instance cap to preven
             // multiple nodes from running in the event of a race condition.
             // This also simplifies tearing down all active pipe servers when shutdown is requested.
+            string pipeName = NamedPipeUtil.GetRarNodePipeName(_handshake);
             using NodePipeServer pipeServer = new(NamedPipeUtil.GetRarNodePipeName(_handshake), _handshake);
 
             NodePacketFactory packetFactory = new();
@@ -133,13 +135,30 @@ namespace Microsoft.Build.Tasks.AssemblyDependency
 
         private async Task RunNodeEndpointsAsync(CancellationToken cancellationToken)
         {
+            // Setup data shared between all endpoints.
+            RarIncrementalCache incrementalCache = new();
+            string pipeName = NamedPipeUtil.GetRarNodeEndpointPipeName(_handshake);
+            NodePacketFactory packetFactory = new();
+            packetFactory.RegisterPacketHandler(NodePacketType.RarNodeConnectionSetup, RarNodeConnectionSetup.FactoryForDeserialization, null);
+            packetFactory.RegisterPacketHandler(NodePacketType.RarNodeExecuteRequest, RarNodeExecuteRequest.FactoryForDeserialization, null);
+            packetFactory.RegisterPacketHandler(NodePacketType.RarNodeLogEvents, RarNodeLogEvents.FactoryForDeserialization, null);
+            packetFactory.RegisterPacketHandler(NodePacketType.NodeShutdown, NodeShutdown.FactoryForDeserialization, null);
+            ConcurrentDictionary<string, byte> seenStateFiles = new(StringComparer.OrdinalIgnoreCase);
+
+            RarTaskParameters.InitReflectedParameters();
+
             OutOfProcRarNodeEndpoint[] endpoints = new OutOfProcRarNodeEndpoint[_maxNumberOfConcurrentTasks];
 
             // Validate all endpoint pipe handles successfully initialize before running any read loops.
-            // This allows us to bail out in the event where we can't control every pipe instance. 
+            // This allows us to bail out in the event where we can't control every pipe instance.
             for (int i = 0; i < endpoints.Length; i++)
             {
-                endpoints[i] = new OutOfProcRarNodeEndpoint(endpointId: i + 1, _handshake, _maxNumberOfConcurrentTasks);
+                endpoints[i] = new OutOfProcRarNodeEndpoint(
+                        endpointId: i + 1,
+                        new NodePipeServer(pipeName, _handshake, _maxNumberOfConcurrentTasks),
+                        packetFactory,
+                        seenStateFiles,
+                        incrementalCache);
             }
 
             Task[] endpointTasks = new Task[endpoints.Length];

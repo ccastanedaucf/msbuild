@@ -440,7 +440,7 @@ namespace Microsoft.Build.Tasks
         public bool EnableCustomCulture
         {
             get { return _enableCustomCulture; }
-            set { _enableCustomCulture = value; }     
+            set { _enableCustomCulture = value; }
         }
 
         /// <summary>
@@ -941,7 +941,8 @@ namespace Microsoft.Build.Tasks
         [Output]
         public ITaskItem[] ResolvedFiles
         {
-            get { return _resolvedFiles; }
+            get => _resolvedFiles;
+            private set => _resolvedFiles = value;
         }
 
         /// <summary>
@@ -960,7 +961,8 @@ namespace Microsoft.Build.Tasks
         [Output]
         public ITaskItem[] ResolvedDependencyFiles
         {
-            get { return _resolvedDependencyFiles; }
+            get => _resolvedDependencyFiles;
+            private set => _resolvedDependencyFiles = value;
         }
 
         /// <summary>
@@ -972,7 +974,8 @@ namespace Microsoft.Build.Tasks
         [Output]
         public ITaskItem[] RelatedFiles
         {
-            get { return _relatedFiles; }
+            get => _relatedFiles;
+            private set => _relatedFiles = value;
         }
 
         /// <summary>
@@ -985,7 +988,8 @@ namespace Microsoft.Build.Tasks
         [Output]
         public ITaskItem[] SatelliteFiles
         {
-            get { return _satelliteFiles; }
+            get => _satelliteFiles;
+            private set => _satelliteFiles = value;
         }
 
         /// <summary>
@@ -996,7 +1000,8 @@ namespace Microsoft.Build.Tasks
         [Output]
         public ITaskItem[] SerializationAssemblyFiles
         {
-            get { return _serializationAssemblyFiles; }
+            get => _serializationAssemblyFiles;
+            private set => _serializationAssemblyFiles = value;
         }
 
         /// <summary>
@@ -1006,7 +1011,8 @@ namespace Microsoft.Build.Tasks
         [Output]
         public ITaskItem[] ScatterFiles
         {
-            get { return _scatterFiles; }
+            get => _scatterFiles;
+            private set => _scatterFiles = value;
         }
 
         /// <summary>
@@ -1017,7 +1023,8 @@ namespace Microsoft.Build.Tasks
         [Output]
         public ITaskItem[] CopyLocalFiles
         {
-            get { return _copyLocalFiles; }
+            get => _copyLocalFiles;
+            internal set => _copyLocalFiles = value;
         }
 
         /// <summary>
@@ -1032,13 +1039,14 @@ namespace Microsoft.Build.Tasks
         [Output]
         public ITaskItem[] SuggestedRedirects
         {
-            get { return _suggestedRedirects; }
+            get => _suggestedRedirects;
+            private set => _suggestedRedirects = value;
         }
 
         /// <summary>
         /// Storage for names of all files writen to disk.
         /// </summary>
-        private List<ITaskItem> _filesWritten = new List<ITaskItem>();
+        private List<ITaskItem> _filesWritten = [];
 
         /// <summary>
         /// The names of all files written to disk.
@@ -1046,8 +1054,8 @@ namespace Microsoft.Build.Tasks
         [Output]
         public ITaskItem[] FilesWritten
         {
-            set { /*Do Nothing, Inputs not Allowed*/ }
-            get { return _filesWritten.ToArray(); }
+            get => [.. _filesWritten];
+            private set => _filesWritten = [.. value];
         }
 
         /// <summary>
@@ -1075,7 +1083,11 @@ namespace Microsoft.Build.Tasks
         /// been outputted in MSB3277. Otherwise empty.
         /// </summary>
         [Output]
-        public ITaskItem[] UnresolvedAssemblyConflicts => _unresolvedConflicts.ToArray();
+        public ITaskItem[] UnresolvedAssemblyConflicts
+        {
+            get => [.. _unresolvedConflicts];
+            private set => _unresolvedConflicts = [.. value];
+        }
 
         #endregion
         #region Logging
@@ -3256,9 +3268,9 @@ namespace Microsoft.Build.Tasks
                 try
                 {
 #pragma warning disable CA2000 // Dispose objects before losing scope
-                    _ = OutOfProcRarClient.GetInstance(buildEngine10).Execute(this);
+                    return OutOfProcRarClient.GetInstance(buildEngine10).Execute(this);
 #pragma warning restore CA2000 // Dispose objects before losing scope
-                    CommunicationsUtilities.Trace("RAR out-of-proc test connection completed. Executing task in-proc.");
+
                 }
                 catch (Exception ex)
                 {

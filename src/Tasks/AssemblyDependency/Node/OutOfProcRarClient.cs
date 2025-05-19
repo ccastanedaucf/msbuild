@@ -19,11 +19,14 @@ namespace Microsoft.Build.Tasks.AssemblyDependency
 
         private OutOfProcRarClient()
         {
+            RarTaskParameters.InitReflectedParameters();
+
             ServerNodeHandshake handshake = new(HandshakeOptions.None);
             _pipeClient = new NodePipeClient(NamedPipeUtil.GetRarNodeEndpointPipeName(handshake), handshake);
 
             NodePacketFactory packetFactory = new();
             packetFactory.RegisterPacketHandler(NodePacketType.RarNodeExecuteResponse, RarNodeExecuteResponse.FactoryForDeserialization, null);
+            packetFactory.RegisterPacketHandler(NodePacketType.RarNodeLogEvents, RarNodeLogEvents.FactoryForDeserialization, null);
             _pipeClient.RegisterPacketFactory(packetFactory);
         }
 
@@ -56,15 +59,101 @@ namespace Microsoft.Build.Tasks.AssemblyDependency
             {
                 // Don't set a timeout since the build manager already blocks until the server is running.
                 _pipeClient.ConnectToServer(0);
+                RarNodeConnectionSetup setup = new([.. FileClassifier.Shared.KnownImmutableDirectoriesSnapshot]);
+                _pipeClient.WritePacket(setup);
             }
 
-            // TODO: Use RAR task to create the request packet.
-            _pipeClient.WritePacket(new RarNodeExecuteRequest());
+            RarNodeExecuteRequest request = new(rarTask);
+            _pipeClient.WritePacket(request);
 
-            // TODO: Use response packet to set RAR task outputs.
-            _ = (RarNodeExecuteResponse)_pipeClient.ReadPacket();
+            INodePacket packet = _pipeClient.ReadPacket();
 
-            return true;
+            while (packet.Type != NodePacketType.RarNodeExecuteResponse)
+            {
+                if (packet.Type == NodePacketType.RarNodeLogEvents)
+                {
+                    RarNodeLogEvents logEvents = (RarNodeLogEvents)packet;
+                    LogBuildEvents(rarTask.BuildEngine, logEvents.BuildEventArgsQueue);
+                }
+                else
+                {
+                    ErrorUtilities.ThrowInternalError($"Received unexpected packet type {packet.Type}");
+                }
+
+                packet = _pipeClient.ReadPacket();
+            }
+
+            RarNodeExecuteResponse response = (RarNodeExecuteResponse)packet;
+            response.SetTask(rarTask);
+
+            return response.Success;
+        }
+
+        private static void LogBuildEvents(IBuildEngine buildEngine, RarNodeBuildEventArgs[] buildEventsArgsQueue)
+        {
+            foreach (RarNodeBuildEventArgs buildEventArgs in buildEventsArgsQueue)
+            {
+                DateTime eventTimestamp = new(buildEventArgs.EventTimestamp, DateTimeKind.Utc);
+
+                switch (buildEventArgs.EventType)
+                {
+                    case RarNodeBuildEventArgsType.Message:
+                        BuildMessageEventArgs messageEventArgs = new(
+                            buildEventArgs.Subcategory,
+                            buildEventArgs.Code,
+                            buildEventArgs.File,
+                            buildEventArgs.LineNumber,
+                            buildEventArgs.ColumnNumber,
+                            buildEventArgs.EndLineNumber,
+                            buildEventArgs.EndColumnNumber,
+                            buildEventArgs.Message,
+                            buildEventArgs.HelpKeyword,
+                            buildEventArgs.SenderName,
+                            (MessageImportance)buildEventArgs.Importance,
+                            eventTimestamp,
+                            buildEventArgs.MessageArgs);
+
+                        buildEngine.LogMessageEvent(messageEventArgs);
+                        break;
+                    case RarNodeBuildEventArgsType.Warning:
+                        BuildWarningEventArgs warningEventArgs = new(
+                            buildEventArgs.Subcategory,
+                            buildEventArgs.Code,
+                            buildEventArgs.File,
+                            buildEventArgs.LineNumber,
+                            buildEventArgs.ColumnNumber,
+                            buildEventArgs.EndLineNumber,
+                            buildEventArgs.EndColumnNumber,
+                            buildEventArgs.Message,
+                            buildEventArgs.HelpKeyword,
+                            buildEventArgs.SenderName,
+                            eventTimestamp,
+                            buildEventArgs.MessageArgs);
+
+                        buildEngine.LogWarningEvent(warningEventArgs);
+                        break;
+                    case RarNodeBuildEventArgsType.Error:
+                        BuildErrorEventArgs errorEventArgs = new(
+                            buildEventArgs.Subcategory,
+                            buildEventArgs.Code,
+                            buildEventArgs.File,
+                            buildEventArgs.LineNumber,
+                            buildEventArgs.ColumnNumber,
+                            buildEventArgs.EndLineNumber,
+                            buildEventArgs.EndColumnNumber,
+                            buildEventArgs.Message,
+                            buildEventArgs.HelpKeyword,
+                            buildEventArgs.SenderName,
+                            eventTimestamp,
+                            buildEventArgs.MessageArgs);
+
+                        buildEngine.LogErrorEvent(errorEventArgs);
+                        break;
+                    default:
+                        ErrorUtilities.ThrowInternalError($"Received unexpected build event type {buildEventArgs.EventType}");
+                        break;
+                }
+            }
         }
     }
 }

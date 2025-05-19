@@ -107,18 +107,18 @@ namespace Microsoft.Build.Internal
 
             string handshakeSalt = Environment.GetEnvironmentVariable("MSBUILDNODEHANDSHAKESALT");
             CommunicationsUtilities.Trace("Handshake salt is {0}", handshakeSalt);
-            string toolsDirectory = BuildEnvironmentHelper.Instance.MSBuildToolsDirectoryRoot;
-            CommunicationsUtilities.Trace("Tools directory root is {0}", toolsDirectory);
-            salt = CommunicationsUtilities.GetHashCode($"{handshakeSalt}{toolsDirectory}");
-            Version fileVersion = new Version(FileVersionInfo.GetVersionInfo(Assembly.GetExecutingAssembly().Location).FileVersion);
-            fileVersionMajor = fileVersion.Major;
-            fileVersionMinor = fileVersion.Minor;
-            fileVersionBuild = fileVersion.Build;
-            fileVersionPrivate = fileVersion.Revision;
 
             // This reaches out to NtQuerySystemInformation. Due to latency, allow skipping for derived handshake if unused.
             if (includeSessionId)
             {
+                string toolsDirectory = BuildEnvironmentHelper.Instance.MSBuildToolsDirectoryRoot;
+                CommunicationsUtilities.Trace("Tools directory root is {0}", toolsDirectory);
+                salt = CommunicationsUtilities.GetHashCode($"{handshakeSalt}{toolsDirectory}");
+                Version fileVersion = new Version(FileVersionInfo.GetVersionInfo(Assembly.GetExecutingAssembly().Location).FileVersion);
+                fileVersionMajor = fileVersion.Major;
+                fileVersionMinor = fileVersion.Minor;
+                fileVersionBuild = fileVersion.Build;
+                fileVersionPrivate = fileVersion.Revision;
                 using Process currentProcess = Process.GetCurrentProcess();
                 sessionId = currentProcess.SessionId;
             }

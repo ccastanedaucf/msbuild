@@ -211,6 +211,16 @@ namespace Microsoft.Build.BackEnd
         RarNodeExecuteResponse,
 
         /// <summary>
+        /// State specific to the connected RAR client that can be used to pre-compute caches.
+        /// </summary>
+        RarNodeConnectionSetup,
+
+        /// <summary>
+        /// Log events emitted from the out-of-proc RAR task.
+        /// </summary>
+        RarNodeLogEvents,
+
+        /// <summary>
         /// Command in form of MSBuild command line for server node - MSBuild Server.
         /// Keep this enum value constant intact as this is part of contract with dotnet CLI
         /// </summary>

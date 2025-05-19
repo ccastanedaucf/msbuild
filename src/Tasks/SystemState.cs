@@ -58,14 +58,14 @@ namespace Microsoft.Build.Tasks
         /// cache this for long periods of time since there's no way (without actually
         /// calling Directory.Exists) to tell whether the cache is out-of-date.
         /// </summary>
-        private Dictionary<string, bool> instanceLocalDirectoryExists = new Dictionary<string, bool>(StringComparer.OrdinalIgnoreCase);
+        internal Dictionary<string, bool> instanceLocalDirectoryExists = new Dictionary<string, bool>(StringComparer.OrdinalIgnoreCase);
 
         /// <summary>
         /// GetDirectories information is also purely instance-local. This information
         /// is only considered good for the lifetime of the task (or whatever) that owns
         /// this instance.
         /// </summary>
-        private Dictionary<string, string[]> instanceLocalDirectories = new Dictionary<string, string[]>(StringComparer.OrdinalIgnoreCase);
+        internal Dictionary<string, string[]> instanceLocalDirectories = new Dictionary<string, string[]>(StringComparer.OrdinalIgnoreCase);
 
         /// <summary>
         /// Additional level of caching kept at the process level.

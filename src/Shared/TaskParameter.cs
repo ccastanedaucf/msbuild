@@ -5,6 +5,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Reflection;
 using Microsoft.Build.Collections;
 
@@ -934,7 +935,7 @@ namespace Microsoft.Build.BackEnd
             {
                 translator.Translate(ref _escapedItemSpec);
                 translator.Translate(ref _escapedDefiningProject);
-                translator.TranslateDictionary(ref _customEscapedMetadata, MSBuildNameIgnoreCaseComparer.Default);
+                translator.InternDictionary(ref _customEscapedMetadata, MSBuildNameIgnoreCaseComparer.Default);
 
                 ErrorUtilities.VerifyThrowInternalNull(_escapedItemSpec);
                 ErrorUtilities.VerifyThrowInternalNull(_customEscapedMetadata);

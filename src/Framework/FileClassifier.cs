@@ -209,6 +209,8 @@ namespace Microsoft.Build.Framework
         /// </summary>
         public static FileClassifier Shared => s_sharedInstance.Value;
 
+        internal IReadOnlyList<string> KnownImmutableDirectoriesSnapshot => [.. _knownImmutableDirectories.Values];
+
         /// <summary>
         ///    Checks if assembly name indicates it is a Microsoft assembly.
         /// </summary>
@@ -233,7 +235,7 @@ namespace Microsoft.Build.Framework
         ///     This value is used by <see cref="IsNonModifiable" />.
         ///     Files in the NuGet package cache are not expected to change over time, once they are created.
         /// </remarks>
-        private protected void RegisterImmutableDirectory(string? directory, bool isCustomLogicLocation)
+        protected internal void RegisterImmutableDirectory(string? directory, bool isCustomLogicLocation)
         {
             if (directory?.Length > 0)
             {
